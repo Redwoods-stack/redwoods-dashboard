@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Redwoods Hub — Redwoods Solutions</title>
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -40,10 +44,8 @@
   .logo{
     width:60px;height:60px;margin:0 auto 1.4rem;
     border-radius:16px;
-    background:linear-gradient(135deg,var(--accent),var(--accent-2));
-    display:flex;align-items:center;justify-content:center;
-    color:#fff;font-weight:800;font-size:1.5rem;
-    box-shadow:0 8px 22px rgba(91,80,232,0.35);
+    object-fit:cover;display:block;
+    box-shadow:0 8px 22px rgba(13,0,30,0.30);
   }
   .eyebrow{
     font-size:0.7rem;font-weight:700;letter-spacing:0.14em;
@@ -70,7 +72,7 @@
 </head>
 <body>
   <main class="card">
-    <div class="logo">R</div>
+    <img class="logo" src="assets/logo.png" alt="Redwoods logo" width="60" height="60">
     <div class="eyebrow">Redwoods Solutions</div>
     <h1>Redwoods Hub</h1>
     <p class="sub">The central hub for Redwoods research, company tools, and dashboards.</p>
