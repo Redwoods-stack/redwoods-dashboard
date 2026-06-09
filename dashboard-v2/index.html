@@ -270,7 +270,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       <div class="topbar-title" id="topbar-title">Dashboard<span>Financial overview</span></div>
       <div class="header-badge">
         <span class="hbadge">15,000 m&sup2;</span>
-        <span class="hbadge">70% office &middot; 30% retail</span>
+        <span class="hbadge">60% office &middot; 40% retail/F&amp;B</span>
         <span class="hbadge" id="hbadge-build">Rp 50B build cost</span>
       </div>
     </div>
@@ -445,7 +445,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
         <input type="range" min="20" max="100" step="5" value="75" id="sl-dev">
         <div class="s-note"><span id="dev-developed-m">&mdash;</span> built &middot; <span id="dev-open-m">&mdash;</span> open space</div>
       </div>
-      <div class="s-note" style="margin-top:2px;line-height:1.5;">Share of the 15,000 m&sup2; turned into leasable commercial GFA. The remainder stays as park / open space and earns no rent. All revenue, occupancy and profit-share figures scale off the developed area.</div>
+      <div class="s-note" style="margin-top:2px;line-height:1.5;">Share of the leasable commercial GFA commercialised &mdash; <strong>9,000 m&sup2; office (60%) + 6,000 m&sup2; F&amp;B/retail (40%)</strong>, aligned to the master plan. The BDD, theater, sustainable hub, park &amp; sport areas earn via the creative-economy streams below, not office/retail rent. Rent, occupancy and profit-share scale off the developed area.</div>
     </div>
     <div class="s-group">
       <div class="s-group-title">Financial scenario &mdash; master</div>
@@ -793,7 +793,10 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 <footer class="footer">Redwoods Park V2 &mdash; Financial Dashboard &nbsp;&middot;&nbsp; Bintaro Land Project &nbsp;&middot;&nbsp; 15,000 m&sup2; &nbsp;&middot;&nbsp; All figures in IDR</footer>
 
 <script>
-const OFF_AREA=10500,RET_AREA=4500,TOTAL_LAND_M=15000;
+// Leasable GFA aligned to the master plan: Office Block 9,000 m² (3,000 footprint × 3F) = 60%,
+// F&B/retail 6,000 m² (2,000 × 3F) = 40%. The BDD, theater, sustainable hub, park & sport areas
+// don't earn office/retail rent — they're monetised via the creative-economy streams instead.
+const OFF_AREA=9000,RET_AREA=6000,TOTAL_LAND_M=15000;
 // Land benchmark fixed at Rp 450k/m²/yr × 15,000 m² = Rp 6.75 B (the value Bintaro's
 // profit share must cover). getLAND() kept so coverage %, surplus and charts work.
 const BENCH_RATE=450000;
