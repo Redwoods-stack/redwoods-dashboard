@@ -259,8 +259,6 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       <button class="rail-tab" onclick="switchTab('concept')" role="tab"><span class="dot"></span>Concept &amp; Model</button>
       <button class="rail-tab" onclick="switchTab('zones')" role="tab"><span class="dot"></span>Zone Layout</button>
       <button class="rail-tab" onclick="switchTab('revenue2')" role="tab"><span class="dot"></span>Revenue Plan</button>
-      <div style="font-size:0.58rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);padding:0.9rem 14px 0.3rem;">Soft Power</div>
-      <button class="rail-tab" onclick="switchTab('feel')" role="tab"><span class="dot"></span>Feel Indonesia</button>
     </nav>
     <div class="rail-foot">
       <a href="../projects/" class="theme-toggle" style="text-decoration:none;margin-bottom:8px;"><span>&larr; All projects</span><span>⌂</span></a>
@@ -846,8 +844,8 @@ function fmtNeg(n){return '('+fmtB(Math.abs(n))+')'; }
 function toB(n){return Math.round(n/1e9*100)/100;}
 
 function switchTab(tab){
-  const names=['dashboard','model','projection','land','build','concept','zones','revenue2','feel'];
-  const titles={dashboard:['Dashboard','Financial overview'],model:['Financial Model','Year-1 assumptions & P&L'],projection:['Financial Projection','10-year outlook'],land:['Land Visualisation','Parcels & development'],build:['Build Cost','Construction budget'],concept:['Concept & Model','Creative Economy Hub'],zones:['Zone Layout','Master plan · 1.5 ha'],revenue2:['Revenue Plan','Creative-economy scenarios'],feel:['Feel Indonesia','Soft power · 6 Senses']};
+  const names=['dashboard','model','projection','land','build','concept','zones','revenue2'];
+  const titles={dashboard:['Dashboard','Financial overview'],model:['Financial Model','Year-1 assumptions & P&L'],projection:['Financial Projection','10-year outlook'],land:['Land Visualisation','Parcels & development'],build:['Build Cost','Construction budget'],concept:['Concept & Model','Creative Economy Hub'],zones:['Zone Layout','Master plan · 1.5 ha'],revenue2:['Revenue Plan','Creative-economy scenarios']};
   document.querySelectorAll('.rail-tab').forEach((b,i)=>b.classList.toggle('active',names[i]===tab));
   names.forEach(p=>{const el=$('panel-'+p);if(el)el.classList.toggle('active',p===tab);});
   const t=titles[tab];if(t&&$('topbar-title'))$('topbar-title').innerHTML=t[0]+'<span>'+t[1]+'</span>';
@@ -857,7 +855,6 @@ function switchTab(tab){
   if(tab==='build')calcBuild();
   if(tab==='zones'&&typeof czSelect==='function'){czSelect(window.__czSel||'office');}
   if(tab==='revenue2'&&typeof cvRefresh==='function'){calcProjection();setTimeout(cvRefresh,30);}
-  if(tab==='feel'){const f=$('feel-frame');if(f&&!f.getAttribute('src'))f.setAttribute('src','feel-indonesia.html');}
 }
 
 function toggleTheme(){
@@ -2085,11 +2082,6 @@ renderDashboard();
   </div>
 </div>
 <!-- ===== /CREATIVE ECONOMY TABS ===== -->
-
-<!-- TAB: FEEL INDONESIA IN 6 SENSES -->
-<div id="panel-feel" class="tab-panel">
-  <iframe id="feel-frame" title="Feel Indonesia in 6 Senses" style="width:100%;height:calc(100vh - 64px);border:none;display:block;background:#070710;"></iframe>
-</div>
 
 <script>
 // ── LAND VISUALISATION ──
