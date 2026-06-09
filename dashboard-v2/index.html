@@ -255,6 +255,10 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       <button class="rail-tab" onclick="switchTab('projection')" role="tab"><span class="dot"></span>Financial Projection</button>
       <button class="rail-tab" onclick="switchTab('land')" role="tab"><span class="dot"></span>Land Visualisation</button>
       <button class="rail-tab" onclick="switchTab('build')" role="tab"><span class="dot"></span>Build Cost</button>
+      <div style="font-size:0.58rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);padding:0.9rem 14px 0.3rem;">Creative Economy</div>
+      <button class="rail-tab" onclick="switchTab('concept')" role="tab"><span class="dot"></span>Concept &amp; Model</button>
+      <button class="rail-tab" onclick="switchTab('zones')" role="tab"><span class="dot"></span>Zone Layout</button>
+      <button class="rail-tab" onclick="switchTab('revenue2')" role="tab"><span class="dot"></span>Revenue Plan</button>
     </nav>
     <div class="rail-foot">
       <button class="theme-toggle" onclick="toggleTheme()"><span id="theme-label">Light mode</span><span id="theme-icon">☀</span></button>
@@ -815,8 +819,8 @@ function fmtNeg(n){return '('+fmtB(Math.abs(n))+')'; }
 function toB(n){return Math.round(n/1e9*100)/100;}
 
 function switchTab(tab){
-  const names=['dashboard','model','projection','land','build'];
-  const titles={dashboard:['Dashboard','Financial overview'],model:['Financial Model','Year-1 assumptions & P&L'],projection:['Financial Projection','10-year outlook'],land:['Land Visualisation','Parcels & development'],build:['Build Cost','Construction budget']};
+  const names=['dashboard','model','projection','land','build','concept','zones','revenue2'];
+  const titles={dashboard:['Dashboard','Financial overview'],model:['Financial Model','Year-1 assumptions & P&L'],projection:['Financial Projection','10-year outlook'],land:['Land Visualisation','Parcels & development'],build:['Build Cost','Construction budget'],concept:['Concept & Model','Creative Economy Hub'],zones:['Zone Layout','Master plan · 1.5 ha'],revenue2:['Revenue Plan','Creative-economy scenarios']};
   document.querySelectorAll('.rail-tab').forEach((b,i)=>b.classList.toggle('active',names[i]===tab));
   names.forEach(p=>{const el=$('panel-'+p);if(el)el.classList.toggle('active',p===tab);});
   const t=titles[tab];if(t&&$('topbar-title'))$('topbar-title').innerHTML=t[0]+'<span>'+t[1]+'</span>';
@@ -824,6 +828,8 @@ function switchTab(tab){
   if(tab==='projection')calcProjection();
   if(tab==='land'){setTimeout(()=>initLand(),50);}
   if(tab==='build')calcBuild();
+  if(tab==='zones'&&typeof czSelect==='function'){czSelect(window.__czSel||'office');}
+  if(tab==='revenue2'&&typeof cvSelect==='function'){setTimeout(()=>cvSelect(window.__cvSel||'base'),30);}
 }
 
 function toggleTheme(){
@@ -1764,6 +1770,286 @@ renderDashboard();
 </div>
 </div>
 
+<!-- ===== CREATIVE ECONOMY TABS (added) ===== -->
+<style>
+.ce-wrap{padding:1.5rem 1.9rem 3.5rem;max-width:1180px;}
+.ce-eyebrow{font-size:0.66rem;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent);}
+.ce-hero h2{font-size:1.7rem;font-weight:800;letter-spacing:-0.025em;margin:0.35rem 0 0.5rem;line-height:1.12;}
+.ce-hero p{color:var(--text2);font-size:0.96rem;max-width:760px;line-height:1.6;}
+.ce-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.8rem;margin:1.4rem 0 0.4rem;}
+.ce-stat{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:0.95rem 1.05rem;box-shadow:var(--shadow);}
+.ce-stat .k{font-size:0.6rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);font-weight:700;}
+.ce-stat .v{font-size:1.2rem;font-weight:800;margin-top:5px;letter-spacing:-0.02em;}
+.ce-stat .s{font-size:0.68rem;color:var(--text2);margin-top:2px;}
+.ce-h3{font-size:1.05rem;font-weight:800;letter-spacing:-0.01em;margin:2rem 0 0.9rem;}
+.ce-grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.ce-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:1.3rem 1.4rem;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.ce-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent);}
+.ce-card.eng-bdd::before{background:var(--teal);}
+.ce-card .tag{display:inline-block;font-size:0.6rem;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);padding:4px 9px;border-radius:999px;}
+.ce-card.eng-bdd .tag{color:var(--teal);background:rgba(58,160,224,0.12);}
+.ce-card h4{font-size:1.12rem;font-weight:800;margin:0.6rem 0 0.3rem;}
+.ce-card .sub{font-size:0.74rem;color:var(--text3);margin-bottom:0.8rem;}
+.ce-list{list-style:none;margin:0;padding:0;}
+.ce-list li{font-size:0.84rem;color:var(--text);padding:6px 0 6px 22px;position:relative;border-top:1px solid var(--border);}
+.ce-list li:first-child{border-top:none;}
+.ce-list li::before{content:"";position:absolute;left:2px;top:12px;width:9px;height:9px;border-radius:50%;background:var(--accent);opacity:0.6;}
+.ce-card.eng-bdd .ce-list li::before{background:var(--teal);}
+.ce-list li span{color:var(--text3);font-size:0.74rem;}
+.ce-pillars{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.7rem;}
+.ce-pill{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:0.85rem 1rem;font-size:0.82rem;font-weight:600;color:var(--text);}
+.ce-pill small{display:block;font-weight:500;color:var(--text3);font-size:0.72rem;margin-top:3px;line-height:1.45;}
+
+/* Zone layout */
+.cz-layout{display:grid;grid-template-columns:1fr 330px;gap:1.3rem;align-items:start;}
+.cz-mapwrap{background:var(--bg3);border:1px solid var(--border);border-radius:18px;padding:1rem;}
+.cz-compass{display:flex;justify-content:space-between;align-items:center;margin:0 4px 8px;font-size:0.62rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);}
+.cz-map{display:flex;flex-direction:column;gap:7px;}
+.cz-row{display:grid;gap:7px;}
+.cz-zone{border:1px solid var(--border2);border-radius:11px;padding:0.7rem 0.8rem;cursor:pointer;background:var(--bg2);transition:transform .12s,box-shadow .12s,border-color .12s;min-height:62px;display:flex;flex-direction:column;justify-content:center;}
+.cz-zone:hover{transform:translateY(-2px);box-shadow:var(--shadow);}
+.cz-zone.active{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft);}
+.cz-zone .zn{font-size:0.8rem;font-weight:700;line-height:1.15;}
+.cz-zone .za{font-size:0.64rem;color:var(--text3);font-weight:600;margin-top:2px;}
+.cz-zone .zedge{width:18px;height:3px;border-radius:2px;margin-bottom:6px;background:var(--accent);}
+.cz-com .zedge{background:var(--accent);}
+.cz-bdd .zedge{background:var(--teal);}
+.cz-grn .zedge{background:var(--green);}
+.cz-ply .zedge{background:var(--amber);}
+.cz-park{background:linear-gradient(135deg,rgba(31,175,107,0.12),rgba(31,175,107,0.04));border-style:dashed;border-color:var(--green-border);}
+.cz-detail{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:1.3rem;box-shadow:var(--shadow);position:sticky;top:1rem;}
+.cz-detail .dh{display:flex;align-items:center;gap:8px;}
+.cz-detail .dh .chip{font-size:0.58rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px;}
+.cz-detail h4{font-size:1.25rem;font-weight:800;margin:0.5rem 0 0.7rem;letter-spacing:-0.01em;}
+.cz-meta{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-bottom:0.9rem;}
+.cz-meta .m{background:var(--bg3);border-radius:10px;padding:0.55rem 0.7rem;}
+.cz-meta .m .k{font-size:0.58rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);font-weight:700;}
+.cz-meta .m .v{font-size:0.92rem;font-weight:800;margin-top:2px;}
+.cz-detail .dlabel{font-size:0.62rem;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--text3);margin:0.9rem 0 0.35rem;}
+.cz-detail .dtext{font-size:0.84rem;color:var(--text);line-height:1.55;}
+.cz-detail .dprog{display:flex;flex-wrap:wrap;gap:5px;margin-top:0.3rem;}
+.cz-detail .dprog span{font-size:0.7rem;font-weight:600;color:var(--text2);background:var(--bg3);border:1px solid var(--border);padding:3px 9px;border-radius:8px;}
+.cz-rev{margin-top:0.9rem;background:var(--accent-soft);border:1px solid var(--accent);border-radius:11px;padding:0.7rem 0.85rem;}
+.cz-rev .k{font-size:0.58rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--accent);}
+.cz-rev .v{font-size:0.82rem;color:var(--text);line-height:1.5;margin-top:3px;}
+
+/* Revenue plan */
+.cv-scen{display:inline-flex;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:1.2rem;}
+.cv-scen button{font-family:inherit;font-size:0.8rem;font-weight:700;color:var(--text2);background:transparent;border:none;padding:8px 16px;border-radius:9px;cursor:pointer;transition:.15s;}
+.cv-scen button.active{background:var(--accent);color:#fff;box-shadow:0 4px 12px var(--accent-soft);}
+.cv-totals{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.9rem;margin-bottom:1.6rem;}
+.cv-tot{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:1.2rem 1.3rem;box-shadow:var(--shadow);}
+.cv-tot .k{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);font-weight:700;}
+.cv-tot .v{font-size:1.7rem;font-weight:800;letter-spacing:-0.025em;margin-top:5px;}
+.cv-tot .v small{font-size:0.9rem;color:var(--text2);font-weight:700;}
+.cv-tot .s{font-size:0.7rem;color:var(--text2);margin-top:3px;}
+.cv-chartwrap{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:1.2rem 1.3rem;box-shadow:var(--shadow);margin-bottom:1.6rem;}
+.cv-chartwrap .ct{font-size:0.92rem;font-weight:800;margin-bottom:0.2rem;}
+.cv-chartwrap .cs{font-size:0.72rem;color:var(--text3);margin-bottom:0.8rem;}
+.cv-canvas-box{height:300px;position:relative;}
+.cv-streams{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-bottom:1.6rem;}
+.cv-stream{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:1.2rem 1.3rem;box-shadow:var(--shadow);border-top:3px solid var(--accent);}
+.cv-stream .n{font-size:0.58rem;font-weight:800;color:var(--accent);letter-spacing:0.06em;}
+.cv-stream h4{font-size:1.02rem;font-weight:800;margin:0.3rem 0 0.4rem;}
+.cv-stream p{font-size:0.8rem;color:var(--text2);line-height:1.55;}
+.cv-stream .amt{font-size:1.05rem;font-weight:800;color:var(--green);margin-top:0.6rem;}
+.cv-phases{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;}
+.cv-phase{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:1.2rem 1.3rem;box-shadow:var(--shadow);}
+.cv-phase .ph{display:inline-block;font-size:0.6rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#fff;background:var(--accent);padding:3px 10px;border-radius:999px;}
+.cv-phase h4{font-size:1.02rem;font-weight:800;margin:0.55rem 0 0.2rem;}
+.cv-phase .when{font-size:0.7rem;color:var(--text3);font-weight:600;margin-bottom:0.6rem;}
+.cv-phase ul{list-style:none;margin:0;padding:0;}
+.cv-phase li{font-size:0.8rem;color:var(--text);padding:5px 0 5px 16px;position:relative;border-top:1px solid var(--border);}
+.cv-phase li:first-child{border-top:none;}
+.cv-phase li::before{content:"→";position:absolute;left:0;color:var(--accent);font-weight:700;}
+.ce-note{font-size:0.7rem;color:var(--text3);line-height:1.55;margin-top:1.4rem;border-top:1px solid var(--border);padding-top:0.9rem;}
+@media(max-width:880px){.ce-grid2{grid-template-columns:1fr;}.cz-layout{grid-template-columns:1fr;}.cz-detail{position:static;}}
+</style>
+
+<!-- TAB 5: CONCEPT & MODEL -->
+<div id="panel-concept" class="tab-panel">
+  <div class="ce-wrap">
+    <div class="ce-hero">
+      <div class="ce-eyebrow">Concept &middot; Creative Economy Hub</div>
+      <h2>Indonesia's Creative Economy Hub</h2>
+      <p>A privately-led creative district that behaves like a public institution &mdash; modelled on Thailand's <strong>CEA / TCDC</strong> and layered with Redwoods Park's commercial &amp; community DNA. Two engines under one roof: a revenue-anchoring <strong>commercial core</strong> and a defensible, brand-funded <strong>creative ecosystem (BDD Center)</strong>.</p>
+    </div>
+
+    <div class="ce-stats">
+      <div class="ce-stat"><div class="k">Total land</div><div class="v">15,000 m&sup2;</div><div class="s">1.5 ha &middot; Bintaro</div></div>
+      <div class="ce-stat"><div class="k">Total GFA</div><div class="v">~28,000 m&sup2;</div><div class="s">across 3 floors</div></div>
+      <div class="ce-stat"><div class="k">FAR</div><div class="v">~1.87</div><div class="s">3-storey envelope</div></div>
+      <div class="ce-stat"><div class="k">Existing parking</div><div class="v">1,531 m&sup2;</div><div class="s">communal, south end</div></div>
+      <div class="ce-stat"><div class="k">Office share</div><div class="v">60%</div><div class="s">revenue anchor</div></div>
+    </div>
+
+    <div class="ce-h3">Two engines</div>
+    <div class="ce-grid2">
+      <div class="ce-card eng-com">
+        <span class="tag">Engine A &middot; Commercial</span>
+        <h4>Redwoods Park</h4>
+        <div class="sub">Cash-flow anchor &mdash; opens early, builds weekly footfall</div>
+        <ul class="ce-list">
+          <li>Office rent (60% of leasable) <span>&mdash; the anchor</span></li>
+          <li>F&amp;B market <span>&mdash; coffee, resto, food hall</span></li>
+          <li>Function hall <span>&mdash; corporate venue hire</span></li>
+          <li>Basketball &amp; community sport</li>
+          <li>Weekend market <span>&mdash; 33&ndash;50 stalls</span></li>
+          <li>Retail &amp; convenience store</li>
+        </ul>
+      </div>
+      <div class="ce-card eng-bdd">
+        <span class="tag">Engine B &middot; BDD Center</span>
+        <h4>Bintaro Design District</h4>
+        <div class="sub">TCDC-inspired &mdash; unique, brand-funded, defensible</div>
+        <ul class="ce-list">
+          <li>Material Library <span>&mdash; brands pay to display</span></li>
+          <li>Co-working &amp; studio rental</li>
+          <li>Creative &amp; maker space</li>
+          <li>Black box theater <span>&mdash; discourse &amp; performance</span></li>
+          <li>Education, workshops &amp; online academy</li>
+          <li>Membership &amp; brand support</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="ce-h3">The CEA / TCDC playbook we adopt</div>
+    <div class="ce-pillars">
+      <div class="ce-pill">Resource &amp; Material Library<small>Physical samples + brand cabinets for architects &amp; designers</small></div>
+      <div class="ce-pill">Creative Education<small>Workshops, seminars, certified programs</small></div>
+      <div class="ce-pill">Research &amp; Data<small>Creative-economy insight &amp; reports</small></div>
+      <div class="ce-pill">Incubation &amp; Consulting<small>Business support for creative ventures</small></div>
+      <div class="ce-pill">Online Academy<small>Content platform &amp; remote courses</small></div>
+      <div class="ce-pill">Exhibition &amp; Discourse<small>Shows, talks, community programming</small></div>
+    </div>
+
+    <p class="ce-note">Concept synthesised from the shared CEA / TCDC reference and the Redwoods Park brief. Figures are planning estimates for discussion, not committed projections. V1 remains the original baseline; this Creative-Economy layer lives only in V2.</p>
+  </div>
+</div>
+
+<!-- TAB 6: ZONE LAYOUT -->
+<div id="panel-zones" class="tab-panel">
+  <div class="ce-wrap">
+    <div class="ce-eyebrow">Master Plan &middot; Zone Layout</div>
+    <h2 style="font-size:1.4rem;font-weight:800;letter-spacing:-0.02em;margin:0.35rem 0 0.3rem;">Site zoning &mdash; 1.5 ha</h2>
+    <p style="color:var(--text2);font-size:0.86rem;margin-bottom:1.2rem;">Schematic arrangement (north &rarr; south). The real parcel is a tapering trapezoid along the curved road &mdash; click any zone for area, floors &amp; revenue model.</p>
+    <div class="cz-layout">
+      <div class="cz-mapwrap">
+        <div class="cz-compass"><span>&uarr; North</span><span>Schematic &mdash; not to scale</span></div>
+        <div class="cz-map">
+          <div class="cz-row" style="grid-template-columns:1fr 1fr;">
+            <div class="cz-zone cz-ply" data-z="basketball" onclick="czSelect('basketball')"><div class="zedge"></div><div class="zn">Basketball Court</div><div class="za">Community sport</div></div>
+            <div class="cz-zone cz-com" data-z="function" onclick="czSelect('function')"><div class="zedge"></div><div class="zn">Function Hall</div><div class="za">Events &middot; venue hire</div></div>
+          </div>
+          <div class="cz-row" style="grid-template-columns:1.2fr 1.3fr 1.2fr 0.9fr;">
+            <div class="cz-zone cz-com" data-z="fnb" onclick="czSelect('fnb')"><div class="zedge"></div><div class="zn">F&amp;B Market</div><div class="za">2,000 m&sup2; &middot; 3F</div></div>
+            <div class="cz-zone cz-park cz-grn" data-z="park" onclick="czSelect('park')"><div class="zedge"></div><div class="zn">Inner Park</div><div class="za">Courtyard &middot; market</div></div>
+            <div class="cz-zone cz-com" data-z="office" onclick="czSelect('office')"><div class="zedge"></div><div class="zn">Office Block</div><div class="za">3,000 m&sup2; &middot; 3F</div></div>
+            <div class="cz-zone cz-ply" data-z="golf" onclick="czSelect('golf')"><div class="zedge"></div><div class="zn">Mini Golf &amp; Play</div><div class="za">Leisure</div></div>
+          </div>
+          <div class="cz-row" style="grid-template-columns:1fr;">
+            <div class="cz-zone cz-grn" data-z="sustain" onclick="czSelect('sustain')"><div class="zedge"></div><div class="zn">Sustainable Hub</div><div class="za">Waste mgmt &middot; herbal lab &middot; cooking lab &middot; urban farm &middot; 3,000 m&sup2;</div></div>
+          </div>
+          <div class="cz-row" style="grid-template-columns:1fr 1.4fr;">
+            <div class="cz-zone cz-bdd" data-z="theater" onclick="czSelect('theater')"><div class="zedge"></div><div class="zn">Black Box Theater</div><div class="za">1,000 m&sup2;</div></div>
+            <div class="cz-zone cz-bdd" data-z="design" onclick="czSelect('design')"><div class="zedge"></div><div class="zn">Design Center (BDD)</div><div class="za">3,000 m&sup2; &middot; 3F</div></div>
+          </div>
+          <div class="cz-row" style="grid-template-columns:1fr;">
+            <div class="cz-zone" data-z="parking" onclick="czSelect('parking')" style="min-height:48px;"><div class="zn">Communal Parking &amp; Main Entry</div><div class="za">1,531 m&sup2; &middot; St. Pd Ranji (south)</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="cz-detail" id="cz-detail"><!-- filled by JS --></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 7: REVENUE PLAN -->
+<div id="panel-revenue2" class="tab-panel">
+  <div class="ce-wrap">
+    <div class="ce-eyebrow">Revenue &middot; Planning Model</div>
+    <h2 style="font-size:1.4rem;font-weight:800;letter-spacing:-0.02em;margin:0.35rem 0 0.7rem;">Revenue scenarios</h2>
+    <div class="cv-scen" id="cv-scen">
+      <button data-s="conservative" onclick="cvSelect('conservative')">Conservative</button>
+      <button data-s="base" class="active" onclick="cvSelect('base')">Base case</button>
+      <button data-s="optimistic" onclick="cvSelect('optimistic')">Optimistic</button>
+    </div>
+    <div class="cv-totals">
+      <div class="cv-tot"><div class="k">Year 1 revenue</div><div class="v" id="cv-y1">Rp 14.4<small> B</small></div><div class="s">first full operating year</div></div>
+      <div class="cv-tot"><div class="k">Year 3 revenue</div><div class="v" id="cv-y3">Rp 26.8<small> B</small></div><div class="s">at programme maturity</div></div>
+      <div class="cv-tot"><div class="k">3-yr growth</div><div class="v" id="cv-mult">1.9&times;</div><div class="s">Year 1 &rarr; Year 3</div></div>
+    </div>
+
+    <div class="cv-chartwrap">
+      <div class="ct">Year 1 revenue by stream <span style="font-weight:600;color:var(--text3);font-size:0.74rem;">&mdash; Base case</span></div>
+      <div class="cs">Eight categories, ~Rp 14.4 B total. Office lease anchors; Material Library is the most defensible.</div>
+      <div class="cv-canvas-box"><canvas id="cv-chart"></canvas></div>
+    </div>
+
+    <div class="ce-h3" style="margin-top:0.5rem;">Three streams worth prioritising</div>
+    <div class="cv-streams">
+      <div class="cv-stream">
+        <div class="n">01 &middot; HIGH-MARGIN VENUE</div>
+        <h4>Function Hall by-the-hour</h4>
+        <p>Corporate venue hire for the BSD / Bintaro corridor (Samsung, Astra, Unilever). ~Rp 50 jt / full day, filled 2&ndash;3 days a week.</p>
+        <div class="amt">~Rp 2&ndash;3 B / yr</div>
+      </div>
+      <div class="cv-stream">
+        <div class="n">02 &middot; RECURRING</div>
+        <h4>"Redwoods Card" membership</h4>
+        <p>One card, all zones &mdash; library, co-working day pass, sport, workshop discounts. Makes the community sticky.</p>
+        <div class="amt">~Rp 2.1 B / yr</div>
+      </div>
+      <div class="cv-stream">
+        <div class="n">03 &middot; DEFENSIBLE</div>
+        <h4>Material Library (reversed)</h4>
+        <p>Brands <em>pay</em> to display to visiting architects &amp; designers. 150&ndash;400 cabinets at Rp 300&ndash;500k/mo, near-zero opex.</p>
+        <div class="amt">~Rp 0.7&ndash;2.4 B / yr</div>
+      </div>
+    </div>
+
+    <div class="ce-h3">Three-phase roadmap</div>
+    <div class="cv-phases">
+      <div class="cv-phase">
+        <span class="ph">Phase 1</span>
+        <h4>Soft launch</h4>
+        <div class="when">Months 0&ndash;6</div>
+        <ul>
+          <li>Office leasing &amp; convenience store</li>
+          <li>Co-working opens</li>
+          <li>Weekend market begins</li>
+          <li>Goal: anchor cash flow + footfall</li>
+        </ul>
+      </div>
+      <div class="cv-phase">
+        <span class="ph">Phase 2</span>
+        <h4>Cultural activation</h4>
+        <div class="when">Months 6&ndash;18</div>
+        <ul>
+          <li>Material Library + Design Center</li>
+          <li>Black box theater programming</li>
+          <li>Function hall corporate hire</li>
+          <li>Redwoods Card membership launch</li>
+        </ul>
+      </div>
+      <div class="cv-phase">
+        <span class="ph">Phase 3</span>
+        <h4>Full ecosystem</h4>
+        <div class="when">Months 18&ndash;36</div>
+        <ul>
+          <li>Sustainable Hub labs live</li>
+          <li>Online academy &amp; research</li>
+          <li>Sponsorship / CSR at scale</li>
+          <li>Mature mix: events + sponsorship &asymp; 50%</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="ce-note">Scenario totals: Conservative Rp 9.2 B &rarr; 16.5 B &middot; Base Rp 14.4 B &rarr; 26.8 B &middot; Optimistic Rp 20.2 B &rarr; 36.2 B (Year 1 &rarr; Year 3). Planning estimates derived from the shared concept &mdash; for discussion, not committed figures.</p>
+  </div>
+</div>
+<!-- ===== /CREATIVE ECONOMY TABS ===== -->
+
 <script>
 // ── LAND VISUALISATION ──
 let landView = 'occupancy';
@@ -2381,5 +2667,94 @@ if(typeof applyChartTheme==='function')setTimeout(applyChartTheme,30);
 
   </div><!-- /content -->
 </div><!-- /app -->
+
+<script>
+// ===== CREATIVE ECONOMY: zones + revenue =====
+(function(){
+  const CSS = (v,f)=>{const c=getComputedStyle(document.documentElement).getPropertyValue(v).trim();return c||f;};
+
+  // ---- Zone data ----
+  const Z = {
+    basketball:{name:'Basketball Court',engine:'Commercial',col:'--amber',area:'Court + stands',floors:'Open-air',fn:'Community sport anchor in the north band — drives recurring footfall and local membership.',rev:'Court rental, memberships, community competitions & clinics.',prog:['Open court','Leagues','Clinics']},
+    function:{name:'Function Hall',engine:'Commercial',col:'--accent',area:'North band',floors:'Single volume',fn:'Flexible event venue beside the court — the highest-margin commercial lever.',rev:'By-the-hour corporate hire (~Rp 50 jt/day) — BSD/Bintaro corridor demand. ~Rp 2–3 B/yr.',prog:['Seminars','Product launches','Weddings','Town halls']},
+    fnb:{name:'F&B Market',engine:'Commercial',col:'--accent',area:'2,000 m² footprint · ~6,000 m² GFA',floors:'3 floors',fn:'Coffee, restaurants and a food hall facing the inner park — daily footfall engine.',rev:'Tenant lease + revenue share; pop-up dining slots.',prog:['Coffee','Resto','Food hall','Pop-ups']},
+    park:{name:'Inner Park (Taman)',engine:'Community',col:'--green',area:'2,000–3,000 m²',floors:'Open courtyard',fn:'Central open-to-sky courtyard ringed by the 3-storey blocks — the social heart, with an urban-farm corner.',rev:'Weekend market (33–50 stalls), brand activations & sponsorship.',prog:['Weekend market','Urban farm','Events','Activations']},
+    office:{name:'Office Block',engine:'Commercial',col:'--accent',area:'3,000 m² footprint · 9,000 m² GFA',floors:'3 floors',fn:'60% of leasable area — the revenue anchor that sustains operations before cultural programs mature.',rev:'Long-lease office rent — ~Rp 4.3 B/yr at conservative occupancy.',prog:['SME offices','Studios','HQ floors']},
+    golf:{name:'Mini Golf & Playground',engine:'Leisure',col:'--amber',area:'Sloped rear area',floors:'Open-air',fn:'Family leisure tucked into the tapering southern slope where built area is hard.',rev:'Pay-per-play, family passes, party bookings.',prog:['Mini putt-putt','Playground','Parties']},
+    sustain:{name:'Sustainable Hub',engine:'BDD / Community',col:'--green',area:'3,000 m²',floors:'Strip across site',fn:'Sustainability programming band: waste management, herbal lab, cooking lab and urban farming — the CSR & brand story.',rev:'Workshops & classes, CSR sponsorship, produce sales.',prog:['Waste mgmt','Herbal lab','Cooking lab','Urban farm']},
+    theater:{name:'Black Box Theater',engine:'BDD',col:'--teal',area:'1,000 m²',floors:'Double-height',fn:'Flexible performance & discourse venue anchoring the BDD Center to the south.',rev:'Ticketing, venue hire, sponsored programming.',prog:['Performances','Talks','Screenings','Showcases']},
+    design:{name:'Design Center (BDD)',engine:'BDD',col:'--teal',area:'3,000 m² footprint · 9,000 m² GFA',floors:'3 floors',fn:'The TCDC-style heart: Material Library, co-working, creative & maker space — unique and defensible.',rev:'Material Library cabinets (brands pay), co-working membership, course fees, brand support.',prog:['Material Library','Co-working','Creative space','Maker space']},
+    parking:{name:'Communal Parking & Entry',engine:'Infrastructure',col:'--text3',area:'1,531 m² (existing)',floors:'Ground',fn:'Existing communal parking and the main entry from St. Pd Ranji at the south end.',rev:'Paid parking; supports all zones’ access.',prog:['Parking','Main entry','Drop-off']}
+  };
+
+  window.czSelect = function(id){
+    const z = Z[id]; if(!z) return;
+    window.__czSel = id;
+    document.querySelectorAll('.cz-zone').forEach(e=>e.classList.toggle('active', e.getAttribute('data-z')===id));
+    const c = CSS(z.col,'#5b50e8');
+    const el = document.getElementById('cz-detail'); if(!el) return;
+    el.innerHTML =
+      '<div class="dh"><span class="chip" style="color:#fff;background:'+c+'">'+z.engine+'</span></div>'+
+      '<h4>'+z.name+'</h4>'+
+      '<div class="cz-meta"><div class="m"><div class="k">Area</div><div class="v">'+z.area+'</div></div>'+
+      '<div class="m"><div class="k">Floors</div><div class="v">'+z.floors+'</div></div></div>'+
+      '<div class="dlabel">Function</div><div class="dtext">'+z.fn+'</div>'+
+      '<div class="dlabel">Programs</div><div class="dprog">'+z.prog.map(p=>'<span>'+p+'</span>').join('')+'</div>'+
+      '<div class="cz-rev"><div class="k">Revenue model</div><div class="v">'+z.rev+'</div></div>';
+  };
+
+  // ---- Revenue scenarios ----
+  const SC = {
+    conservative:{y1:9.2,y3:16.5},
+    base:{y1:14.4,y3:26.8},
+    optimistic:{y1:20.2,y3:36.2}
+  };
+  // Base-case Year-1 streams (Rp B) — scaled proportionally for other scenarios
+  const STREAMS = [
+    ['Office lease',4.3],['Function hall & events',2.5],['Membership (Redwoods Card)',2.1],
+    ['F&B & retail',1.8],['Material Library',1.2],['Sponsorship / CSR',1.0],
+    ['Weekend & design market',0.8],['Co-working & studio',0.7]
+  ];
+  let cvChart = null;
+
+  function drawChart(scale){
+    const cv = document.getElementById('cv-chart'); if(!cv || typeof Chart==='undefined') return;
+    const accent = CSS('--accent','#5b50e8'), text2 = CSS('--text2','#6b7385'), border = CSS('--border','rgba(0,0,0,0.08)');
+    const labels = STREAMS.map(s=>s[0]);
+    const data = STREAMS.map(s=>Math.round(s[1]*scale*10)/10);
+    if(cvChart) cvChart.destroy();
+    cvChart = new Chart(cv.getContext('2d'),{
+      type:'bar',
+      data:{labels:labels,datasets:[{data:data,backgroundColor:accent,borderRadius:6,maxBarThickness:34}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'Rp '+c.parsed.x+' B'}}},
+        scales:{
+          x:{grid:{color:border},ticks:{color:text2,callback:v=>'Rp '+v+'B'}},
+          y:{grid:{display:false},ticks:{color:text2,font:{size:11}}}
+        }}
+    });
+  }
+
+  window.cvSelect = function(name){
+    const s = SC[name]; if(!s) return;
+    window.__cvSel = name;
+    document.querySelectorAll('#cv-scen button').forEach(b=>b.classList.toggle('active', b.getAttribute('data-s')===name));
+    const y1 = document.getElementById('cv-y1'), y3 = document.getElementById('cv-y3'), mu = document.getElementById('cv-mult');
+    if(y1) y1.innerHTML = 'Rp '+s.y1.toFixed(1)+'<small> B</small>';
+    if(y3) y3.innerHTML = 'Rp '+s.y3.toFixed(1)+'<small> B</small>';
+    if(mu) mu.innerHTML = (Math.round(s.y3/s.y1*10)/10)+'&times;';
+    drawChart(s.y1 / SC.base.y1); // scale the Base-case stream mix to the chosen scenario's Year-1 total
+  };
+
+  // Repaint chart on theme toggle if the revenue tab is visible
+  const _tt = window.toggleTheme;
+  if(typeof _tt === 'function'){
+    window.toggleTheme = function(){ _tt.apply(this, arguments);
+      const p = document.getElementById('panel-revenue2');
+      if(p && p.classList.contains('active')) cvSelect(window.__cvSel||'base');
+    };
+  }
+})();
+</script>
 </body>
 </html>
