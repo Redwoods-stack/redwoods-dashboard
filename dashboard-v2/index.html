@@ -1,0 +1,2385 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redwoods Park V2 — Financial Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  /* Light theme (default) — matches reference: soft grey canvas, white cards, indigo accent */
+  --bg:#eef1f6;--bg2:#ffffff;--bg3:#f4f6fa;--bg4:#e9edf4;
+  --border:rgba(28,35,60,0.08);--border2:rgba(28,35,60,0.14);
+  --text:#1b2138;--text2:#6b7385;--text3:#9aa2b4;
+  --green:#1faf6b;--green-dim:rgba(31,175,107,0.12);--green-border:rgba(31,175,107,0.25);
+  --amber:#e08a2b;--amber-dim:rgba(224,138,43,0.12);--amber-border:rgba(224,138,43,0.25);
+  --red:#e5533c;--red-dim:rgba(229,83,60,0.12);--red-border:rgba(229,83,60,0.25);
+  --teal:#3aa0e0;--accent:#5b50e8;--accent-soft:rgba(91,80,232,0.10);
+  --rail:#ffffff;--shadow:0 4px 16px rgba(28,35,60,0.06);--shadow-lg:0 8px 28px rgba(28,35,60,0.08);
+}
+[data-theme="dark"] {
+  --bg:#11131c;--bg2:#1a1d2b;--bg3:#22263a;--bg4:#2c3146;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --text:#eceef6;--text2:#9aa3b8;--text3:#646c82;
+  --green:#34c281;--green-dim:rgba(52,194,129,0.14);--green-border:rgba(52,194,129,0.32);
+  --amber:#e6a23c;--amber-dim:rgba(230,162,60,0.14);--amber-border:rgba(230,162,60,0.32);
+  --red:#ef6450;--red-dim:rgba(239,100,80,0.14);--red-border:rgba(239,100,80,0.32);
+  --teal:#46b0ea;--accent:#7a72f0;--accent-soft:rgba(122,114,240,0.16);
+  --rail:#1a1d2b;--shadow:0 4px 16px rgba(0,0,0,0.3);--shadow-lg:0 8px 28px rgba(0,0,0,0.4);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{background:var(--bg);}
+body{font-family:'Plus Jakarta Sans','Geist',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5;transition:background 0.25s,color 0.25s;-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+
+/* APP SHELL — left rail + content */
+.app{display:grid;grid-template-columns:230px 1fr;min-height:100vh;}
+.rail{background:var(--rail);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.rail-brand{padding:1.6rem 1.4rem 1.3rem;display:flex;align-items:center;gap:11px;}
+.rail-logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#8b83f5);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:1rem;box-shadow:0 4px 12px var(--accent-soft);}
+.rail-brand h1{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.05rem;font-weight:800;color:var(--text);letter-spacing:-0.02em;line-height:1.05;}
+.rail-brand p{font-size:0.6rem;color:var(--text3);margin-top:2px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;}
+.rail-nav{display:flex;flex-direction:column;padding:0.5rem 0.8rem;gap:3px;flex:1;}
+.rail-tab{font-family:'Plus Jakarta Sans',sans-serif;font-size:0.85rem;font-weight:600;text-align:left;padding:11px 14px;background:transparent;border:none;border-radius:11px;color:var(--text2);cursor:pointer;transition:background 0.15s,color 0.15s;display:flex;align-items:center;gap:11px;}
+.rail-tab:hover{background:var(--bg3);color:var(--text);}
+.rail-tab.active{background:var(--accent);color:#fff;font-weight:700;box-shadow:0 6px 16px var(--accent-soft);}
+.rail-tab .dot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:0.35;flex-shrink:0;}
+.rail-tab.active .dot{opacity:1;}
+.rail-foot{padding:1rem 1.1rem;border-top:1px solid var(--border);}
+.theme-toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:10px 13px;background:var(--bg3);border:1px solid var(--border);border-radius:11px;color:var(--text2);font-family:'Plus Jakarta Sans',sans-serif;font-size:0.74rem;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.theme-toggle:hover{border-color:var(--border2);color:var(--text);}
+.content{display:flex;flex-direction:column;min-width:0;}
+
+/* TOP BAR (badges) */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:1.1rem 1.9rem;background:transparent;}
+.topbar-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.35rem;font-weight:800;color:var(--text);letter-spacing:-0.02em;}
+.topbar-title span{color:var(--text3);font-weight:500;font-size:0.82rem;margin-left:10px;letter-spacing:0;}
+.header-badge{display:flex;gap:8px;flex-wrap:wrap;}
+.hbadge{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:0.7rem;padding:6px 13px;border-radius:20px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);letter-spacing:0;box-shadow:var(--shadow);}
+
+/* legacy header hidden */
+.header{display:none;}
+.tab-nav{display:none;}
+.footer{display:none;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* LAYOUT — sliders on the right */
+.layout{display:grid;grid-template-columns:1fr 320px;min-height:calc(100vh - 56px);}
+.sidebar{order:2;border-left:1px solid var(--border);padding:1.5rem;overflow-y:auto;position:sticky;top:0;max-height:calc(100vh - 56px);background:var(--bg2);}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+.main{order:1;padding:1.75rem;overflow-y:auto;}
+
+/* SIDEBAR CONTROLS */
+.s-group{margin-bottom:1.5rem;}
+.s-group-title{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:0.75rem;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.s-row{margin-bottom:0.9rem;}
+.s-row-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;}
+.s-label{font-size:0.77rem;color:var(--text2);}
+.s-val{font-family:'DM Mono',monospace;font-size:0.77rem;color:var(--text);font-weight:500;}
+.s-note{font-size:0.67rem;color:var(--text3);margin-top:3px;display:flex;align-items:center;gap:5px;}
+.s-tag{font-family:'Plus Jakarta Sans',sans-serif;font-size:0.6rem;padding:2px 9px;border-radius:20px;font-weight:600;letter-spacing:0;}
+.tag-below{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-border);}
+.tag-within{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border);}
+.tag-above{background:rgba(212,92,75,0.12);color:#e07060;border:1px solid rgba(212,92,75,0.3);}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:5px;background:var(--bg4);border-radius:3px;outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);border:3px solid var(--bg2);box-shadow:0 2px 6px var(--accent-soft);cursor:pointer;transition:transform 0.15s;}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2);}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent);border:3px solid var(--bg2);cursor:pointer;}
+
+/* COVERAGE */
+.coverage-strip{border-radius:16px;box-shadow:var(--shadow);padding:13px 17px;margin-bottom:1.25rem;border:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;transition:background 0.3s,border-color 0.3s;}
+.coverage-strip.green{background:var(--green-dim);border-color:var(--green-border);}
+.coverage-strip.amber{background:var(--amber-dim);border-color:var(--amber-border);}
+.coverage-strip.red{background:var(--red-dim);border-color:var(--red-border);}
+.cov-main{font-size:0.87rem;font-weight:500;}
+.coverage-strip.green .cov-main{color:var(--green);}
+.coverage-strip.amber .cov-main{color:var(--amber);}
+.coverage-strip.red .cov-main{color:var(--red);}
+.cov-sub{font-size:0.73rem;color:var(--text2);margin-top:2px;}
+.cov-pct{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:1.9rem;line-height:1;}
+.coverage-strip.green .cov-pct{color:var(--green);}
+.coverage-strip.amber .cov-pct{color:var(--amber);}
+.coverage-strip.red .cov-pct{color:var(--red);}
+.bar-wrap{margin-bottom:1.25rem;}
+.bar-track{height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-bottom:4px;}
+.bar-fill{height:3px;border-radius:2px;transition:width 0.3s,background 0.3s;}
+.bar-labels{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--text3);}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:1.5rem;}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow);}
+.kpi-label{font-size:0.72rem;color:var(--text2);font-weight:600;letter-spacing:0;text-transform:none;font-family:'Plus Jakarta Sans',sans-serif;margin-bottom:8px;}
+.kpi-val{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:1.55rem;color:var(--text);line-height:1.05;letter-spacing:-0.02em;}
+.kpi-val.green{color:var(--green);}.kpi-val.amber{color:var(--amber);}
+.kpi-sub{font-size:0.7rem;color:var(--text3);margin-top:6px;}
+
+/* SECTION TITLE */
+.section-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:0.92rem;font-weight:700;letter-spacing:-0.01em;text-transform:none;color:var(--text);margin-bottom:0.85rem;margin-top:1.5rem;display:flex;align-items:center;gap:10px;}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* PRICING */
+.pricing-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:1.5rem;box-shadow:var(--shadow);}
+.pricing-row{display:flex;justify-content:space-between;align-items:center;padding:11px 18px;border-bottom:1px solid var(--border);font-size:0.82rem;}
+.pricing-row:last-child{border-bottom:none;}
+.pricing-row.divider{background:var(--bg3);padding:7px 18px;}
+.pricing-row.divider span{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:0.64rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text2);}
+.pricing-row.highlight{background:var(--accent-soft);}
+.pr-label{color:var(--text2);}
+.pr-val{font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--text);font-weight:500;}
+.pr-val.accent{color:var(--accent);font-weight:600;}
+
+/* PNL */
+.pnl-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:1.5rem;box-shadow:var(--shadow);}
+.pnl-row{display:flex;justify-content:space-between;padding:9px 18px;font-size:0.82rem;border-bottom:1px solid var(--border);}
+.pnl-row:last-child{border-bottom:none;}
+.pnl-row.indent{padding-left:34px;}
+.pnl-row.indent .pnl-label{color:var(--text3);font-size:0.78rem;}
+.pnl-row.subtotal{background:var(--bg3);}
+.pnl-row.subtotal .pnl-label,.pnl-row.subtotal .pnl-amount{font-weight:600;color:var(--text);}
+.pnl-row.total-row{background:var(--accent-soft);border-top:1px solid var(--border2);padding:13px 18px;}
+.pnl-row.total-row .pnl-label{font-weight:700;color:var(--text);font-size:0.88rem;}
+.pnl-row.total-row .pnl-amount{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:1.15rem;color:var(--accent);}
+.pnl-label{color:var(--text2);}
+.pnl-amount{font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--text);font-weight:500;}
+.pnl-amount.pos{color:var(--green);}.pnl-amount.neg{color:var(--red);}.pnl-amount.muted{color:var(--text3);}
+
+/* CHART */
+.chart-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:1.4rem;margin-bottom:1.5rem;box-shadow:var(--shadow);}
+.chart-legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:0.72rem;color:var(--text2);font-weight:500;}
+.leg-dot{width:9px;height:9px;border-radius:3px;}
+.mem-box{background:var(--green-dim);border:1px solid var(--green-border);border-radius:14px;padding:15px 17px;margin-top:8px;display:none;}
+.mem-box-label{font-size:0.74rem;color:var(--green);font-weight:600;margin-bottom:3px;}
+.mem-box-val{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:1.7rem;color:var(--green);}
+.mem-box-sub{font-size:0.7rem;color:var(--text3);margin-top:2px;}
+
+/* PROJECTION */
+.proj-layout{display:grid;grid-template-columns:1fr 280px;min-height:calc(100vh - 56px);}
+.proj-sidebar{order:2;border-left:1px solid var(--border);padding:1.5rem;overflow-y:auto;position:sticky;top:0;max-height:calc(100vh - 56px);background:var(--bg2);}
+.proj-sidebar::-webkit-scrollbar{width:6px;}
+.proj-sidebar::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+.proj-main{order:1;padding:1.75rem;overflow-y:auto;}
+.proj-table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:1.25rem;overflow-x:auto;}
+.proj-table{width:100%;border-collapse:collapse;font-size:0.78rem;min-width:620px;}
+.proj-table th{background:var(--bg3);padding:8px 12px;text-align:right;font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);font-weight:500;border-bottom:1px solid var(--border2);}
+.proj-table th:first-child{text-align:left;}
+.proj-table td{padding:7px 12px;text-align:right;border-bottom:1px solid var(--border);color:var(--text2);font-family:'DM Mono',monospace;font-size:0.75rem;}
+.proj-table td:first-child{text-align:left;color:var(--text2);font-family:'Geist',sans-serif;font-size:0.77rem;}
+.proj-table tr:last-child td{border-bottom:none;}
+.proj-table .row-subtotal td{background:var(--bg3);color:var(--text);font-weight:500;}
+.proj-table .row-subtotal td:first-child{color:var(--text);}
+.proj-table .row-total td{background:var(--bg4);color:var(--green);font-weight:500;}
+.proj-table .th-total{border-left:1px solid var(--border2);color:var(--accent)!important;}
+.proj-table .td-total{border-left:1px solid var(--border2);background:rgba(91,80,232,0.07);color:var(--text);font-weight:500;}
+.proj-table .yoy{font-size:0.62rem;margin-left:2px;}
+.proj-table .yoy.up{color:var(--green);}
+.proj-table .yoy.down{color:var(--red);}
+.proj-table .yoy.flat{color:var(--text3);font-size:0.5rem;vertical-align:middle;}
+.proj-table .row-total td:first-child{color:var(--text);font-weight:600;}
+.proj-table .row-indent td:first-child{padding-left:24px;font-size:0.72rem;color:var(--text3);}
+.proj-table .row-bintaro td{color:var(--amber);}
+.proj-table .row-bintaro td:first-child{color:var(--text2);}
+.proj-table .row-neg td:not(:first-child){color:var(--red);}
+.proj-table .row-cov td:not(:first-child){color:var(--teal);}
+.occ-ramp{display:flex;gap:4px;margin-top:6px;}
+.occ-pip{flex:1;height:3px;border-radius:1px;background:var(--border2);transition:background 0.2s;}
+.occ-pip.active{background:var(--accent);}
+.scenario-badge{display:inline-flex;align-items:center;gap:6px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:0.7rem;padding:6px 14px;border-radius:20px;border:1px solid var(--border2);color:var(--text2);margin-bottom:6px;cursor:pointer;user-select:none;transition:all 0.15s;}
+.scenario-badge.active{border-color:var(--accent);background:var(--accent);color:#fff;}
+.scenario-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+
+/* SUB-TABS */
+.sub-tab-nav{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:1.5rem;}
+.sub-tab-btn{font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.06em;text-transform:uppercase;padding:8px 16px;background:transparent;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;color:var(--text3);cursor:pointer;transition:color 0.15s,border-color 0.15s;white-space:nowrap;}
+.sub-tab-btn:hover{color:var(--text2);}
+.sub-tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.sub-panel{display:none;}
+.sub-panel.active{display:block;}
+
+/* PAYBACK PROGRESS */
+.payback-track{background:var(--bg3);border-radius:4px;height:10px;margin:8px 0 4px;overflow:hidden;}
+.payback-fill{height:10px;border-radius:4px;background:var(--accent);transition:width 0.4s;}
+.payback-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);font-size:0.78rem;}
+.payback-row:last-child{border-bottom:none;}
+.payback-yr{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--text3);min-width:90px;}
+.payback-bar-wrap{flex:1;background:var(--bg3);border-radius:3px;height:6px;overflow:hidden;}
+.payback-bar{height:6px;border-radius:3px;transition:width 0.3s;}
+.payback-amt{font-family:'DM Mono',monospace;font-size:0.68rem;min-width:80px;text-align:right;}
+.payback-cumamt{font-family:'DM Mono',monospace;font-size:0.68rem;min-width:85px;text-align:right;color:var(--text3);}
+.payback-status{font-size:0.65rem;min-width:70px;text-align:right;}
+
+/* CF / BS TABLE extra row types */
+.proj-table .row-spacer td{padding:3px 12px;background:var(--bg);border-bottom:none;}
+.proj-table .row-header td{background:var(--bg3);color:var(--accent);font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:500;padding:6px 12px;}
+.proj-table .row-opening td{color:var(--teal);}
+.proj-table .row-opening td:first-child{color:var(--text2);}
+.proj-table .row-asset td{color:var(--green);}
+.proj-table .row-asset td:first-child{color:var(--text2);}
+.proj-table .row-liability td{color:var(--red);}
+.proj-table .row-liability td:first-child{color:var(--text2);}
+.proj-table .row-equity td{color:var(--accent);}
+.proj-table .row-equity td:first-child{color:var(--text);}
+
+/* FOOTER */
+.footer{border-top:1px solid var(--border);padding:0.9rem 2rem;font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--text3);letter-spacing:0.05em;text-align:center;}
+@media(max-width:980px){
+  .app{grid-template-columns:1fr;}
+  .rail{position:static;height:auto;flex-direction:row;align-items:center;flex-wrap:wrap;border-right:none;border-bottom:1px solid var(--border);}
+  .rail-brand{border-bottom:none;border-right:1px solid var(--border);padding:0.9rem 1.1rem;}
+  .rail-nav{flex-direction:row;flex-wrap:wrap;flex:1;}
+  .rail-foot{border-top:none;}
+  .layout,.proj-layout,.land-layout,.build-layout{grid-template-columns:1fr;}
+  .sidebar,.proj-sidebar,.land-sidebar,.build-sidebar{order:-1;position:static;max-height:none;border-left:none;border-bottom:1px solid var(--border);}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail">
+    <div class="rail-brand">
+      <div class="rail-logo">R</div>
+      <div>
+        <h1>Redwoods Park V2</h1>
+        <p>Bintaro Project</p>
+      </div>
+    </div>
+    <nav class="rail-nav" role="tablist">
+      <button class="rail-tab active" onclick="switchTab('dashboard')" role="tab"><span class="dot"></span>Dashboard</button>
+      <button class="rail-tab" onclick="switchTab('model')" role="tab"><span class="dot"></span>Financial Model</button>
+      <button class="rail-tab" onclick="switchTab('projection')" role="tab"><span class="dot"></span>Financial Projection</button>
+      <button class="rail-tab" onclick="switchTab('land')" role="tab"><span class="dot"></span>Land Visualisation</button>
+      <button class="rail-tab" onclick="switchTab('build')" role="tab"><span class="dot"></span>Build Cost</button>
+    </nav>
+    <div class="rail-foot">
+      <button class="theme-toggle" onclick="toggleTheme()"><span id="theme-label">Light mode</span><span id="theme-icon">☀</span></button>
+    </div>
+  </aside>
+
+  <div class="content">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Dashboard<span>Financial overview</span></div>
+      <div class="header-badge">
+        <span class="hbadge">15,000 m&sup2;</span>
+        <span class="hbadge">70% office &middot; 30% retail</span>
+        <span class="hbadge" id="hbadge-build">Rp 50B build cost</span>
+      </div>
+    </div>
+
+<!-- legacy header retained but hidden -->
+<header class="header">
+  <nav class="tab-nav" role="tablist"></nav>
+</header>
+
+<!-- TAB 0: DASHBOARD (MAIN) -->
+<div id="panel-dashboard" class="tab-panel active">
+<style>
+.dash-wrap{padding:1.5rem 2rem;max-width:1280px;margin:0 auto;}
+.dash-hero{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-bottom:14px;}
+@media(max-width:880px){.dash-hero{grid-template-columns:1fr;}}
+.dash-cov{border-radius:18px;padding:1.5rem 1.7rem;border:1px solid var(--border);box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:center;transition:background .3s,border-color .3s;}
+.dash-cov.green{background:var(--green-dim);border-color:var(--green-border);}
+.dash-cov.amber{background:var(--amber-dim);border-color:var(--amber-border);}
+.dash-cov.red{background:var(--red-dim);border-color:var(--red-border);}
+.dash-cov-lbl{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;}
+.dash-cov-pct{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:3.6rem;line-height:0.95;}
+.dash-cov.green .dash-cov-pct{color:var(--green);} .dash-cov.amber .dash-cov-pct{color:var(--amber);} .dash-cov.red .dash-cov-pct{color:var(--red);}
+.dash-cov-status{font-size:0.9rem;font-weight:500;margin-top:8px;}
+.dash-cov.green .dash-cov-status{color:var(--green);} .dash-cov.amber .dash-cov-status{color:var(--amber);} .dash-cov.red .dash-cov-status{color:var(--red);}
+.dash-cov-sub{font-size:0.76rem;color:var(--text2);margin-top:4px;}
+.dash-scenario{background:var(--bg2);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);padding:1.2rem 1.4rem;}
+.dash-scenario-lbl{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;}
+.dash-pill{display:inline-block;font-family:'DM Mono',monospace;font-size:0.85rem;padding:6px 16px;border-radius:3px;border:1px solid var(--accent);color:var(--accent);margin-bottom:12px;text-transform:capitalize;}
+.dash-assum{display:flex;flex-direction:column;gap:7px;}
+.dash-assum-row{display:flex;justify-content:space-between;font-size:0.78rem;border-bottom:1px solid var(--border);padding-bottom:6px;}
+.dash-assum-row:last-child{border-bottom:none;}
+.dash-assum-row .k{color:var(--text2);} .dash-assum-row .v{font-family:'DM Mono',monospace;color:var(--text);font-weight:500;}
+.dash-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px;}
+.dash-kpi{background:var(--bg2);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:1rem 1.1rem;position:relative;overflow:hidden;}
+.dash-kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);opacity:0.5;}
+.dash-kpi.k-green::before{background:var(--green);} .dash-kpi.k-amber::before{background:var(--amber);} .dash-kpi.k-teal::before{background:var(--teal);} .dash-kpi.k-red::before{background:var(--red);}
+.dash-kpi-lbl{font-size:0.66rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;font-family:'DM Mono',monospace;margin-bottom:6px;}
+.dash-kpi-val{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:1.7rem;line-height:1.05;color:var(--text);}
+.dash-kpi-val.green{color:var(--green);} .dash-kpi-val.amber{color:var(--amber);} .dash-kpi-val.teal{color:var(--teal);} .dash-kpi-val.red{color:var(--red);}
+.dash-kpi-sub{font-size:0.68rem;color:var(--text3);margin-top:4px;}
+.dash-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+@media(max-width:880px){.dash-cols{grid-template-columns:1fr;}}
+.dash-card{background:var(--bg2);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);padding:1.2rem 1.4rem;}
+.dash-card-title{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.09em;text-transform:uppercase;color:var(--text3);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.dash-card-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.dash-mixbar{display:flex;height:30px;border-radius:5px;overflow:hidden;background:var(--bg3);margin-bottom:12px;}
+.dash-mixseg{display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.62rem;text-transform:uppercase;letter-spacing:0.05em;color:rgba(14,15,14,0.78);font-weight:500;transition:width .4s;white-space:nowrap;overflow:hidden;}
+.dash-mixseg.o{background:var(--green);} .dash-mixseg.r{background:var(--teal);}
+.dash-mixrow{display:flex;align-items:center;gap:8px;font-size:0.78rem;color:var(--text2);margin-bottom:6px;}
+.dash-mixdot{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+.dash-mixdot.o{background:var(--green);} .dash-mixdot.r{background:var(--teal);}
+.dash-mixrow .k{flex:1;} .dash-mixrow .v{font-family:'DM Mono',monospace;color:var(--text);font-weight:500;}
+.dash-flow{display:flex;flex-direction:column;gap:9px;}
+.dash-flow-row{display:flex;align-items:center;gap:10px;font-size:0.8rem;}
+.dash-flow-row .k{min-width:130px;color:var(--text2);}
+.dash-flow-bar-wrap{flex:1;height:14px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.dash-flow-bar{height:14px;border-radius:3px;transition:width .4s;}
+.dash-flow-row .v{font-family:'DM Mono',monospace;font-size:0.74rem;min-width:88px;text-align:right;color:var(--text);font-weight:500;}
+.dash-note{font-size:0.72rem;color:var(--text3);line-height:1.5;margin-top:4px;}
+.dash-outlook{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;}
+.dash-foot{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--text3);text-align:center;margin-top:6px;letter-spacing:0.04em;}
+</style>
+<div class="dash-wrap">
+
+  <!-- HERO: coverage + scenario/assumptions -->
+  <div class="dash-hero">
+    <div class="dash-cov green" id="dash-cov">
+      <div class="dash-cov-lbl">Land benchmark coverage &mdash; Year 1</div>
+      <div class="dash-cov-pct" id="dash-cov-pct">&mdash;</div>
+      <div class="dash-cov-status" id="dash-cov-status">&mdash;</div>
+      <div class="dash-cov-sub" id="dash-cov-sub">&mdash;</div>
+    </div>
+    <div class="dash-scenario">
+      <div class="dash-scenario-lbl">Active scenario &amp; key assumptions</div>
+      <div class="scenario-row" style="margin-bottom:12px;">
+        <div class="scenario-badge" id="dfs-low" onclick="setFinScenario('low')">Low</div>
+        <div class="scenario-badge active" id="dfs-mid" onclick="setFinScenario('mid')">Mid</div>
+        <div class="scenario-badge" id="dfs-high" onclick="setFinScenario('high')">High</div>
+      </div>
+      <div class="dash-assum">
+        <div class="dash-assum-row"><span class="k">Land developed</span><span class="v" id="dash-a-dev">&mdash;</span></div>
+        <div class="dash-assum-row"><span class="k">Office / retail rent</span><span class="v" id="dash-a-rent">&mdash;</span></div>
+        <div class="dash-assum-row"><span class="k">Office / retail occupancy</span><span class="v" id="dash-a-occ">&mdash;</span></div>
+        <div class="dash-assum-row"><span class="k">Opex ratio / profit share</span><span class="v" id="dash-a-cost">&mdash;</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEADLINE KPIs -->
+  <div class="dash-kpis">
+    <div class="dash-kpi k-green"><div class="dash-kpi-lbl">Gross revenue / yr</div><div class="dash-kpi-val green" id="dash-k-rev">&mdash;</div><div class="dash-kpi-sub">all streams, Year 1</div></div>
+    <div class="dash-kpi k-amber"><div class="dash-kpi-lbl">Redwoods net / yr</div><div class="dash-kpi-val amber" id="dash-k-rw">&mdash;</div><div class="dash-kpi-sub" id="dash-k-rw-sub">bottom line</div></div>
+    <div class="dash-kpi k-teal"><div class="dash-kpi-lbl">Profit share to Bintaro</div><div class="dash-kpi-val teal" id="dash-k-ps">&mdash;</div><div class="dash-kpi-sub" id="dash-k-ps-sub">&mdash;</div></div>
+    <div class="dash-kpi"><div class="dash-kpi-lbl">Build cost payback</div><div class="dash-kpi-val" id="dash-k-payback">&mdash;</div><div class="dash-kpi-sub" id="dash-k-payback-sub">&mdash;</div></div>
+  </div>
+
+  <div class="dash-cols">
+    <!-- Annual economics flow -->
+    <div class="dash-card">
+      <div class="dash-card-title">Year 1 economics</div>
+      <div class="dash-flow">
+        <div class="dash-flow-row"><span class="k">Gross revenue</span><div class="dash-flow-bar-wrap"><div class="dash-flow-bar" id="dash-f-rev" style="background:var(--green);width:100%;"></div></div><span class="v" id="dash-f-rev-v">&mdash;</span></div>
+        <div class="dash-flow-row"><span class="k">Operating expenses</span><div class="dash-flow-bar-wrap"><div class="dash-flow-bar" id="dash-f-opex" style="background:var(--red);"></div></div><span class="v" id="dash-f-opex-v">&mdash;</span></div>
+        <div class="dash-flow-row"><span class="k">Profit share out</span><div class="dash-flow-bar-wrap"><div class="dash-flow-bar" id="dash-f-ps" style="background:var(--amber);"></div></div><span class="v" id="dash-f-ps-v">&mdash;</span></div>
+        <div class="dash-flow-row"><span class="k">Redwoods net</span><div class="dash-flow-bar-wrap"><div class="dash-flow-bar" id="dash-f-rw" style="background:var(--accent);"></div></div><span class="v" id="dash-f-rw-v">&mdash;</span></div>
+      </div>
+      <div class="dash-note" id="dash-margin-note">&mdash;</div>
+    </div>
+
+    <!-- Office vs retail mix -->
+    <div class="dash-card">
+      <div class="dash-card-title">Office vs commercial mix</div>
+      <div style="font-size:0.66rem;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">By developed area</div>
+      <div class="dash-mixbar"><div class="dash-mixseg o" id="dash-mix-area-o">office</div><div class="dash-mixseg r" id="dash-mix-area-r">retail</div></div>
+      <div style="font-size:0.66rem;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">By revenue</div>
+      <div class="dash-mixbar"><div class="dash-mixseg o" id="dash-mix-rev-o">office</div><div class="dash-mixseg r" id="dash-mix-rev-r">retail</div></div>
+      <div class="dash-mixrow"><span class="dash-mixdot o"></span><span class="k">Office / workspace</span><span class="v" id="dash-mix-o-rev">&mdash;</span></div>
+      <div class="dash-mixrow"><span class="dash-mixdot r"></span><span class="k">Commercial (retail)</span><span class="v" id="dash-mix-r-rev">&mdash;</span></div>
+    </div>
+  </div>
+
+  <!-- Revenue waterfall (by year) + mini land map -->
+  <div class="dash-cols">
+    <div class="dash-card">
+      <div class="dash-card-title" style="justify-content:flex-start;gap:12px;">Revenue waterfall
+        <select id="dash-wf-year" onchange="renderDashboard()" style="flex:none;background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:3px;padding:3px 8px;font-size:0.68rem;font-family:'DM Mono',monospace;cursor:pointer;text-transform:none;letter-spacing:0;"></select>
+      </div>
+      <div class="chart-legend" style="margin-bottom:8px;">
+        <div class="leg-item"><div class="leg-dot" style="background:#4caf82;"></div>Revenue in</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#d45c4b;"></div>Deductions</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#5b50e8;"></div>Redwoods net</div>
+      </div>
+      <div style="position:relative;height:230px;"><canvas id="dash-wf-canvas" role="img" aria-label="Revenue waterfall by year">Waterfall</canvas></div>
+      <div class="dash-note" id="dash-wf-note" style="margin-top:8px;">&mdash;</div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-title" style="justify-content:space-between;">Land plan
+        <span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--text3);letter-spacing:0.04em;cursor:pointer;text-transform:none;" onclick="switchTab('land')">open full map →</span>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px;">
+        <canvas id="dash-land-canvas" height="300" style="display:block;width:100%;cursor:pointer;" onclick="switchTab('land')"></canvas>
+      </div>
+      <div class="dash-mixrow" style="margin-top:10px;"><span class="dash-mixdot" style="background:var(--accent);"></span><span class="k">Developed / commercialized</span><span class="v" id="dash-land-dev">&mdash;</span></div>
+      <div class="dash-mixrow"><span class="dash-mixdot" style="background:rgba(120,160,90,0.6);"></span><span class="k">Open space / park</span><span class="v" id="dash-land-open">&mdash;</span></div>
+    </div>
+  </div>
+
+  <!-- 10-year outlook -->
+  <div class="dash-card">
+    <div class="dash-card-title">10-year outlook</div>
+    <div class="dash-outlook">
+      <div class="dash-kpi k-green" style="background:var(--bg3);"><div class="dash-kpi-lbl">Cum. revenue</div><div class="dash-kpi-val green" id="dash-o-rev">&mdash;</div><div class="dash-kpi-sub">all streams, 10 yr</div></div>
+      <div class="dash-kpi k-amber" style="background:var(--bg3);"><div class="dash-kpi-lbl">Cum. Redwoods net</div><div class="dash-kpi-val amber" id="dash-o-rw">&mdash;</div><div class="dash-kpi-sub">after opex + share</div></div>
+      <div class="dash-kpi k-teal" style="background:var(--bg3);"><div class="dash-kpi-lbl">Cum. to Bintaro</div><div class="dash-kpi-val teal" id="dash-o-ps">&mdash;</div><div class="dash-kpi-sub">profit share, 10 yr</div></div>
+      <div class="dash-kpi" style="background:var(--bg3);"><div class="dash-kpi-lbl">Stabilised coverage</div><div class="dash-kpi-val" id="dash-o-cov">&mdash;</div><div class="dash-kpi-sub">Year 10 vs benchmark</div></div>
+    </div>
+    <div class="dash-note" id="dash-outlook-note" style="margin-top:12px;">&mdash;</div>
+  </div>
+
+  <div class="dash-foot">Live summary &middot; updates with every assumption &middot; Rp 6.75 B land benchmark &middot; All figures IDR</div>
+</div>
+</div>
+
+<!-- TAB 1: FINANCIAL MODEL -->
+<div id="panel-model" class="tab-panel">
+<div class="layout">
+  <aside class="sidebar">
+    <div class="s-group">
+      <div class="s-group-title">Land development &mdash; master</div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Commercialized / developed</span><span class="s-val" id="lbl-dev">75%</span></div>
+        <input type="range" min="20" max="100" step="5" value="75" id="sl-dev">
+        <div class="s-note"><span id="dev-developed-m">&mdash;</span> built &middot; <span id="dev-open-m">&mdash;</span> open space</div>
+      </div>
+      <div class="s-note" style="margin-top:2px;line-height:1.5;">Share of the 15,000 m&sup2; turned into leasable commercial GFA. The remainder stays as park / open space and earns no rent. All revenue, occupancy and profit-share figures scale off the developed area.</div>
+    </div>
+    <div class="s-group">
+      <div class="s-group-title">Financial scenario &mdash; master</div>
+      <div class="scenario-row">
+        <div class="scenario-badge" id="fs-low" onclick="setFinScenario('low')">Low</div>
+        <div class="scenario-badge active" id="fs-mid" onclick="setFinScenario('mid')">Mid</div>
+        <div class="scenario-badge" id="fs-high" onclick="setFinScenario('high')">High</div>
+      </div>
+      <div class="s-note" style="line-height:1.5;"><span id="fs-detail">Market-baseline assumptions.</span> Sets occupancy, rents, service charge and opex across every tab. The sliders below move with it — fine-tune any of them afterward.</div>
+    </div>
+    <div class="s-group">
+      <div class="s-group-title">Rent rates / m&sup2; / month</div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Office rent</span><span class="s-val" id="lbl-off">&mdash;</span></div>
+        <input type="range" min="100000" max="1000000" step="25000" value="150000" id="sl-off">
+        <div class="s-note">Bintaro avg Rp 90k&ndash;175k &nbsp;<span class="s-tag" id="tag-off">&mdash;</span></div>
+      </div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Retail rent</span><span class="s-val" id="lbl-ret">&mdash;</span></div>
+        <input type="range" min="100000" max="1000000" step="25000" value="150000" id="sl-ret">
+        <div class="s-note">Bintaro avg Rp 90k&ndash;175k &nbsp;<span class="s-tag" id="tag-ret">&mdash;</span></div>
+      </div>
+    </div>
+    <div class="s-group">
+      <div class="s-group-title">Service charge / m&sup2; / month</div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Office SC</span><span class="s-val" id="lbl-sc-off">&mdash;</span></div>
+        <input type="range" min="50000" max="100000" step="5000" value="55000" id="sl-sc-off">
+        <div class="s-note">Bintaro avg Rp 50k&ndash;60k &nbsp;<span class="s-tag" id="tag-sc-off">&mdash;</span></div>
+      </div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Retail SC</span><span class="s-val" id="lbl-sc-ret">&mdash;</span></div>
+        <input type="range" min="50000" max="100000" step="5000" value="55000" id="sl-sc-ret">
+        <div class="s-note">Bintaro avg Rp 50k&ndash;60k &nbsp;<span class="s-tag" id="tag-sc-ret">&mdash;</span></div>
+      </div>
+    </div>
+    <div class="s-group">
+      <div class="s-group-title">Occupancy &amp; other revenue</div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Office occupancy</span><span class="s-val" id="lbl-occ-off">85%</span></div>
+        <input type="range" min="50" max="100" step="5" value="85" id="sl-occ-off">
+      </div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Retail occupancy</span><span class="s-val" id="lbl-occ-ret">80%</span></div>
+        <input type="range" min="50" max="100" step="5" value="80" id="sl-occ-ret">
+      </div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Membership revenue /yr</span><span class="s-val" id="lbl-mem">Rp 0 B</span></div>
+        <input type="range" min="0" max="8" step="0.5" value="0" id="sl-mem">
+      </div>
+    </div>
+    <div class="s-group">
+      <div class="s-group-title">Cost &amp; profit sharing</div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Operating cost ratio</span><span class="s-val" id="lbl-opex">40%</span></div>
+        <input type="range" min="25" max="60" step="5" value="40" id="sl-opex">
+      </div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Profit share to Bintaro</span><span class="s-val" id="lbl-ps">32%</span></div>
+        <input type="range" min="25" max="50" step="1" value="32" id="sl-ps">
+      </div>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="coverage-strip green" id="cov-strip">
+      <div><div class="cov-main" id="cov-text">&mdash;</div><div class="cov-sub" id="cov-sub">&mdash;</div></div>
+      <div class="cov-pct" id="cov-pct">&mdash;</div>
+    </div>
+    <div class="bar-wrap">
+      <div class="bar-track"><div class="bar-fill" id="bar-fill" style="width:0%;background:var(--green);"></div></div>
+      <div class="bar-labels"><span>Rp 0</span><span><span class="bench-label">Rp 6.75 B</span> target</span><span id="bar-max">&mdash;</span></div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-label">Gross revenue</div><div class="kpi-val" id="kpi-gross">&mdash;</div><div class="kpi-sub">rent + SC + membership</div></div>
+      <div class="kpi"><div class="kpi-label">Net profit</div><div class="kpi-val" id="kpi-net">&mdash;</div><div class="kpi-sub">after opex</div></div>
+      <div class="kpi"><div class="kpi-label">Profit share out</div><div class="kpi-val" id="kpi-ps">&mdash;</div><div class="kpi-sub" id="kpi-ps-sub">&mdash;</div></div>
+      <div class="kpi"><div class="kpi-label">Redwoods keeps</div><div class="kpi-val amber" id="kpi-rw">&mdash;</div><div class="kpi-sub">bottom line</div></div>
+    </div>
+    <div class="section-title">Effective rates &amp; sample tenant pricing</div>
+    <div class="pricing-card">
+      <div class="pricing-row divider"><span>Office</span></div>
+      <div class="pricing-row"><span class="pr-label">Rent /m&sup2;/month</span><span class="pr-val" id="p-off-mo">&mdash;</span></div>
+      <div class="pricing-row"><span class="pr-label">Service charge /m&sup2;/month</span><span class="pr-val" id="p-sc-off">&mdash;</span></div>
+      <div class="pricing-row highlight"><span class="pr-label">All-in /m&sup2;/month</span><span class="pr-val accent" id="p-off-allin">&mdash;</span></div>
+      <div class="pricing-row"><span class="pr-label">Hot desk (6m&sup2;) /month</span><span class="pr-val" id="p-hotdesk">&mdash;</span></div>
+      <div class="pricing-row"><span class="pr-label">Private suite S (25m&sup2;) /month</span><span class="pr-val" id="p-pvt-s">&mdash;</span></div>
+      <div class="pricing-row"><span class="pr-label">Private suite M (50m&sup2;) /month</span><span class="pr-val" id="p-pvt-m">&mdash;</span></div>
+      <div class="pricing-row"><span class="pr-label">Half-floor (250m&sup2;) /month</span><span class="pr-val" id="p-floor">&mdash;</span></div>
+      <div class="pricing-row"><span class="pr-label">Library seat (4m&sup2;) /month</span><span class="pr-val" id="p-lib">&mdash;</span></div>
+      <div class="pricing-row divider"><span>Retail</span></div>
+      <div class="pricing-row"><span class="pr-label">Rent /m&sup2;/month</span><span class="pr-val" id="p-ret-mo">&mdash;</span></div>
+      <div class="pricing-row"><span class="pr-label">Service charge /m&sup2;/month</span><span class="pr-val" id="p-sc-ret">&mdash;</span></div>
+      <div class="pricing-row highlight"><span class="pr-label">All-in /m&sup2;/month</span><span class="pr-val accent" id="p-ret-allin">&mdash;</span></div>
+      <div class="pricing-row"><span class="pr-label">Caf&eacute; / kopi (40m&sup2;) /month</span><span class="pr-val" id="p-cafe">&mdash;</span></div>
+      <div class="pricing-row"><span class="pr-label">Restaurant (200m&sup2;) /month</span><span class="pr-val" id="p-resto">&mdash;</span></div>
+      <div class="pricing-row"><span class="pr-label">Mini mart (60m&sup2;) /month</span><span class="pr-val" id="p-mart">&mdash;</span></div>
+      <div class="pricing-row"><span class="pr-label">Boutique shop (30m&sup2;) /month</span><span class="pr-val" id="p-boutique">&mdash;</span></div>
+      <div class="pricing-row"><span class="pr-label">Salon / beauty (35m&sup2;) /month</span><span class="pr-val" id="p-salon">&mdash;</span></div>
+      <div class="pricing-row"><span class="pr-label">Pharmacy / clinic (50m&sup2;) /month</span><span class="pr-val" id="p-pharma">&mdash;</span></div>
+      <div class="pricing-row divider"><span>Service charge total</span></div>
+      <div class="pricing-row highlight"><span class="pr-label">Total SC revenue /yr</span><span class="pr-val accent" id="p-sc-total">&mdash;</span></div>
+    </div>
+    <div class="mem-box" id="mem-box">
+      <div class="mem-box-label">Members needed (equal mix Basic / Pro / Premium)</div>
+      <div class="mem-box-val" id="mem-total">&mdash;</div>
+      <div class="mem-box-sub">Basic Rp 350k &middot; Pro Rp 850k &middot; Premium Rp 1.75 jt /month</div>
+    </div>
+    <div class="section-title" style="margin-top:1.25rem;">Profit &amp; loss &mdash; annual</div>
+    <div class="kpi-grid" style="margin-bottom:0.9rem;">
+      <div class="kpi"><div class="kpi-label">Total revenue</div><div class="kpi-val green" id="kpi-rev">&mdash;</div><div class="kpi-sub">all streams</div></div>
+      <div class="kpi"><div class="kpi-label">Total costs out</div><div class="kpi-val" style="color:var(--red)" id="kpi-costs">&mdash;</div><div class="kpi-sub">opex + profit share</div></div>
+      <div class="kpi"><div class="kpi-label">Redwoods net</div><div class="kpi-val amber" id="kpi-rw2">&mdash;</div><div class="kpi-sub">bottom line</div></div>
+      <div class="kpi"><div class="kpi-label">Net margin</div><div class="kpi-val" id="kpi-margin">&mdash;</div><div class="kpi-sub">of total revenue</div></div>
+    </div>
+    <div class="pnl-card">
+      <div class="pnl-row subtotal"><span class="pnl-label">Revenue</span><span class="pnl-amount"></span></div>
+      <div class="pnl-row indent"><span class="pnl-label">Office rent</span><span class="pnl-amount pos" id="pnl-off">&mdash;</span></div>
+      <div class="pnl-row indent"><span class="pnl-label">Retail rent</span><span class="pnl-amount pos" id="pnl-ret">&mdash;</span></div>
+      <div class="pnl-row indent"><span class="pnl-label">Office service charge</span><span class="pnl-amount pos" id="pnl-sc-off">&mdash;</span></div>
+      <div class="pnl-row indent"><span class="pnl-label">Retail service charge</span><span class="pnl-amount pos" id="pnl-sc-ret">&mdash;</span></div>
+      <div class="pnl-row indent"><span class="pnl-label">Membership fees</span><span class="pnl-amount pos" id="pnl-mem">&mdash;</span></div>
+      <div class="pnl-row subtotal"><span class="pnl-label">Gross revenue</span><span class="pnl-amount pos" id="pnl-gross">&mdash;</span></div>
+      <div class="pnl-row subtotal"><span class="pnl-label">Operating expenses</span><span class="pnl-amount"></span></div>
+      <div class="pnl-row indent"><span class="pnl-label">Staff &amp; management (40%)</span><span class="pnl-amount neg" id="pnl-staff">&mdash;</span></div>
+      <div class="pnl-row indent"><span class="pnl-label">Maintenance &amp; utilities (30%)</span><span class="pnl-amount neg" id="pnl-maint">&mdash;</span></div>
+      <div class="pnl-row indent"><span class="pnl-label">Marketing &amp; programs (20%)</span><span class="pnl-amount neg" id="pnl-mktg">&mdash;</span></div>
+      <div class="pnl-row indent"><span class="pnl-label">Admin &amp; misc (10%)</span><span class="pnl-amount neg" id="pnl-admin">&mdash;</span></div>
+      <div class="pnl-row subtotal"><span class="pnl-label">Total opex</span><span class="pnl-amount neg" id="pnl-opex">&mdash;</span></div>
+      <div class="pnl-row subtotal"><span class="pnl-label">Net profit (before sharing)</span><span class="pnl-amount" id="pnl-net-b">&mdash;</span></div>
+      <div class="pnl-row indent"><span class="pnl-label">Profit share to Bintaro (<span id="pnl-ps-pct">&mdash;</span>%)</span><span class="pnl-amount neg" id="pnl-ps-out">&mdash;</span></div>
+      <div class="pnl-row indent"><span class="pnl-label">Land benchmark (<span id="pnl-bench-rate">Rp 450k</span> &times; 15,000 m&sup2;)</span><span class="pnl-amount muted bench-label">Rp 6.75 B</span></div>
+      <div class="pnl-row indent"><span class="pnl-label">Coverage surplus / (shortfall)</span><span class="pnl-amount" id="pnl-surplus">&mdash;</span></div>
+      <div class="pnl-row total-row"><span class="pnl-label">Redwoods net profit</span><span class="pnl-amount" id="pnl-rw">&mdash;</span></div>
+    </div>
+    <div class="section-title">Revenue waterfall</div>
+    <div class="chart-wrap">
+      <div class="chart-legend">
+        <div class="leg-item"><div class="leg-dot" style="background:#4caf82;"></div>Revenue</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#4bafd4;"></div>Service charge</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#d45c4b;"></div>Costs</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#5b50e8;"></div>Redwoods net</div>
+      </div>
+      <div style="position:relative;height:250px;"><canvas id="chart-model" role="img" aria-label="P&L waterfall chart">P&amp;L waterfall</canvas></div>
+    </div>
+  </main>
+</div>
+</div>
+
+<!-- TAB 2: FINANCIAL PROJECTION -->
+<div id="panel-projection" class="tab-panel">
+<div class="proj-layout">
+  <aside class="proj-sidebar">
+    <div class="s-group">
+      <div class="s-group-title">Projection assumptions</div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Build cost (total)</span><span class="s-val" id="p-lbl-build">50 B</span></div>
+        <div class="s-note" style="margin-top:2px;line-height:1.5;">Synced from the Build Cost tab. Adjust the cost/m² there to update payback, cash flow and the balance sheet.</div>
+      </div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Opening year</span><span class="s-val" id="p-lbl-openyr">2026</span></div>
+        <input type="range" min="2025" max="2030" step="1" value="2026" id="p-sl-openyr">
+      </div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Annual rent escalation</span><span class="s-val" id="p-lbl-esc">5%</span></div>
+        <input type="range" min="0" max="15" step="1" value="5" id="p-sl-esc">
+      </div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Annual opex growth</span><span class="s-val" id="p-lbl-opexg">3%</span></div>
+        <input type="range" min="0" max="10" step="1" value="3" id="p-sl-opexg">
+      </div>
+    </div>
+    <div class="s-group">
+      <div class="s-group-title">Year 1 base rates</div>
+      <div style="font-size:0.68rem;color:var(--text3);line-height:1.6;margin-top:2px;">Synced from Financial Model tab. Adjust sliders there to update projections here.</div>
+    </div>
+    <div class="s-group">
+      <div class="s-group-title">Occupancy ramp-up</div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Year 1 occupancy</span><span class="s-val" id="p-lbl-occ1">60%</span></div>
+        <input type="range" min="30" max="100" step="5" value="60" id="p-sl-occ1">
+      </div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Stabilised occ. (Yr 3+)</span><span class="s-val" id="p-lbl-occS">85%</span></div>
+        <input type="range" min="50" max="100" step="5" value="85" id="p-sl-occS">
+      </div>
+      <div class="occ-ramp">
+        <div class="occ-pip active" id="occ-pip-1"></div>
+        <div class="occ-pip" id="occ-pip-2"></div>
+        <div class="occ-pip" id="occ-pip-3"></div>
+        <div class="occ-pip" id="occ-pip-4"></div>
+        <div class="occ-pip" id="occ-pip-5"></div>
+        <div class="occ-pip" id="occ-pip-6"></div>
+        <div class="occ-pip" id="occ-pip-7"></div>
+        <div class="occ-pip" id="occ-pip-8"></div>
+        <div class="occ-pip" id="occ-pip-9"></div>
+        <div class="occ-pip" id="occ-pip-10"></div>
+      </div>
+      <div style="font-size:0.65rem;color:var(--text3);margin-top:4px;">Yr 1 &rarr; ramp &rarr; stabilised from Yr 3</div>
+    </div>
+    <div class="s-group">
+      <div class="s-group-title">Scenario</div>
+      <div class="scenario-row">
+        <div class="scenario-badge active" id="sc-base" onclick="setScenario('base')">Base</div>
+        <div class="scenario-badge" id="sc-bear" onclick="setScenario('bear')">Bear</div>
+        <div class="scenario-badge" id="sc-bull" onclick="setScenario('bull')">Bull</div>
+      </div>
+      <div style="font-size:0.67rem;color:var(--text3);line-height:1.6;"><span id="sc-desc">Standard assumptions as set above.</span></div>
+    </div>
+  </aside>
+  <main class="proj-main">
+    <!-- Summary KPIs always visible -->
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-label">10-yr cum. revenue</div><div class="kpi-val green" id="pk-cumrev">&mdash;</div><div class="kpi-sub">all streams</div></div>
+      <div class="kpi"><div class="kpi-label">10-yr cum. Redwoods net</div><div class="kpi-val amber" id="pk-cumrw">&mdash;</div><div class="kpi-sub">after opex + share</div></div>
+      <div class="kpi"><div class="kpi-label">10-yr cum. profit share</div><div class="kpi-val" id="pk-cumps">&mdash;</div><div class="kpi-sub">to Bintaro</div></div>
+      <div class="kpi"><div class="kpi-label">Build cost payback</div><div class="kpi-val" id="pk-payback">&mdash;</div><div class="kpi-sub">at Rp <span id="pk-build-lbl">50</span>B cost</div></div>
+    </div>
+
+    <!-- SUB-TAB NAV -->
+    <div class="sub-tab-nav">
+      <button class="sub-tab-btn active" onclick="switchSubTab('pnl')">P&amp;L</button>
+      <button class="sub-tab-btn" onclick="switchSubTab('cashflow')">Cash Flow</button>
+      <button class="sub-tab-btn" onclick="switchSubTab('balance')">Balance Sheet</button>
+      <button class="sub-tab-btn" onclick="switchSubTab('payback')">Build Cost Payback</button>
+    </div>
+
+    <!-- SUB-PANEL: P&L -->
+    <div id="sub-pnl" class="sub-panel active">
+      <div class="section-title" style="margin-top:0;">10-year revenue &amp; profitability</div>
+      <div class="chart-wrap">
+        <div class="chart-legend">
+          <div class="leg-item"><div class="leg-dot" style="background:rgba(76,175,130,0.8);"></div>Gross revenue</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#5b50e8;"></div>Redwoods net</div>
+          <div class="leg-item"><div class="leg-dot" style="background:rgba(212,168,75,0.8);"></div>Profit share (Bintaro)</div>
+        </div>
+        <div style="position:relative;height:240px;"><canvas id="chart-proj" role="img" aria-label="10-year projection chart">Projection chart</canvas></div>
+      </div>
+      <div class="section-title" style="justify-content:flex-start;gap:14px;">10-year P&amp;L detail
+        <label style="display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.04em;text-transform:none;color:var(--text2);cursor:pointer;flex:none;">
+          <input type="checkbox" id="pnl-arrows-toggle" checked onchange="calcProjection()" style="accent-color:var(--accent);width:12px;height:12px;cursor:pointer;">
+          YoY change arrows
+        </label>
+      </div>
+      <div class="proj-table-wrap">
+        <table class="proj-table">
+          <thead><tr><th>Line item</th><th id="ph-y1">&mdash;</th><th id="ph-y2">&mdash;</th><th id="ph-y3">&mdash;</th><th id="ph-y4">&mdash;</th><th id="ph-y5">&mdash;</th><th id="ph-y6">&mdash;</th><th id="ph-y7">&mdash;</th><th id="ph-y8">&mdash;</th><th id="ph-y9">&mdash;</th><th id="ph-y10">&mdash;</th><th class="th-total">10-yr total</th></tr></thead>
+          <tbody id="proj-tbody"></tbody>
+        </table>
+      </div>
+      <div class="section-title">Bintaro land coverage &mdash; year by year</div>
+      <div class="chart-wrap">
+        <div class="chart-legend">
+          <div class="leg-item"><div class="leg-dot" style="background:#4caf82;"></div>Profit share to Bintaro</div>
+          <div class="leg-item"><div class="leg-dot" style="background:rgba(255,255,255,0.2);border:1px dashed rgba(255,255,255,0.3);"></div><span class="bench-label">Rp 6.75 B</span> benchmark</div>
+        </div>
+        <div style="position:relative;height:200px;"><canvas id="chart-cov" role="img" aria-label="Year-by-year coverage chart">Coverage chart</canvas></div>
+      </div>
+    </div>
+
+    <!-- SUB-PANEL: CASH FLOW -->
+    <div id="sub-cashflow" class="sub-panel">
+      <div class="section-title" style="margin-top:0;">10-year cash flow statement</div>
+      <div class="chart-wrap">
+        <div class="chart-legend">
+          <div class="leg-item"><div class="leg-dot" style="background:#4caf82;"></div>Operating cash inflow</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#d45c4b;"></div>Cash outflows</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#5b50e8;"></div>Net free cash flow</div>
+        </div>
+        <div style="position:relative;height:240px;"><canvas id="chart-cf" role="img" aria-label="Cash flow chart">Cash flow chart</canvas></div>
+      </div>
+      <div class="section-title">Cash flow detail</div>
+      <div class="proj-table-wrap">
+        <table class="proj-table">
+          <thead><tr><th>Line item</th><th id="cf-y1">&mdash;</th><th id="cf-y2">&mdash;</th><th id="cf-y3">&mdash;</th><th id="cf-y4">&mdash;</th><th id="cf-y5">&mdash;</th><th id="cf-y6">&mdash;</th><th id="cf-y7">&mdash;</th><th id="cf-y8">&mdash;</th><th id="cf-y9">&mdash;</th><th id="cf-y10">&mdash;</th></tr></thead>
+          <tbody id="cf-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SUB-PANEL: BALANCE SHEET -->
+    <div id="sub-balance" class="sub-panel">
+      <div class="section-title" style="margin-top:0;">10-year balance sheet</div>
+      <div class="chart-wrap">
+        <div class="chart-legend">
+          <div class="leg-item"><div class="leg-dot" style="background:#4caf82;"></div>Total assets</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#d45c4b;"></div>Total liabilities</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#5b50e8;"></div>Net equity</div>
+        </div>
+        <div style="position:relative;height:240px;"><canvas id="chart-bs" role="img" aria-label="Balance sheet chart">Balance sheet chart</canvas></div>
+      </div>
+      <div class="section-title">Balance sheet detail</div>
+      <div class="proj-table-wrap">
+        <table class="proj-table">
+          <thead><tr><th>Line item</th><th id="bs-y1">&mdash;</th><th id="bs-y2">&mdash;</th><th id="bs-y3">&mdash;</th><th id="bs-y4">&mdash;</th><th id="bs-y5">&mdash;</th><th id="bs-y6">&mdash;</th><th id="bs-y7">&mdash;</th><th id="bs-y8">&mdash;</th><th id="bs-y9">&mdash;</th><th id="bs-y10">&mdash;</th></tr></thead>
+          <tbody id="bs-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SUB-PANEL: BUILD COST PAYBACK -->
+    <div id="sub-payback" class="sub-panel">
+      <div class="section-title" style="margin-top:0;">Build cost recovery progress</div>
+      <div class="kpi-grid" style="margin-bottom:1.25rem;">
+        <div class="kpi"><div class="kpi-label">Build cost</div><div class="kpi-val" id="pbk-cost">&mdash;</div><div class="kpi-sub">total investment</div></div>
+        <div class="kpi"><div class="kpi-label">Recovered by Yr 10</div><div class="kpi-val green" id="pbk-recovered">&mdash;</div><div class="kpi-sub">cumulative net</div></div>
+        <div class="kpi"><div class="kpi-label">Remaining at Yr 10</div><div class="kpi-val" id="pbk-remaining">&mdash;</div><div class="kpi-sub">unrecovered balance</div></div>
+        <div class="kpi"><div class="kpi-label">Payback year</div><div class="kpi-val amber" id="pbk-year">&mdash;</div><div class="kpi-sub">full recovery</div></div>
+      </div>
+      <div class="chart-wrap" style="margin-bottom:1.25rem;">
+        <div class="chart-legend">
+          <div class="leg-item"><div class="leg-dot" style="background:#5b50e8;"></div>Annual Redwoods net</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#4bafd4;"></div>Cumulative recovered</div>
+          <div class="leg-item"><div class="leg-dot" style="background:rgba(255,255,255,0.15);border:1px dashed rgba(255,255,255,0.3);"></div>Build cost target</div>
+        </div>
+        <div style="position:relative;height:260px;"><canvas id="chart-pbk" role="img" aria-label="Build cost payback chart">Payback chart</canvas></div>
+      </div>
+      <div class="section-title">Year-by-year recovery detail</div>
+      <div class="pricing-card" id="payback-detail-list"></div>
+    </div>
+  </main>
+</div>
+</div>
+
+<footer class="footer">Redwoods Park V2 &mdash; Financial Dashboard &nbsp;&middot;&nbsp; Bintaro Land Project &nbsp;&middot;&nbsp; 15,000 m&sup2; &nbsp;&middot;&nbsp; All figures in IDR</footer>
+
+<script>
+const OFF_AREA=10500,RET_AREA=4500,TOTAL_LAND_M=15000;
+// Land benchmark fixed at Rp 450k/m²/yr × 15,000 m² = Rp 6.75 B (the value Bintaro's
+// profit share must cover). getLAND() kept so coverage %, surplus and charts work.
+const BENCH_RATE=450000;
+function getLAND(){return BENCH_RATE*TOTAL_LAND_M;}
+Object.defineProperty(window,'LAND',{get:getLAND});
+const $=id=>document.getElementById(id);
+// Theme-aware colors for canvas charts (read live from CSS variables)
+function cssVar(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function chartTick(){return cssVar('--text3')||'#5e6975';}
+function chartGrid(){return document.documentElement.getAttribute('data-theme')==='light'?'rgba(20,30,45,0.07)':'rgba(255,255,255,0.06)';}
+function chartTipBg(){return cssVar('--bg3')||'#1c232d';}
+function applyChartTheme(){
+  if(window.Chart){Chart.defaults.color=chartTick();Chart.defaults.borderColor=chartGrid();}
+  // Repaint existing charts
+  [chartModel,chartProj,chartCov,chartCF,chartBS,chartPBK,chartDashWF,chartBuild,(typeof chartProd!=='undefined'?chartProd:null)].forEach(c=>{
+    if(!c)return;
+    try{
+      if(c.options.scales){['x','y'].forEach(ax=>{if(c.options.scales[ax]){if(c.options.scales[ax].ticks)c.options.scales[ax].ticks.color=chartTick();if(c.options.scales[ax].grid)c.options.scales[ax].grid.color=chartGrid();}});}
+      if(c.options.plugins&&c.options.plugins.tooltip){c.options.plugins.tooltip.backgroundColor=chartTipBg();c.options.plugins.tooltip.titleColor=cssVar('--text2');c.options.plugins.tooltip.bodyColor=cssVar('--text');}
+      c.update('none');
+    }catch(e){}
+  });
+}
+// ── BUILD COST ──
+// Three tiers: total land → built area → commercialized area.
+//  • Commercialized (productive) = 15,000 m² × development ratio (drives revenue).
+//  • Park/amenity (non-productive but built) = an extra % of the commercialized area.
+//  • Built area = commercialized + park/amenity.
+// Build cost = commercialized × full rate + park/amenity × a lower park rate.
+function getCommM(){const dev=$('sl-dev')?parseInt($('sl-dev').value)/100:1;return TOTAL_LAND_M*dev;}
+function getParkPct(){return $('sl-parkpct')?parseInt($('sl-parkpct').value)/100:0;}
+function getParkM(){return getCommM()*getParkPct();}
+function getBuiltM(){return getCommM()+getParkM();}
+function getBuildRate(){return $('sl-buildrate')?parseInt($('sl-buildrate').value):4500000;}
+function getParkRate(){return $('sl-parkrate')?parseInt($('sl-parkrate').value):1500000;}
+function getBuildCost(){return getCommM()*getBuildRate()+getParkM()*getParkRate();}
+// Back-compat alias used elsewhere (developed = commercialized area)
+function getDevAreaM(){return getCommM();}
+let chartModel=null,chartProj=null,chartCov=null,chartCF=null,chartBS=null,chartPBK=null,chartDashWF=null,chartBuild=null,activeScenario='base';
+
+function fmtB(n){const a=Math.abs(n),s=n<0?'-':'';if(a>=1e9)return s+'Rp '+(a/1e9).toFixed(2)+' B';if(a>=1e6)return s+'Rp '+(a/1e6).toFixed(1)+' Jt';return s+'Rp '+Math.round(a).toLocaleString('id-ID');}
+function fmtR(n){return 'Rp '+Math.round(n).toLocaleString('id-ID');}
+function fmtNeg(n){return '('+fmtB(Math.abs(n))+')'; }
+function toB(n){return Math.round(n/1e9*100)/100;}
+
+function switchTab(tab){
+  const names=['dashboard','model','projection','land','build'];
+  const titles={dashboard:['Dashboard','Financial overview'],model:['Financial Model','Year-1 assumptions & P&L'],projection:['Financial Projection','10-year outlook'],land:['Land Visualisation','Parcels & development'],build:['Build Cost','Construction budget']};
+  document.querySelectorAll('.rail-tab').forEach((b,i)=>b.classList.toggle('active',names[i]===tab));
+  names.forEach(p=>{const el=$('panel-'+p);if(el)el.classList.toggle('active',p===tab);});
+  const t=titles[tab];if(t&&$('topbar-title'))$('topbar-title').innerHTML=t[0]+'<span>'+t[1]+'</span>';
+  if(tab==='dashboard'){calcProjection();renderDashboard();}
+  if(tab==='projection')calcProjection();
+  if(tab==='land'){setTimeout(()=>initLand(),50);}
+  if(tab==='build')calcBuild();
+}
+
+function toggleTheme(){
+  const root=document.documentElement;
+  const cur=root.getAttribute('data-theme')==='light'?'light':'dark';
+  const next=cur==='light'?'dark':'light';
+  root.setAttribute('data-theme',next);
+  if($('theme-label'))$('theme-label').textContent=(next==='light'?'Light':'Dark')+' mode';
+  if($('theme-icon'))$('theme-icon').textContent=next==='light'?'☀':'◐';
+  if(typeof applyChartTheme==='function')applyChartTheme();
+  // Repaint charts so canvas-rendered colors pick up the theme where relevant
+  if(typeof landInited!=='undefined'&&landInited&&typeof updateLand==='function'){try{updateLand();}catch(e){}}
+  if(typeof renderDashboard==='function')renderDashboard();
+}
+
+function tag(id,val,lo,hi){const el=$(id);if(!el)return;if(val<lo){el.textContent='below market';el.className='s-tag tag-below';}else if(val<=hi){el.textContent='at market';el.className='s-tag tag-within';}else{el.textContent='above market';el.className='s-tag tag-above';}}
+
+function getM(){return{offR:parseInt($('sl-off').value),retR:parseInt($('sl-ret').value),scO:parseInt($('sl-sc-off').value),scR:parseInt($('sl-sc-ret').value),occO:parseInt($('sl-occ-off').value)/100,occR:parseInt($('sl-occ-ret').value)/100,memB:parseFloat($('sl-mem').value)*1e9,opexR:parseInt($('sl-opex').value)/100,ps:parseInt($('sl-ps').value)/100,dev:($('sl-dev')?parseInt($('sl-dev').value):100)/100};}
+
+function calcModel(){
+  const{offR,retR,scO,scR,occO,occR,memB,opexR,ps,dev}=getM();
+  // Developed (commercialized) leasable area scales with the master slider.
+  const offArea=OFF_AREA*dev, retArea=RET_AREA*dev;
+  const devTotM=Math.round((OFF_AREA+RET_AREA)*dev), openTotM=Math.round((OFF_AREA+RET_AREA)*(1-dev));
+  $('lbl-dev').textContent=Math.round(dev*100)+'%';
+  if($('dev-developed-m'))$('dev-developed-m').textContent=devTotM.toLocaleString()+' m²';
+  if($('dev-open-m'))$('dev-open-m').textContent=openTotM.toLocaleString()+' m²';
+  $('lbl-off').textContent=fmtR(offR)+'/m²/mo';$('lbl-ret').textContent=fmtR(retR)+'/m²/mo';
+  $('lbl-sc-off').textContent=fmtR(scO)+'/m²/mo';$('lbl-sc-ret').textContent=fmtR(scR)+'/m²/mo';
+  $('lbl-occ-off').textContent=Math.round(occO*100)+'%';$('lbl-occ-ret').textContent=Math.round(occR*100)+'%';
+  $('lbl-mem').textContent='Rp '+parseFloat($('sl-mem').value).toFixed(1)+' B';
+  $('lbl-opex').textContent=Math.round(opexR*100)+'%';$('lbl-ps').textContent=Math.round(ps*100)+'%';
+  tag('tag-off',offR,90000,175000);tag('tag-ret',retR,90000,175000);tag('tag-sc-off',scO,50000,60000);tag('tag-sc-ret',scR,50000,60000);
+  const offRev=offArea*offR*occO*12,retRev=retArea*retR*occR*12;
+  const scOff=offArea*scO*occO*12,scRet=retArea*scR*occR*12,scTot=scOff+scRet;
+  const totRev=offRev+retRev+scOff+scRet+memB,opex=totRev*opexR,netPre=totRev-opex;
+  const psOut=netPre*ps,rwNet=netPre-psOut,surplus=psOut-LAND,covPct=(psOut/LAND)*100,margin=(rwNet/totRev)*100;
+  const staff=opex*.4,maint=opex*.3,mktg=opex*.2,admin=opex*.1;
+  const strip=$('cov-strip');$('cov-pct').textContent=Math.round(covPct)+'%';
+  if(covPct>=110){strip.className='coverage-strip green';$('cov-text').textContent='Above target — '+covPct.toFixed(0)+'% of land benchmark';$('cov-sub').textContent='Surplus of '+fmtB(surplus)+' above '+fmtB(LAND);$('bar-fill').style.background='var(--green)';}
+  else if(covPct>=95){strip.className='coverage-strip amber';$('cov-text').textContent='On target — '+covPct.toFixed(0)+'% of land benchmark';$('cov-sub').textContent=(surplus>=0?'Surplus ':' Shortfall ')+fmtB(Math.abs(surplus));$('bar-fill').style.background='var(--amber)';}
+  else{strip.className='coverage-strip red';$('cov-text').textContent='Below target — '+covPct.toFixed(0)+'% of land benchmark';$('cov-sub').textContent='Shortfall of '+fmtB(Math.abs(surplus));$('bar-fill').style.background='var(--red)';}
+  const maxBar=Math.max(psOut*1.5,LAND*1.5);$('bar-fill').style.width=Math.min(psOut/maxBar*100,100).toFixed(1)+'%';$('bar-max').textContent=fmtB(maxBar);
+  $('kpi-gross').textContent=fmtB(totRev);$('kpi-net').textContent=fmtB(netPre);$('kpi-ps').textContent=fmtB(psOut);$('kpi-ps-sub').textContent=Math.round(ps*100)+'% of net profit';$('kpi-rw').textContent=fmtB(rwNet);
+  const offAI=offR+scO,retAI=retR+scR;
+  $('p-off-mo').textContent=fmtR(offR)+'/m²/mo';$('p-sc-off').textContent=fmtR(scO)+'/m²/mo';$('p-off-allin').textContent=fmtR(offAI)+'/m²/mo';$('p-hotdesk').textContent=fmtR(offAI*6);$('p-pvt-s').textContent=fmtR(offAI*25);$('p-pvt-m').textContent=fmtR(offAI*50);$('p-floor').textContent=fmtR(offAI*250);$('p-lib').textContent=fmtR(offAI*4);
+  $('p-ret-mo').textContent=fmtR(retR)+'/m²/mo';$('p-sc-ret').textContent=fmtR(scR)+'/m²/mo';$('p-ret-allin').textContent=fmtR(retAI)+'/m²/mo';$('p-cafe').textContent=fmtR(retAI*40);$('p-resto').textContent=fmtR(retAI*200);$('p-mart').textContent=fmtR(retAI*60);$('p-boutique').textContent=fmtR(retAI*30);$('p-salon').textContent=fmtR(retAI*35);$('p-pharma').textContent=fmtR(retAI*50);$('p-sc-total').textContent=fmtB(scTot)+'/yr';
+  if(memB>0){$('mem-box').style.display='block';const avgM=(350000+850000+1750000)/3;$('mem-total').textContent=Math.ceil(memB/(avgM*12))+' members';}else{$('mem-box').style.display='none';}
+  $('kpi-rev').textContent=fmtB(totRev);$('kpi-costs').textContent=fmtB(opex+psOut);$('kpi-rw2').textContent=fmtB(rwNet);$('kpi-margin').textContent=margin.toFixed(1)+'%';
+  $('pnl-off').textContent=fmtB(offRev);$('pnl-ret').textContent=fmtB(retRev);$('pnl-sc-off').textContent=fmtB(scOff);$('pnl-sc-ret').textContent=fmtB(scRet);$('pnl-mem').textContent=memB>0?fmtB(memB):'Rp 0';$('pnl-gross').textContent=fmtB(totRev);$('pnl-staff').textContent=fmtNeg(staff);$('pnl-maint').textContent=fmtNeg(maint);$('pnl-mktg').textContent=fmtNeg(mktg);$('pnl-admin').textContent=fmtNeg(admin);$('pnl-opex').textContent=fmtNeg(opex);$('pnl-net-b').textContent=fmtB(netPre);$('pnl-ps-pct').textContent=Math.round(ps*100);$('pnl-ps-out').textContent=fmtNeg(psOut);
+  const se=$('pnl-surplus');se.textContent=surplus>=0?fmtB(surplus):fmtNeg(Math.abs(surplus));se.className='pnl-amount '+(surplus>=0?'pos':'neg');$('pnl-rw').textContent=fmtB(rwNet);
+  const cv=[toB(offRev),toB(retRev),toB(scTot),memB>0?toB(memB):null,toB(-staff),toB(-maint),toB(-mktg),toB(-admin),toB(-psOut),toB(rwNet)].filter(x=>x!==null);
+  const cl=['Off rent','Ret rent','Serv chg',memB>0?'Membership':null,'Staff','Maint','Mktg','Admin','Profit share','RW net'].filter(x=>x!==null);
+  const cc=['#4caf82','#4caf82','#4bafd4',memB>0?'#4bafd4':null,'#d45c4b','#d45c4b','#d45c4b','#d45c4b','#d45c4b','#5b50e8'].filter(x=>x!==null);
+  if(chartModel){chartModel.data.labels=cl;chartModel.data.datasets[0].data=cv;chartModel.data.datasets[0].backgroundColor=cc;chartModel.update('none');}
+  else{chartModel=new Chart($('chart-model'),{type:'bar',data:{labels:cl,datasets:[{data:cv,backgroundColor:cc,borderRadius:3,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const v=ctx.parsed.y;return(v<0?'(':'')+ ' Rp '+Math.abs(v).toFixed(2)+' B'+(v<0?')':'')}},backgroundColor:'#1e1f1c',titleColor:'#9a9890',bodyColor:'#f0ede6',borderColor:'rgba(255,255,255,0.1)',borderWidth:1}},scales:{x:{grid:{display:false},ticks:{color:'#5a5a56',font:{size:10,family:'DM Mono'},maxRotation:35,autoSkip:false}},y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#5a5a56',font:{size:10,family:'DM Mono'},callback:v=>'Rp '+v.toFixed(1)+'B'}}}}});}
+}
+
+function setScenario(s){
+  activeScenario=s;
+  ['base','bear','bull'].forEach(k=>$('sc-'+k).classList.toggle('active',k===s));
+  const desc={base:'Standard assumptions as set above.',bear:'Occupancy −15%, rent escalation halved, opex +5%. Stress test.',bull:'Occupancy +10% (capped), rent escalation +50%. Upside scenario.'};
+  $('sc-desc').textContent=desc[s];
+  calcProjection();
+}
+
+// Master financial scenario. Moves the actual input sliders (occupancy, rents,
+// service charge, opex) so the whole dashboard recomputes and the user can still
+// fine-tune afterwards. Independent of the Projection tab's Bear/Base/Bull.
+const FIN_SCENARIOS={
+  low:  {off:120000, ret:120000, scO:50000, scR:50000, occO:70, occR:65, opex:45, label:'Downside — softer rents, lower occupancy, higher opex.'},
+  mid:  {off:150000, ret:150000, scO:55000, scR:55000, occO:85, occR:80, opex:40, label:'Market-baseline assumptions.'},
+  high: {off:175000, ret:175000, scO:60000, scR:60000, occO:95, occR:90, opex:35, label:'Upside — stronger rents, high occupancy, leaner opex.'}
+};
+let activeFinScenario='mid';
+function setFinScenario(s){
+  activeFinScenario=s;
+  ['low','mid','high'].forEach(k=>{
+    const el=$('fs-'+k);if(el)el.classList.toggle('active',k===s);
+    const de=$('dfs-'+k);if(de)de.classList.toggle('active',k===s);
+  });
+  const v=FIN_SCENARIOS[s];
+  if($('fs-detail'))$('fs-detail').textContent=v.label;
+  // Move the real sliders
+  $('sl-off').value=v.off; $('sl-ret').value=v.ret;
+  $('sl-sc-off').value=v.scO; $('sl-sc-ret').value=v.scR;
+  $('sl-occ-off').value=v.occO; $('sl-occ-ret').value=v.occR;
+  $('sl-opex').value=v.opex;
+  // Recompute every tab
+  calcModel();
+  calcProjection();
+  if(typeof calcBuild==='function')calcBuild();
+  if(typeof renderDashboard==='function')renderDashboard();
+  if(typeof landInited!=='undefined'&&landInited){if(typeof occSyncOn==='function'&&occSyncOn())toggleOccSync();else updateLand();}
+}
+
+// Benchmark stays fixed at the mid land value (Rp 450k/m²/yr); kept as a helper
+// so coverage %, surplus and the coverage charts keep working.
+function refreshBenchLabels(){
+  const land=getLAND();
+  document.querySelectorAll('.bench-label').forEach(el=>el.textContent=fmtB(land));
+}
+
+// ── MAIN DASHBOARD ──
+function renderDashboard(){
+  if(!$('panel-dashboard'))return;
+  const m=getM();
+  const land=getLAND();
+  // Year-1 economics (same basis as calcModel)
+  const offArea=OFF_AREA*m.dev, retArea=RET_AREA*m.dev;
+  const offRev=offArea*m.offR*m.occO*12, retRev=retArea*m.retR*m.occR*12;
+  const scOff=offArea*m.scO*m.occO*12, scRet=retArea*m.scR*m.occR*12;
+  const totRev=offRev+retRev+scOff+scRet+m.memB;
+  const opex=totRev*m.opexR, netPre=totRev-opex;
+  const psOut=netPre*m.ps, rwNet=netPre-psOut;
+  const covPct=psOut/land*100, surplus=psOut-land, margin=totRev>0?rwNet/totRev*100:0;
+
+  // Coverage hero
+  const cov=$('dash-cov');
+  $('dash-cov-pct').textContent=Math.round(covPct)+'%';
+  if(covPct>=110){cov.className='dash-cov green';$('dash-cov-status').textContent='Above land benchmark';$('dash-cov-sub').textContent='Profit share clears the Rp '+(land/1e9).toFixed(2)+' B target with '+fmtB(surplus)+' to spare.';}
+  else if(covPct>=95){cov.className='dash-cov amber';$('dash-cov-status').textContent='On target';$('dash-cov-sub').textContent=(surplus>=0?'Surplus of ':'Shortfall of ')+fmtB(Math.abs(surplus))+' vs the Rp '+(land/1e9).toFixed(2)+' B target.';}
+  else{cov.className='dash-cov red';$('dash-cov-status').textContent='Below land benchmark';$('dash-cov-sub').textContent='Short of the Rp '+(land/1e9).toFixed(2)+' B target by '+fmtB(Math.abs(surplus))+'.';}
+
+  // Scenario + assumptions
+  // Scenario badges sync via setFinScenario; assumptions below
+  $('dash-a-dev').textContent=Math.round(m.dev*100)+'% of 15,000 m²';
+  $('dash-a-rent').textContent=fmtR(m.offR)+' / '+fmtR(m.retR);
+  $('dash-a-occ').textContent=Math.round(m.occO*100)+'% / '+Math.round(m.occR*100)+'%';
+  $('dash-a-cost').textContent=Math.round(m.opexR*100)+'% / '+Math.round(m.ps*100)+'%';
+
+  // Headline KPIs
+  $('dash-k-rev').textContent=fmtB(totRev);
+  $('dash-k-rw').textContent=fmtB(rwNet);
+  $('dash-k-rw-sub').textContent=margin.toFixed(0)+'% net margin';
+  $('dash-k-ps').textContent=fmtB(psOut);
+  $('dash-k-ps-sub').textContent=Math.round(m.ps*100)+'% of net · '+Math.round(covPct)+'% of benchmark';
+
+  // Year-1 economics flow bars (scaled to gross revenue)
+  const setBar=(id,val)=>{const el=$(id);if(el)el.style.width=(totRev>0?Math.min(Math.abs(val)/totRev*100,100):0).toFixed(1)+'%';};
+  setBar('dash-f-opex',opex);setBar('dash-f-ps',psOut);setBar('dash-f-rw',rwNet);
+  $('dash-f-rev-v').textContent=fmtB(totRev);
+  $('dash-f-opex-v').textContent=fmtNeg(opex);
+  $('dash-f-ps-v').textContent=fmtNeg(psOut);
+  $('dash-f-rw-v').textContent=fmtB(rwNet);
+  $('dash-margin-note').textContent='Of every Rp earned, Redwoods keeps '+margin.toFixed(0)+'% after operating costs and the profit share to Bintaro.';
+
+  // Office vs retail mix (developed area + revenue), via land-tab data
+  let aO=0,aR=0,rO=0,rR=0;
+  if(typeof PARCELS!=='undefined' && typeof getLandData==='function' && typeof USE_RATES!=='undefined'){
+    const {occs,uses,dev}=getLandData();
+    PARCELS.forEach(p=>{
+      const use=uses[p.id],occ=occs[p.id],rate=USE_RATES[use];
+      const da=p.area*dev, rev=da*occ*(rate.rent+rate.sc)*12;
+      if(use==='retail'){aR+=da;rR+=rev;}
+      else if(use==='mixed'){aO+=da*0.5;aR+=da*0.5;rO+=rev*0.5;rR+=rev*0.5;}
+      else{aO+=da;rO+=rev;}
+    });
+  } else {
+    // Fallback: model's fixed office/retail areas
+    aO=offArea;aR=retArea;rO=offRev+scOff;rR=retRev+scRet;
+  }
+  const aT=aO+aR||1, rT=rO+rR||1;
+  const aOp=aO/aT*100,rOp=rO/rT*100;
+  const seg=(id,pct)=>{const el=$(id);if(el){el.style.width=pct.toFixed(1)+'%';el.textContent=pct>=14?Math.round(pct)+'% office':(id.endsWith('-r')&&pct>=14?Math.round(pct)+'% retail':'');}};
+  $('dash-mix-area-o').style.width=aOp.toFixed(1)+'%';$('dash-mix-area-o').textContent=aOp>=16?Math.round(aOp)+'% office':'';
+  $('dash-mix-area-r').style.width=(100-aOp).toFixed(1)+'%';$('dash-mix-area-r').textContent=(100-aOp)>=16?Math.round(100-aOp)+'% retail':'';
+  $('dash-mix-rev-o').style.width=rOp.toFixed(1)+'%';$('dash-mix-rev-o').textContent=rOp>=16?Math.round(rOp)+'% office':'';
+  $('dash-mix-rev-r').style.width=(100-rOp).toFixed(1)+'%';$('dash-mix-rev-r').textContent=(100-rOp)>=16?Math.round(100-rOp)+'% retail':'';
+  $('dash-mix-o-rev').textContent=fmtB(rO)+'/yr';
+  $('dash-mix-r-rev').textContent=fmtB(rR)+'/yr';
+
+  // 10-year outlook from shared projection results
+  const P=window.PROJ_RESULTS;
+  if(P){
+    $('dash-o-rev').textContent=fmtB(P.cumRev);
+    $('dash-o-rw').textContent=fmtB(P.cumRw);
+    $('dash-o-ps').textContent=fmtB(P.cumPs);
+    $('dash-o-cov').textContent=Math.round(P.stabilised)+'%';
+    $('dash-k-payback').textContent=P.payback;
+    $('dash-k-payback-sub').textContent='vs '+fmtB(P.buildCost)+' build cost';
+    $('dash-outlook-note').textContent='Over 10 years from '+P.openYr+', the project is projected to generate '+fmtB(P.cumRev)+' in gross revenue, returning '+fmtB(P.cumPs)+' to Bintaro and '+fmtB(P.cumRw)+' to Redwoods, with build cost recovered by '+P.payback+'.';
+  }
+
+  renderDashWaterfall();
+  drawDashLandMap(m);
+}
+
+// Interactive revenue waterfall for the selected projection year
+function renderDashWaterfall(){
+  const P=window.PROJ_RESULTS; const sel=$('dash-wf-year');
+  if(!P||!P.data||!sel)return;
+  // Populate year dropdown once (or if count changed)
+  if(sel.options.length!==P.data.length){
+    sel.innerHTML='';
+    P.ylbls.forEach((lbl,i)=>{const o=document.createElement('option');o.value=i;o.textContent=lbl;sel.appendChild(o);});
+  }
+  let yi=parseInt(sel.value);if(isNaN(yi)||yi<0||yi>=P.data.length)yi=0;
+  const d=P.data[yi];
+  const gross=toB(d.totRev), opex=toB(d.opex), ps=toB(d.psOut), net=toB(d.rwNet);
+  // Waterfall steps: floating bars. [base, value] per bar via stacked transparent base.
+  const labels=['Gross rev','− Opex','− Profit share','Redwoods net'];
+  const afterOpex=gross-opex;
+  // base (transparent) and visible segment for each step
+  const bases=[0, afterOpex, afterOpex-ps, 0];
+  const vals =[gross, opex, ps, net];
+  const colors=['rgba(76,175,130,0.75)','rgba(212,92,75,0.7)','rgba(212,168,75,0.7)','rgba(91,80,232,0.85)'];
+  if(chartDashWF){
+    chartDashWF.data.datasets[0].data=bases;
+    chartDashWF.data.datasets[1].data=vals;
+    chartDashWF.data.datasets[1].backgroundColor=colors;
+    chartDashWF.update('none');
+  } else {
+    chartDashWF=new Chart($('dash-wf-canvas'),{type:'bar',data:{labels,datasets:[
+      {label:'_base',data:bases,backgroundColor:'rgba(0,0,0,0)',stack:'w'},
+      {label:'val',data:vals,backgroundColor:colors,borderRadius:3,stack:'w'}
+    ]},options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{filter:c=>c.datasetIndex===1,backgroundColor:'#1e1f1c',titleColor:'#9a9890',bodyColor:'#f0ede6',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,callbacks:{label:c=>' Rp '+c.parsed.y.toFixed(2)+' B'}}},
+      scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#5a5a56',font:{size:10,family:'DM Mono'}}},y:{stacked:true,grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#5a5a56',font:{size:10,family:'DM Mono'},callback:v=>'Rp '+v.toFixed(1)+'B'}}}}});
+  }
+  const marg=d.totRev>0?(d.rwNet/d.totRev*100):0;
+  $('dash-wf-note').textContent=P.ylbls[yi]+': gross '+fmtB(d.totRev)+' → less '+fmtB(d.opex)+' opex and '+fmtB(d.psOut)+' profit share → '+fmtB(d.rwNet)+' net ('+marg.toFixed(0)+'% margin).';
+}
+
+// Compact land map for the dashboard — reuses PARCELS but draws a simplified version
+function drawDashLandMap(m){
+  const canvas=$('dash-land-canvas');
+  if(!canvas||typeof PARCELS==='undefined')return;
+  const wrap=canvas.parentElement;
+  const W=wrap.clientWidth-20; const H=300;
+  canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  let occs={},uses={},dev=m.dev;
+  if(typeof getLandData==='function'){const ld=getLandData();occs=ld.occs;uses=ld.uses;dev=ld.dev;}
+  const PAD=14,scaleX=W-PAD*2,scaleY=(H-PAD*2),offX=PAD,offY=PAD;
+  let devM=0,openM=0;
+  PARCELS.forEach(p=>{
+    const occ=occs[p.id]!==undefined?occs[p.id]:0.8;
+    const scaled=p.pts.map(([nx,ny])=>[offX+nx*scaleX,offY+ny*scaleY]);
+    ctx.beginPath();scaled.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y));ctx.closePath();
+    const r=parseInt(p.color.slice(1,3),16),g=parseInt(p.color.slice(3,5),16),b=parseInt(p.color.slice(5,7),16);
+    ctx.fillStyle=`rgba(${r},${g},${b},${0.2+occ*0.6})`;ctx.fill();
+    ctx.strokeStyle=p.color;ctx.lineWidth=1.5;ctx.stroke();
+    // open-space band
+    if(dev<1){
+      const minY=Math.min(...scaled.map(([,y])=>y)),maxY=Math.max(...scaled.map(([,y])=>y));
+      const openTop=minY+(maxY-minY)*dev;
+      ctx.save();ctx.beginPath();scaled.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y));ctx.closePath();ctx.clip();
+      ctx.fillStyle='rgba(10,12,9,0.5)';ctx.fillRect(0,openTop,W,maxY-openTop);
+      ctx.strokeStyle='rgba(120,160,90,0.4)';ctx.lineWidth=1;
+      for(let i=-H;i<W+H;i+=8){ctx.beginPath();ctx.moveTo(i,openTop);ctx.lineTo(i+(maxY-openTop),maxY);ctx.stroke();}
+      ctx.restore();
+    }
+    // label
+    const cx=scaled.reduce((s,[x])=>s+x,0)/scaled.length, cy=scaled.reduce((s,[,y])=>s+y,0)/scaled.length;
+    ctx.fillStyle='#f0ede6';ctx.font='600 11px Geist,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(p.id,cx,cy-5);
+    ctx.fillStyle=occColor(occ);ctx.font='500 9px DM Mono,monospace';
+    ctx.fillText(Math.round(occ*100)+'%',cx,cy+8);
+    devM+=p.area*dev; openM+=p.area*(1-dev);
+  });
+  if($('dash-land-dev'))$('dash-land-dev').textContent=Math.round(devM).toLocaleString()+' m²';
+  if($('dash-land-open'))$('dash-land-open').textContent=Math.round(openM).toLocaleString()+' m²';
+}
+
+function switchSubTab(name){
+  document.querySelectorAll('.sub-tab-btn').forEach((b,i)=>{
+    const names=['pnl','cashflow','balance','payback'];
+    b.classList.toggle('active',names[i]===name);
+  });
+  document.querySelectorAll('.sub-panel').forEach(p=>p.classList.remove('active'));
+  const el=$('sub-'+name); if(el) el.classList.add('active');
+  // resize charts when revealed
+  setTimeout(()=>{
+    if(name==='cashflow'&&chartCF) chartCF.resize();
+    if(name==='balance'&&chartBS) chartBS.resize();
+    if(name==='payback'&&chartPBK) chartPBK.resize();
+  },50);
+}
+
+function calcProjection(){
+  const m=getM();
+  const buildCost=getBuildCost();
+  const openYr=parseInt($('p-sl-openyr').value);
+  const escBase=parseInt($('p-sl-esc').value)/100;
+  const opexG=parseInt($('p-sl-opexg').value)/100;
+  const occ1=parseInt($('p-sl-occ1').value)/100;
+  const occS=parseInt($('p-sl-occS').value)/100;
+  $('p-lbl-build').textContent=fmtB(buildCost);
+  $('p-lbl-openyr').textContent=openYr;
+  $('p-lbl-esc').textContent=Math.round(escBase*100)+'%';
+  $('p-lbl-opexg').textContent=Math.round(opexG*100)+'%';
+  $('p-lbl-occ1').textContent=Math.round(occ1*100)+'%';
+  $('p-lbl-occS').textContent=Math.round(occS*100)+'%';
+  $('pk-build-lbl').textContent=(buildCost/1e9).toFixed(1);
+  let escMod=1,occMod=0,opexMod=0;
+  if(activeScenario==='bear'){escMod=0.5;occMod=-0.15;opexMod=0.05;}
+  if(activeScenario==='bull'){escMod=1.5;occMod=0.10;opexMod=0;}
+  const esc=escBase*escMod;
+  function getOcc(yr){const raw=yr===1?occ1:yr===2?(occ1+occS)/2:occS;return Math.min(1,Math.max(0.1,raw+occMod));}
+  const years=[1,2,3,4,5,6,7,8,9,10];
+  const ylbls=years.map(y=>'Yr '+y+' ('+(openYr+y-1)+')');
+  const yshort=years.map(y=>'Yr '+(openYr+y-1));
+
+  // ── CORE DATA ──
+  const offArea=OFF_AREA*m.dev, retArea=RET_AREA*m.dev;
+  const data=years.map(yr=>{
+    const occ=getOcc(yr),rm=Math.pow(1+esc,yr-1);
+    const offR=m.offR*rm,retR=m.retR*rm,scO=m.scO*rm,scR=m.scR*rm;
+    const om=Math.pow(1+opexG,yr-1)*(1+opexMod);
+    const offRev=offArea*offR*occ*12,retRev=retArea*retR*occ*12;
+    const scOff=offArea*scO*occ*12,scRet=retArea*scR*occ*12,scTot=scOff+scRet;
+    const memB=m.memB*(yr>=2?1:0.5);
+    const totRev=offRev+retRev+scOff+scRet+memB;
+    const opex=totRev*m.opexR*om,netPre=totRev-opex;
+    const psOut=netPre*m.ps,rwNet=netPre-psOut;
+    const covPct=(psOut/LAND)*100;
+
+    // Depreciation: straight-line over 20 years
+    const depr=buildCost/20;
+    // Working capital change: Y1 build-up, stable after
+    const wcChange=yr===1?totRev*0.05:yr===2?totRev*0.02:0;
+    // CapEx: maintenance capex from Y3 (~2% of build cost)
+    const capex=yr>=3?buildCost*0.02:0;
+    // Operating cash flow = rwNet + depr - wcChange
+    const opCF=rwNet+depr-wcChange;
+    // Free cash flow = opCF - capex
+    const fcf=opCF-capex;
+
+    // Balance sheet
+    // Assets: property (build cost - accumulated depr), cash (cumulative FCF), receivables
+    const accumDepr=depr*yr;
+    const propertyNet=Math.max(0,buildCost-accumDepr);
+    const receivables=totRev*0.08; // ~1 month revenue
+    // Cash = opening + FCF (cumulative, simplified)
+    // Liabilities: sponsor loan (amortises over 10yr), deferred income
+    const sponsorLoan=Math.max(0,buildCost*(1-(yr*0.1)));
+    const deferredIncome=totRev*0.04;
+    // Equity = cumulative retained earnings
+    // These will be computed cumulatively below
+    return{yr,occ,offRev,retRev,scTot,memB,totRev,opex,netPre,psOut,rwNet,covPct,
+      staff:opex*.4,maint:opex*.3,mktg:opex*.2,admin:opex*.1,
+      depr,wcChange,capex,opCF,fcf,accumDepr,propertyNet,receivables,sponsorLoan,deferredIncome};
+  });
+
+  // Cumulative cash (starts at 0 after build)
+  let cumCash=0,cumRWNet=0;
+  data.forEach(d=>{
+    cumCash+=d.fcf;
+    cumRWNet+=d.rwNet;
+    d.cashBalance=Math.max(0,cumCash);
+    d.cumRWNet=cumRWNet;
+    d.totalAssets=d.propertyNet+d.cashBalance+d.receivables;
+    d.totalLiabilities=d.sponsorLoan+d.deferredIncome;
+    d.equity=d.totalAssets-d.totalLiabilities;
+  });
+
+  // ── PIPS ──
+  for(let i=1;i<=10;i++){const el=$('occ-pip-'+i);if(el)el.className='occ-pip'+(i<=2?' active':'');}
+  for(let i=1;i<=10;i++){const el=$('occ-pip-'+i);if(el){const o=getOcc(i);if(o>=occS*.9)el.className='occ-pip active';}}
+
+  // ── SUMMARY KPIs ──
+  const cumRev=data.reduce((a,d)=>a+d.totRev,0);
+  const cumRw=data.reduce((a,d)=>a+d.rwNet,0);
+  const cumPs=data.reduce((a,d)=>a+d.psOut,0);
+  let payback='> 10 yrs',cn=0;
+  for(const d of data){cn+=d.rwNet;if(cn>=buildCost){payback='Yr '+d.yr+' ('+(openYr+d.yr-1)+')';break;}}
+  $('pk-cumrev').textContent=fmtB(cumRev);$('pk-cumrw').textContent=fmtB(cumRw);
+  $('pk-cumps').textContent=fmtB(cumPs);$('pk-payback').textContent=payback;
+  // Share results with the Dashboard tab
+  window.PROJ_RESULTS={cumRev,cumRw,cumPs,payback,buildCost,openYr,
+    y1:data[0],y10:data[9],stabilised:data[9].covPct,data:data,ylbls:ylbls};
+  if(typeof renderDashboard==='function' && $('panel-dashboard') && $('panel-dashboard').classList.contains('active')) renderDashboard();
+
+  // ── P&L TABLE ──
+  ylbls.forEach((l,i)=>{const el=$('ph-y'+(i+1));if(el)el.textContent=l;});
+  const tbody=$('proj-tbody');tbody.innerHTML='';
+  const pnlRows=[
+    {label:'Revenue',cls:'row-subtotal',empty:true},
+    {label:'Office rent',cls:'row-indent',key:'offRev'},{label:'Retail rent',cls:'row-indent',key:'retRev'},
+    {label:'Service charge',cls:'row-indent',key:'scTot'},{label:'Membership',cls:'row-indent',key:'memB'},
+    {label:'Gross revenue',cls:'row-subtotal',key:'totRev'},
+    {label:'Opex (total)',cls:'row-neg',key:'opex'},
+    {label:'Net profit (pre-share)',cls:'row-subtotal',fn:d=>d.netPre},
+    {label:'Profit share → Bintaro',cls:'row-bintaro',key:'psOut'},
+    {label:'Land benchmark',cls:'row-indent',fn:()=>LAND,noArrow:true,noTotal:true},
+    {label:'Coverage %',cls:'row-cov',fn:d=>d.covPct,pct:true},
+    {label:'Redwoods net profit',cls:'row-total',key:'rwNet'},
+    {label:'Occupancy',cls:'row-cov',fn:d=>d.occ*100,pct:true},
+  ];
+  buildTable(tbody,pnlRows,data,{arrows:true,total:true});
+
+  // ── REVENUE CHART ──
+  const revD=data.map(d=>toB(d.totRev)),rwD=data.map(d=>toB(d.rwNet)),psD=data.map(d=>toB(d.psOut));
+  if(chartProj){chartProj.data.labels=yshort;chartProj.data.datasets[0].data=revD;chartProj.data.datasets[1].data=rwD;chartProj.data.datasets[2].data=psD;chartProj.update('none');}
+  else{chartProj=new Chart($('chart-proj'),{type:'bar',data:{labels:yshort,datasets:[
+    {label:'Gross revenue',data:revD,backgroundColor:'rgba(76,175,130,0.55)',borderColor:'#4caf82',borderWidth:1,borderRadius:3},
+    {label:'Redwoods net',data:rwD,backgroundColor:'rgba(91,80,232,0.8)',borderColor:'#5b50e8',borderWidth:1,borderRadius:3},
+    {label:'Profit share',data:psD,backgroundColor:'rgba(212,168,75,0.55)',borderColor:'#d4a84b',borderWidth:1,borderRadius:3}
+  ]},options:chartOpts('Rp',true)});}
+
+  // ── COVERAGE CHART ──
+  const covD=data.map(d=>toB(d.psOut)),bench=toB(LAND);
+  const covColors=covD.map(v=>v>=bench?'rgba(76,175,130,0.7)':'rgba(212,92,75,0.6)');
+  if(chartCov){chartCov.data.labels=yshort;chartCov.data.datasets[0].data=covD;chartCov.data.datasets[0].backgroundColor=covColors;chartCov.update('none');}
+  else{chartCov=new Chart($('chart-cov'),{type:'bar',data:{labels:yshort,datasets:[{label:'Profit share',data:covD,backgroundColor:covColors,borderRadius:3}]},options:chartOpts('Rp')});}
+
+  // ── CASH FLOW TABLE ──
+  yshort.forEach((l,i)=>{const el=$('cf-y'+(i+1));if(el)el.textContent=l;});
+  const cfTbody=$('cf-tbody');cfTbody.innerHTML='';
+  const cfRows=[
+    {label:'Operating activities',cls:'row-header',empty:true},
+    {label:'Redwoods net profit',cls:'row-indent row-asset',key:'rwNet'},
+    {label:'Add: depreciation',cls:'row-indent',key:'depr'},
+    {label:'Working capital movement',cls:'row-indent row-liability',fn:d=>-d.wcChange},
+    {label:'Net operating cash flow',cls:'row-subtotal',key:'opCF'},
+    {label:'Investing activities',cls:'row-header',empty:true},
+    {label:'Maintenance capex',cls:'row-indent row-liability',fn:d=>-d.capex},
+    {label:'Free cash flow',cls:'row-subtotal',key:'fcf'},
+    {label:'Financing activities',cls:'row-header',empty:true},
+    {label:'Profit share to Bintaro',cls:'row-indent row-liability',fn:d=>-d.psOut},
+    {label:'Sponsor loan repayment',cls:'row-indent row-liability',fn:d=>d.yr<=10?-(buildCost*0.1):0},
+    {label:'Cumulative cash balance',cls:'row-total',key:'cashBalance'},
+  ];
+  buildTable(cfTbody,cfRows,data);
+
+  // ── CF CHART ──
+  const opCFD=data.map(d=>toB(d.opCF)),fcfD=data.map(d=>toB(d.fcf)),cumCashD=data.map(d=>toB(d.cashBalance));
+  if(chartCF){chartCF.data.labels=yshort;chartCF.data.datasets[0].data=opCFD;chartCF.data.datasets[1].data=fcfD;chartCF.data.datasets[2].data=cumCashD;chartCF.update('none');}
+  else{chartCF=new Chart($('chart-cf'),{type:'bar',data:{labels:yshort,datasets:[
+    {label:'Op. cash flow',data:opCFD,backgroundColor:'rgba(76,175,130,0.55)',borderColor:'#4caf82',borderWidth:1,borderRadius:3},
+    {label:'Free cash flow',data:fcfD,backgroundColor:'rgba(91,80,232,0.7)',borderColor:'#5b50e8',borderWidth:1,borderRadius:3},
+    {label:'Cum. cash',data:cumCashD,type:'line',borderColor:'#4bafd4',borderWidth:2,pointRadius:3,pointBackgroundColor:'#4bafd4',fill:false,tension:0.3,yAxisID:'y2'}
+  ]},options:{...chartOpts('Rp',true),scales:{
+    x:{grid:{display:false},ticks:{color:'#5a5a56',font:{size:10,family:'DM Mono'}}},
+    y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#5a5a56',font:{size:10,family:'DM Mono'},callback:v=>'Rp '+v.toFixed(1)+'B'}},
+    y2:{position:'right',grid:{display:false},ticks:{color:'#4bafd4',font:{size:10,family:'DM Mono'},callback:v=>'Rp '+v.toFixed(1)+'B'}}
+  }}});}
+
+  // ── BALANCE SHEET TABLE ──
+  yshort.forEach((l,i)=>{const el=$('bs-y'+(i+1));if(el)el.textContent=l;});
+  const bsTbody=$('bs-tbody');bsTbody.innerHTML='';
+  const bsRows=[
+    {label:'ASSETS',cls:'row-header',empty:true},
+    {label:'Property (net book value)',cls:'row-indent row-asset',key:'propertyNet'},
+    {label:'Cash & equivalents',cls:'row-indent row-asset',key:'cashBalance'},
+    {label:'Receivables',cls:'row-indent row-asset',key:'receivables'},
+    {label:'Total assets',cls:'row-subtotal row-asset',key:'totalAssets'},
+    {label:'LIABILITIES',cls:'row-header',empty:true},
+    {label:'Sponsor loan (outstanding)',cls:'row-indent row-liability',key:'sponsorLoan'},
+    {label:'Deferred income',cls:'row-indent row-liability',key:'deferredIncome'},
+    {label:'Total liabilities',cls:'row-subtotal row-liability',key:'totalLiabilities'},
+    {label:'NET EQUITY',cls:'row-header',empty:true},
+    {label:'Retained earnings / equity',cls:'row-total row-equity',key:'equity'},
+  ];
+  buildTable(bsTbody,bsRows,data);
+
+  // ── BS CHART ──
+  const assD=data.map(d=>toB(d.totalAssets)),liabD=data.map(d=>toB(d.totalLiabilities)),eqD=data.map(d=>toB(d.equity));
+  if(chartBS){chartBS.data.labels=yshort;chartBS.data.datasets[0].data=assD;chartBS.data.datasets[1].data=liabD;chartBS.data.datasets[2].data=eqD;chartBS.update('none');}
+  else{chartBS=new Chart($('chart-bs'),{type:'bar',data:{labels:yshort,datasets:[
+    {label:'Total assets',data:assD,backgroundColor:'rgba(76,175,130,0.55)',borderColor:'#4caf82',borderWidth:1,borderRadius:3},
+    {label:'Total liabilities',data:liabD,backgroundColor:'rgba(212,92,75,0.5)',borderColor:'#d45c4b',borderWidth:1,borderRadius:3},
+    {label:'Net equity',data:eqD,backgroundColor:'rgba(91,80,232,0.8)',borderColor:'#5b50e8',borderWidth:1,borderRadius:3}
+  ]},options:chartOpts('Rp',true)});}
+
+  // ── PAYBACK DETAIL ──
+  $('pbk-cost').textContent=fmtB(buildCost);
+  const yr10cum=data[9].cumRWNet;
+  const remaining=Math.max(0,buildCost-yr10cum);
+  $('pbk-recovered').textContent=fmtB(Math.min(yr10cum,buildCost));
+  $('pbk-remaining').textContent=remaining>0?fmtB(remaining):'Fully recovered';
+  $('pbk-year').textContent=payback;
+  const detailList=$('payback-detail-list');detailList.innerHTML='';
+  let cumNet2=0;
+  data.forEach(d=>{
+    cumNet2+=d.rwNet;
+    const pct=Math.min(100,(cumNet2/buildCost)*100);
+    const done=cumNet2>=buildCost;
+    const row=document.createElement('div');
+    row.style.cssText='padding:10px 15px;border-bottom:1px solid var(--border);';
+    const topLine=document.createElement('div');
+    topLine.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
+    topLine.innerHTML=
+      '<span style="font-family:DM Mono,monospace;font-size:0.7rem;color:var(--text3);">'+yshort[d.yr-1]+'</span>'+
+      '<span style="font-family:DM Mono,monospace;font-size:0.72rem;color:var(--text2);">+'+fmtB(d.rwNet)+' this year</span>'+
+      '<span style="font-family:DM Mono,monospace;font-size:0.72rem;color:'+(done?'var(--green)':'var(--text)')+';">'+fmtB(Math.min(cumNet2,buildCost))+' / '+fmtB(buildCost)+'</span>'+
+      '<span style="font-size:0.65rem;padding:2px 8px;border-radius:2px;background:'+(done?'var(--green-dim)':'var(--bg3)')+';color:'+(done?'var(--green)':'var(--text3)')+';border:1px solid '+(done?'var(--green-border)':'var(--border2)')+';">'+(done?'Paid back':pct.toFixed(0)+'%')+'</span>';
+    const barWrap=document.createElement('div');
+    barWrap.style.cssText='background:var(--bg3);border-radius:3px;height:5px;overflow:hidden;';
+    const bar=document.createElement('div');
+    bar.style.cssText='height:5px;border-radius:3px;width:'+pct.toFixed(1)+'%;background:'+(done?'var(--green)':'var(--accent)')+';transition:width 0.3s;';
+    barWrap.appendChild(bar);row.appendChild(topLine);row.appendChild(barWrap);
+    detailList.appendChild(row);
+  });
+
+  // ── PAYBACK CHART ──
+  const annualRW=data.map(d=>toB(d.rwNet));
+  let cc2=0;const cumRW2=data.map(d=>{cc2+=d.rwNet;return toB(Math.min(cc2,buildCost));});
+  const bcLine=Array(10).fill(toB(buildCost));
+  if(chartPBK){chartPBK.data.labels=yshort;chartPBK.data.datasets[0].data=annualRW;chartPBK.data.datasets[1].data=cumRW2;chartPBK.update('none');}
+  else{chartPBK=new Chart($('chart-pbk'),{type:'bar',data:{labels:yshort,datasets:[
+    {label:'Annual net',data:annualRW,backgroundColor:'rgba(91,80,232,0.7)',borderColor:'#5b50e8',borderWidth:1,borderRadius:3},
+    {label:'Cumulative recovered',data:cumRW2,type:'line',borderColor:'#4bafd4',borderWidth:2,pointRadius:4,pointBackgroundColor:'#4bafd4',fill:false,tension:0.3,yAxisID:'y2'},
+    {label:'Build cost',data:bcLine,type:'line',borderColor:'rgba(255,255,255,0.2)',borderWidth:1,borderDash:[5,5],pointRadius:0,fill:false,yAxisID:'y2'}
+  ]},options:{...chartOpts('Rp'),scales:{
+    x:{grid:{display:false},ticks:{color:'#5a5a56',font:{size:10,family:'DM Mono'}}},
+    y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#5a5a56',font:{size:10,family:'DM Mono'},callback:v=>'Rp '+v.toFixed(1)+'B'},title:{display:true,text:'Annual',color:'#5a5a56',font:{size:9}}},
+    y2:{position:'right',grid:{display:false},ticks:{color:'#4bafd4',font:{size:10,family:'DM Mono'},callback:v=>'Rp '+v.toFixed(1)+'B'},title:{display:true,text:'Cumulative',color:'#4bafd4',font:{size:9}}}
+  }}});}
+}
+
+function buildTable(tbody,rows,data,opts){
+  opts=opts||{};
+  const showArrows=opts.arrows && (!$('pnl-arrows-toggle') || $('pnl-arrows-toggle').checked);
+  const showTotal=opts.total;
+  tbody.innerHTML='';
+  rows.forEach(r=>{
+    const tr=document.createElement('tr');tr.className=r.cls||'';
+    const tdL=document.createElement('td');tdL.textContent=r.label;tr.appendChild(tdL);
+    let prev=null, sum=0;
+    data.forEach(d=>{
+      const td=document.createElement('td');
+      if(r.empty){td.textContent='';}
+      else{
+        const v=r.fn?r.fn(d):d[r.key];
+        sum+=v;
+        let txt=r.pct?v.toFixed(0)+'%':fmtB(v);
+        // YoY change arrow
+        if(showArrows && !r.noArrow && prev!==null){
+          const diff=v-prev;
+          const thr=Math.abs(prev)*0.005; // ignore <0.5% noise
+          if(diff>thr){td.innerHTML=txt+' <span class="yoy up">▲</span>';}
+          else if(diff<-thr){td.innerHTML=txt+' <span class="yoy down">▼</span>';}
+          else{td.innerHTML=txt+' <span class="yoy flat">▬</span>';}
+        } else { td.textContent=txt; }
+        prev=v;
+      }
+      tr.appendChild(td);
+    });
+    if(showTotal){
+      const tdT=document.createElement('td');tdT.className='td-total';
+      if(r.empty){tdT.textContent='';}
+      else if(r.pct){tdT.textContent='—';} // percentages don't sum
+      else if(r.noTotal){tdT.textContent='—';}
+      else{tdT.textContent=fmtB(sum);}
+      tr.appendChild(tdT);
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+function chartOpts(unit,multi){
+  return{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e1f1c',titleColor:'#9a9890',bodyColor:'#f0ede6',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,callbacks:{label:ctx=>' '+ctx.dataset.label+': Rp '+Math.abs(ctx.parsed.y).toFixed(2)+'B'}}},
+    scales:{x:{grid:{display:false},ticks:{color:'#5a5a56',font:{size:10,family:'DM Mono'}}},y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#5a5a56',font:{size:10,family:'DM Mono'},callback:v=>'Rp '+v.toFixed(1)+'B'}}}};
+}
+
+['sl-dev','sl-off','sl-ret','sl-sc-off','sl-sc-ret','sl-occ-off','sl-occ-ret','sl-mem','sl-opex','sl-ps'].forEach(id=>{$(id).addEventListener('input',()=>{calcModel();if(typeof calcBuild==='function'&&id==='sl-dev')calcBuild();calcProjection();if(typeof renderDashboard==='function')renderDashboard();if(typeof landInited!=='undefined'&&landInited){if(typeof occSyncOn==='function'&&occSyncOn())toggleOccSync();else updateLand();}});});
+['p-sl-openyr','p-sl-esc','p-sl-opexg','p-sl-occ1','p-sl-occS'].forEach(id=>{$(id).addEventListener('input',()=>{calcProjection();if(typeof renderDashboard==='function')renderDashboard();});});
+calcModel();
+refreshBenchLabels();
+calcProjection();
+renderDashboard();
+</script>
+
+<!-- TAB 3: LAND VISUALISATION -->
+<div id="panel-land" class="tab-panel">
+<style>
+/* LAND TAB STYLES */
+.land-layout{display:grid;grid-template-columns:1fr 290px;min-height:calc(100vh - 56px);}
+.land-sidebar{order:2;border-left:1px solid var(--border);padding:1.5rem;overflow-y:auto;position:sticky;top:0;max-height:calc(100vh - 56px);background:var(--bg2);}
+.land-sidebar::-webkit-scrollbar{width:4px;}
+.land-sidebar::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.land-main{order:1;padding:1.75rem;overflow-y:auto;}
+.parcel-legend{display:flex;flex-direction:column;gap:6px;margin-bottom:1rem;}
+.parcel-legend-item{display:flex;align-items:center;gap:8px;font-size:0.78rem;color:var(--text2);}
+.parcel-swatch{width:14px;height:14px;border-radius:2px;flex-shrink:0;}
+.land-canvas-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:1.25rem;margin-bottom:1.25rem;position:relative;}
+.land-canvas-wrap canvas{display:block;width:100%;cursor:crosshair;}
+.land-tooltip{position:absolute;background:#1e1f1c;border:1px solid var(--border2);border-radius:4px;padding:8px 12px;font-size:0.72rem;color:var(--text);pointer-events:none;display:none;z-index:10;min-width:160px;line-height:1.7;}
+.land-tooltip .tt-title{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--accent);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;}
+.land-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:1.25rem;}
+.l-occ-bar{height:8px;background:var(--bg3);border-radius:4px;margin-top:6px;overflow:hidden;}
+.l-occ-fill{height:8px;border-radius:4px;transition:width 0.4s,background 0.3s;}
+.zone-ctrl{margin-bottom:1rem;}
+.zone-ctrl-title{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.zone-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:8px;}
+.zone-label{font-size:0.75rem;color:var(--text2);}
+.zone-badge{font-family:'DM Mono',monospace;font-size:0.65rem;padding:2px 8px;border-radius:2px;font-weight:500;}
+.zone-occ-row{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;margin-bottom:10px;}
+.zone-occ-name{font-size:0.72rem;color:var(--text2);min-width:55px;}
+.zone-occ-val{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text);min-width:30px;text-align:right;}
+.heatmap-legend{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:0.65rem;color:var(--text3);}
+.heatmap-grad{width:80px;height:6px;border-radius:3px;background:linear-gradient(to right,rgba(212,92,75,0.6),rgba(212,168,75,0.6),rgba(76,175,130,0.8));}
+.view-toggle{display:flex;gap:6px;margin-bottom:1rem;}
+.view-btn{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:0.68rem;letter-spacing:0;text-transform:none;padding:6px 14px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all 0.15s;}
+.view-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.land-metrics-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:1.25rem;}
+.land-metrics-row{display:flex;justify-content:space-between;padding:8px 14px;border-bottom:1px solid var(--border);font-size:0.8rem;}
+.land-metrics-row:last-child{border-bottom:none;}
+.land-metrics-row.hl{background:var(--bg3);}
+.lm-label{color:var(--text2);}
+.lm-val{font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--text);font-weight:500;}
+.lm-val.g{color:var(--green);} .lm-val.a{color:var(--amber);} .lm-val.t{color:var(--teal);}
+/* OFFICE vs RETAIL MIX */
+.mix-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px;}
+.mix-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:1.1rem 1.25rem;}
+.mix-card-title{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:12px;}
+.mix-headline{display:flex;align-items:baseline;gap:7px;margin-bottom:12px;flex-wrap:wrap;}
+.mix-pct{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:1.8rem;line-height:1;}
+.mix-pct.office{color:var(--green);} .mix-pct.retail{color:var(--teal);}
+.mix-vs{font-size:0.68rem;color:var(--text3);margin-right:4px;}
+.mix-bar{display:flex;height:26px;border-radius:4px;overflow:hidden;background:var(--bg3);margin-bottom:12px;}
+.mix-seg{display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.05em;color:rgba(14,15,14,0.75);font-weight:500;transition:width 0.4s;overflow:hidden;white-space:nowrap;}
+.mix-seg.office{background:var(--green);} .mix-seg.retail{background:var(--teal);}
+.mix-rows{display:flex;flex-direction:column;gap:6px;}
+.mix-row{display:flex;align-items:center;gap:8px;font-size:0.76rem;color:var(--text2);}
+.mix-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+.mix-dot.office{background:var(--green);} .mix-dot.retail{background:var(--teal);}
+.mix-row-lbl{flex:1;}
+.mix-row-val{font-family:'DM Mono',monospace;font-size:0.74rem;color:var(--text);font-weight:500;}
+.mix-note{font-size:0.68rem;color:var(--text3);line-height:1.5;margin-bottom:1.25rem;}
+@media(max-width:680px){.mix-grid{grid-template-columns:1fr;}}
+</style>
+
+<div class="land-layout">
+  <aside class="land-sidebar">
+    <div class="zone-ctrl">
+      <div class="zone-ctrl-title">Parcels</div>
+      <div class="parcel-legend">
+        <div class="parcel-legend-item"><div class="parcel-swatch" style="background:#d4a84b;opacity:0.8;"></div>03 — 4,604 m²</div>
+        <div class="parcel-legend-item"><div class="parcel-swatch" style="background:#4caf82;opacity:0.8;"></div>05 — 4,585 m²</div>
+        <div class="parcel-legend-item"><div class="parcel-swatch" style="background:#4bafd4;opacity:0.8;"></div>06 — 3,624 m²</div>
+        <div class="parcel-legend-item"><div class="parcel-swatch" style="background:#5b50e8;opacity:0.8;"></div>07 — 2,866 m²</div>
+      </div>
+    </div>
+
+    <div class="zone-ctrl">
+      <div class="zone-ctrl-title">Occupancy per parcel</div>
+      <label style="display:flex;align-items:center;gap:7px;font-size:0.7rem;color:var(--text2);margin-bottom:10px;cursor:pointer;user-select:none;">
+        <input type="checkbox" id="l-occ-sync" checked onchange="toggleOccSync()" style="accent-color:var(--accent);width:13px;height:13px;cursor:pointer;">
+        Sync occupancy from Financial Model
+      </label>
+      <div id="l-occ-sync-note" style="font-size:0.63rem;color:var(--text3);line-height:1.5;margin-bottom:10px;">Office parcels use the model's office occupancy; retail parcels use retail occupancy; mixed uses the average.</div>
+      <div class="zone-occ-row">
+        <span class="zone-occ-name">Parcel 03</span>
+        <input type="range" min="0" max="100" step="5" value="80" id="l-occ-03" oninput="updateLand()">
+        <span class="zone-occ-val" id="l-occ-03-lbl">80%</span>
+      </div>
+      <div class="zone-occ-row">
+        <span class="zone-occ-name">Parcel 05</span>
+        <input type="range" min="0" max="100" step="5" value="85" id="l-occ-05" oninput="updateLand()">
+        <span class="zone-occ-val" id="l-occ-05-lbl">85%</span>
+      </div>
+      <div class="zone-occ-row">
+        <span class="zone-occ-name">Parcel 06</span>
+        <input type="range" min="0" max="100" step="5" value="75" id="l-occ-06" oninput="updateLand()">
+        <span class="zone-occ-val" id="l-occ-06-lbl">75%</span>
+      </div>
+      <div class="zone-occ-row">
+        <span class="zone-occ-name">Parcel 07</span>
+        <input type="range" min="0" max="100" step="5" value="60" id="l-occ-07" oninput="updateLand()">
+        <span class="zone-occ-val" id="l-occ-07-lbl">60%</span>
+      </div>
+    </div>
+
+    <div class="zone-ctrl">
+      <div class="zone-ctrl-title">Use type per parcel</div>
+      <div style="margin-bottom:8px;">
+        <div class="zone-label" style="margin-bottom:4px;">Parcel 03</div>
+        <select id="l-use-03" onchange="updateLand()" style="width:100%;background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:3px;padding:5px 8px;font-size:0.75rem;font-family:Geist,sans-serif;">
+          <option value="office" selected>Office / Co-working</option>
+          <option value="retail">Retail</option>
+          <option value="mixed">Mixed Use</option>
+          <option value="library">Paid Library</option>
+        </select>
+      </div>
+      <div style="margin-bottom:8px;">
+        <div class="zone-label" style="margin-bottom:4px;">Parcel 05</div>
+        <select id="l-use-05" onchange="updateLand()" style="width:100%;background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:3px;padding:5px 8px;font-size:0.75rem;font-family:Geist,sans-serif;">
+          <option value="office" selected>Office / Co-working</option>
+          <option value="retail">Retail</option>
+          <option value="mixed">Mixed Use</option>
+          <option value="library">Paid Library</option>
+        </select>
+      </div>
+      <div style="margin-bottom:8px;">
+        <div class="zone-label" style="margin-bottom:4px;">Parcel 06</div>
+        <select id="l-use-06" onchange="updateLand()" style="width:100%;background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:3px;padding:5px 8px;font-size:0.75rem;font-family:Geist,sans-serif;">
+          <option value="mixed" selected>Mixed Use</option>
+          <option value="office">Office / Co-working</option>
+          <option value="retail">Retail</option>
+          <option value="library">Paid Library</option>
+        </select>
+      </div>
+      <div style="margin-bottom:8px;">
+        <div class="zone-label" style="margin-bottom:4px;">Parcel 07</div>
+        <select id="l-use-07" onchange="updateLand()" style="width:100%;background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:3px;padding:5px 8px;font-size:0.75rem;font-family:Geist,sans-serif;">
+          <option value="retail" selected>Retail</option>
+          <option value="office">Office / Co-working</option>
+          <option value="mixed">Mixed Use</option>
+          <option value="library">Paid Library</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="zone-ctrl">
+      <div class="zone-ctrl-title">View mode</div>
+      <div class="view-toggle">
+        <button class="view-btn active" id="vbtn-occ" onclick="setLandView('occupancy')">Occupancy</button>
+        <button class="view-btn" id="vbtn-val" onclick="setLandView('value')">Revenue</button>
+        <button class="view-btn" id="vbtn-use" onclick="setLandView('use')">Use type</button>
+      </div>
+      <div class="heatmap-legend">
+        <span>Low</span><div class="heatmap-grad"></div><span>High</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="land-main">
+    <!-- KPI strip -->
+    <div class="land-kpi-grid" id="land-kpis">
+      <div class="kpi"><div class="kpi-label">Developed area</div><div class="kpi-val" id="lkpi-area">15,075 m²</div><div class="kpi-sub" id="lkpi-area-sub">commercialized GFA</div></div>
+      <div class="kpi"><div class="kpi-label">Weighted occupancy</div><div class="kpi-val green" id="lkpi-occ">—</div><div class="kpi-sub">area-weighted avg</div></div>
+      <div class="kpi"><div class="kpi-label">Productive area</div><div class="kpi-val amber" id="lkpi-prod">—</div><div class="kpi-sub">m² in active use</div></div>
+      <div class="kpi"><div class="kpi-label">Est. annual revenue</div><div class="kpi-val" id="lkpi-rev" style="color:var(--teal);">—</div><div class="kpi-sub">from occupied area</div></div>
+    </div>
+
+    <!-- OFFICE vs COMMERCIAL (RETAIL) MIX -->
+    <div class="section-title" style="margin-top:0;">Office vs commercial (retail) mix</div>
+    <div class="mix-grid">
+      <!-- Area split -->
+      <div class="mix-card">
+        <div class="mix-card-title">By land area</div>
+        <div class="mix-headline"><span class="mix-pct office" id="mix-area-off">—</span><span class="mix-vs">office</span><span class="mix-pct retail" id="mix-area-ret">—</span><span class="mix-vs">retail</span></div>
+        <div class="mix-bar">
+          <div class="mix-seg office" id="mix-area-bar-off" style="width:0%;">office</div>
+          <div class="mix-seg retail" id="mix-area-bar-ret" style="width:0%;">retail</div>
+        </div>
+        <div class="mix-rows">
+          <div class="mix-row"><span class="mix-dot office"></span><span class="mix-row-lbl">Office / workspace</span><span class="mix-row-val" id="mix-area-off-m">—</span></div>
+          <div class="mix-row"><span class="mix-dot retail"></span><span class="mix-row-lbl">Commercial (retail)</span><span class="mix-row-val" id="mix-area-ret-m">—</span></div>
+        </div>
+      </div>
+      <!-- Economic split -->
+      <div class="mix-card">
+        <div class="mix-card-title">By economics (est. revenue /yr)</div>
+        <div class="mix-headline"><span class="mix-pct office" id="mix-rev-off">—</span><span class="mix-vs">office</span><span class="mix-pct retail" id="mix-rev-ret">—</span><span class="mix-vs">retail</span></div>
+        <div class="mix-bar">
+          <div class="mix-seg office" id="mix-rev-bar-off" style="width:0%;">office</div>
+          <div class="mix-seg retail" id="mix-rev-bar-ret" style="width:0%;">retail</div>
+        </div>
+        <div class="mix-rows">
+          <div class="mix-row"><span class="mix-dot office"></span><span class="mix-row-lbl">Office / workspace</span><span class="mix-row-val" id="mix-rev-off-v">—</span></div>
+          <div class="mix-row"><span class="mix-dot retail"></span><span class="mix-row-lbl">Commercial (retail)</span><span class="mix-row-val" id="mix-rev-ret-v">—</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="mix-note" id="mix-note">—</div>
+
+    <!-- Main land canvas -->
+    <div class="land-canvas-wrap" id="land-canvas-wrap">
+      <canvas id="land-canvas" height="520"></canvas>
+      <div class="land-tooltip" id="land-tt"></div>
+    </div>
+
+    <!-- Per-parcel metrics -->
+    <div class="section-title" style="margin-top:0;">Parcel breakdown</div>
+    <div class="land-metrics-card" id="land-metrics-table">
+      <div class="land-metrics-row hl">
+        <span class="lm-label" style="font-family:DM Mono,monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);">Parcel</span>
+        <span class="lm-val" style="color:var(--text3);font-size:0.6rem;">Area</span>
+        <span class="lm-val" style="color:var(--text3);font-size:0.6rem;">Occupancy</span>
+        <span class="lm-val" style="color:var(--text3);font-size:0.6rem;">Productive m²</span>
+        <span class="lm-val" style="color:var(--text3);font-size:0.6rem;">Est. rev /yr</span>
+        <span class="lm-val" style="color:var(--text3);font-size:0.6rem;">Rev / m²</span>
+      </div>
+      <div class="land-metrics-row" id="lmt-03">
+        <span class="lm-label">Parcel 03</span><span class="lm-val">4,604 m²</span>
+        <span class="lm-val g" id="lmt-03-occ">—</span><span class="lm-val a" id="lmt-03-prod">—</span>
+        <span class="lm-val t" id="lmt-03-rev">—</span><span class="lm-val" id="lmt-03-rpsm">—</span>
+      </div>
+      <div class="land-metrics-row" id="lmt-05">
+        <span class="lm-label">Parcel 05</span><span class="lm-val">4,585 m²</span>
+        <span class="lm-val g" id="lmt-05-occ">—</span><span class="lm-val a" id="lmt-05-prod">—</span>
+        <span class="lm-val t" id="lmt-05-rev">—</span><span class="lm-val" id="lmt-05-rpsm">—</span>
+      </div>
+      <div class="land-metrics-row" id="lmt-06">
+        <span class="lm-label">Parcel 06</span><span class="lm-val">3,624 m²</span>
+        <span class="lm-val g" id="lmt-06-occ">—</span><span class="lm-val a" id="lmt-06-prod">—</span>
+        <span class="lm-val t" id="lmt-06-rev">—</span><span class="lm-val" id="lmt-06-rpsm">—</span>
+      </div>
+      <div class="land-metrics-row" id="lmt-07">
+        <span class="lm-label">Parcel 07</span><span class="lm-val">2,866 m²</span>
+        <span class="lm-val g" id="lmt-07-occ">—</span><span class="lm-val a" id="lmt-07-prod">—</span>
+        <span class="lm-val t" id="lmt-07-rev">—</span><span class="lm-val" id="lmt-07-rpsm">—</span>
+      </div>
+      <div class="land-metrics-row hl" id="lmt-total">
+        <span class="lm-label" style="font-weight:500;color:var(--text);">Total</span><span class="lm-val">15,075 m²</span>
+        <span class="lm-val g" id="lmt-total-occ">—</span><span class="lm-val a" id="lmt-total-prod">—</span>
+        <span class="lm-val t" id="lmt-total-rev">—</span><span class="lm-val" id="lmt-total-rpsm">—</span>
+      </div>
+    </div>
+
+    <!-- Land value section -->
+    <div class="section-title">Land productivity &amp; value density</div>
+    <div class="chart-legend" style="margin-bottom:8px;">
+      <div class="leg-item"><div class="leg-dot" style="background:rgba(76,175,130,0.7);"></div>Productive (occupied)</div>
+      <div class="leg-item"><div class="leg-dot" style="background:rgba(76,175,130,0.2);border:1px solid rgba(76,175,130,0.4);"></div>Idle (developed, unoccupied)</div>
+      <div class="leg-item"><div class="leg-dot" style="background:rgba(120,160,90,0.25);border:1px solid rgba(120,160,90,0.5);"></div>Open space / park</div>
+    </div>
+    <div class="land-canvas-wrap">
+      <canvas id="land-chart-prod" height="200"></canvas>
+    </div>
+  </main>
+</div>
+</div>
+
+<!-- TAB 4: BUILD COST -->
+<div id="panel-build" class="tab-panel">
+<style>
+.build-layout{display:grid;grid-template-columns:1fr 300px;min-height:calc(100vh - 56px);}
+.build-sidebar{order:2;border-left:1px solid var(--border);padding:1.5rem;overflow-y:auto;position:sticky;top:0;max-height:calc(100vh - 56px);background:var(--bg2);}
+.build-sidebar::-webkit-scrollbar{width:4px;}
+.build-sidebar::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.build-main{order:1;padding:1.75rem;overflow-y:auto;}
+.build-hero{background:var(--bg2);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);padding:1.6rem 1.8rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;}
+.build-hero-lbl{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;}
+.build-hero-val{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:3rem;line-height:1;color:var(--accent);}
+.build-hero-sub{font-size:0.78rem;color:var(--text2);margin-top:6px;}
+.build-hero-right{text-align:right;}
+.build-hero-rate{font-family:'DM Mono',monospace;font-size:1.1rem;color:var(--text);}
+.build-bar{display:flex;height:30px;border-radius:5px;overflow:hidden;background:var(--bg3);margin-bottom:6px;}
+.build-seg{display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.6rem;color:rgba(14,15,14,0.8);font-weight:500;white-space:nowrap;overflow:hidden;transition:width .4s;}
+.build-comp-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:1.25rem;}
+.build-comp-row{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border);font-size:0.82rem;}
+.build-comp-row:last-child{border-bottom:none;}
+.build-comp-row.hl{background:var(--bg3);}
+.build-comp-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0;}
+.build-comp-name{flex:1;color:var(--text2);}
+.build-comp-pct{font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--text3);min-width:42px;text-align:right;}
+.build-comp-val{font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--text);font-weight:500;min-width:95px;text-align:right;}
+.build-comp-row.total{background:var(--bg4);}
+.build-comp-row.total .build-comp-name{color:var(--text);font-weight:600;}
+.build-comp-row.total .build-comp-val{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:1.05rem;color:var(--accent);}
+@media(max-width:980px){.build-layout{grid-template-columns:1fr;}.build-sidebar{order:-1;position:static;max-height:none;border-left:none;border-bottom:1px solid var(--border);}}
+</style>
+<div class="build-layout">
+  <aside class="build-sidebar">
+    <div class="s-group">
+      <div class="s-group-title">Build cost rate</div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Cost / m²</span><span class="s-val" id="b-lbl-rate">&mdash;</span></div>
+        <input type="range" min="2000000" max="20000000" step="250000" value="4500000" id="sl-buildrate">
+        <div class="s-note">Construction cost per m² of <b>commercialized</b> (leasable) GFA. Rp 2 Jt – Rp 20 Jt.</div>
+      </div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Park / amenity cost / m²</span><span class="s-val" id="b-lbl-parkrate">&mdash;</span></div>
+        <input type="range" min="500000" max="8000000" step="250000" value="1500000" id="sl-parkrate">
+        <div class="s-note">Lower rate for built-but-non-revenue space (park, plaza, landscape). Rp 0.5 Jt – Rp 8 Jt.</div>
+      </div>
+    </div>
+    <div class="s-group">
+      <div class="s-group-title">Commercialized vs built</div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Extra park / amenity built</span><span class="s-val" id="b-lbl-park">&mdash;</span></div>
+        <input type="range" min="0" max="60" step="5" value="20" id="sl-parkpct">
+        <div class="s-note">Non-productive built area as a % of the commercialized area. Built on top of it — costs money, earns no rent.</div>
+      </div>
+      <div class="dash-assum" style="margin-top:10px;">
+        <div class="dash-assum-row"><span class="k">Commercialized (productive)</span><span class="v" id="b-area-comm">&mdash;</span></div>
+        <div class="dash-assum-row"><span class="k">Park / amenity (non-prod.)</span><span class="v" id="b-area-park">&mdash;</span></div>
+        <div class="dash-assum-row"><span class="k">Total built area</span><span class="v" id="b-area-built">&mdash;</span></div>
+        <div class="dash-assum-row"><span class="k">Productive ratio</span><span class="v" id="b-area-ratio">&mdash;</span></div>
+      </div>
+    </div>
+    <div class="s-group">
+      <div class="s-group-title">Cost preset (commercialized)</div>
+      <div class="scenario-row">
+        <div class="scenario-badge" id="bp-eco" onclick="setBuildPreset(3000000)">Economy</div>
+        <div class="scenario-badge active" id="bp-std" onclick="setBuildPreset(4500000)">Standard</div>
+        <div class="scenario-badge" id="bp-prem" onclick="setBuildPreset(8000000)">Premium</div>
+      </div>
+      <div class="s-note" style="line-height:1.5;">Quick-set the commercialized cost/m². Fine-tune with the sliders above.</div>
+    </div>
+  </aside>
+  <main class="build-main">
+    <div class="build-hero">
+      <div>
+        <div class="build-hero-lbl">Total build cost</div>
+        <div class="build-hero-val" id="b-total">&mdash;</div>
+        <div class="build-hero-sub" id="b-total-sub">&mdash;</div>
+      </div>
+      <div class="build-hero-right">
+        <div class="build-hero-lbl">Cost / m²</div>
+        <div class="build-hero-rate" id="b-rate">&mdash;</div>
+        <div class="build-hero-sub" id="b-payback">&mdash;</div>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-label">Blended cost / m² (built)</div><div class="kpi-val" id="b-k-rate">&mdash;</div><div class="kpi-sub">total ÷ built area</div></div>
+      <div class="kpi"><div class="kpi-label">Total built area</div><div class="kpi-val amber" id="b-k-area">&mdash;</div><div class="kpi-sub">commercialized + park</div></div>
+      <div class="kpi"><div class="kpi-label">Total build cost</div><div class="kpi-val" style="color:var(--accent);" id="b-k-total">&mdash;</div><div class="kpi-sub">rate × developed area</div></div>
+      <div class="kpi"><div class="kpi-label">Cost vs 10-yr net</div><div class="kpi-val teal" id="b-k-ratio">&mdash;</div><div class="kpi-sub">build cost ÷ Redwoods net</div></div>
+    </div>
+
+    <div class="section-title" style="margin-top:0;">Productive vs non-productive cost</div>
+    <div style="margin-bottom:6px;">
+      <div class="build-bar" id="b-bar"></div>
+      <div class="chart-legend" style="margin-top:8px;">
+        <div class="leg-item"><div class="leg-dot" style="background:#4caf82;"></div>Commercialized (productive, earns rent)</div>
+        <div class="leg-item"><div class="leg-dot" style="background:rgba(120,160,90,0.7);"></div>Park / amenity (built, no revenue)</div>
+      </div>
+    </div>
+    <div class="build-comp-card" id="b-comp-table">
+      <div class="build-comp-row hl">
+        <span class="build-comp-dot" style="background:transparent;"></span>
+        <span class="build-comp-name" style="font-family:DM Mono,monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);">Component</span>
+        <span class="build-comp-pct" style="color:var(--text3);">Of comm.</span>
+        <span class="build-comp-val" style="color:var(--text3);font-size:0.6rem;">Cost</span>
+      </div>
+      <div class="build-comp-row"><span class="build-comp-dot" style="background:#4caf82;"></span><span class="build-comp-name">Structure &amp; shell (comm.)</span><span class="build-comp-pct">55%</span><span class="build-comp-val" id="b-c-struct">&mdash;</span></div>
+      <div class="build-comp-row"><span class="build-comp-dot" style="background:#4bafd4;"></span><span class="build-comp-name">Fit-out &amp; interiors (comm.)</span><span class="build-comp-pct">30%</span><span class="build-comp-val" id="b-c-fitout">&mdash;</span></div>
+      <div class="build-comp-row"><span class="build-comp-dot" style="background:#d4a84b;"></span><span class="build-comp-name">MEP &amp; services (comm.)</span><span class="build-comp-pct">15%</span><span class="build-comp-val" id="b-c-mep">&mdash;</span></div>
+      <div class="build-comp-row"><span class="build-comp-dot" style="background:rgba(120,160,90,0.7);"></span><span class="build-comp-name">Park / amenity (non-revenue)</span><span class="build-comp-pct">—</span><span class="build-comp-val" id="b-c-site">&mdash;</span></div>
+      <div class="build-comp-row total"><span class="build-comp-dot" style="background:transparent;"></span><span class="build-comp-name">Total build cost</span><span class="build-comp-pct" id="b-c-totpct">100%</span><span class="build-comp-val" id="b-c-total">&mdash;</span></div>
+    </div>
+
+    <div class="section-title">Sensitivity — total cost across the commercialized rate range</div>
+    <div class="chart-wrap">
+      <div style="position:relative;height:240px;"><canvas id="b-chart" role="img" aria-label="Build cost sensitivity chart">Build cost sensitivity</canvas></div>
+    </div>
+    <div class="s-note" id="b-note" style="line-height:1.6;">&mdash;</div>
+  </main>
+</div>
+</div>
+
+<script>
+// ── LAND VISUALISATION ──
+let landView = 'occupancy';
+let landInited = false;
+let chartProd = null;
+
+const PARCELS = [
+  {
+    // Parcel 03 — 4,604 m² — topmost section
+    // Top: ~100.9m wide, bottom ~93.7m, left height ~50.1m
+    // Left edge: straight road. Right edge: slight diagonal
+    id:'03', label:'Parcel 03', area:4604,
+    pts:[[0.04,0.01],[0.93,0.01],[0.96,0.04],[0.97,0.13],[0.92,0.24],[0.04,0.24]],
+    color:'#d4a84b', colorDim:'rgba(212,168,75,0.15)'
+  },
+  {
+    // Parcel 05 — 4,585 m² — second section
+    // Top ~93.7m, bottom ~85.2m, left height ~50.1m
+    // Right edge tapers: 38.7m segment on diagonal
+    id:'05', label:'Parcel 05', area:4585,
+    pts:[[0.04,0.25],[0.92,0.25],[0.89,0.30],[0.85,0.47],[0.04,0.47]],
+    color:'#4caf82', colorDim:'rgba(76,175,130,0.15)'
+  },
+  {
+    // Parcel 06 — 3,624 m² — third section
+    // Top ~85.2m, bottom ~63.5m, left height ~50.1m
+    // Right: 49.0m diagonal + 7.4m short segment
+    id:'06', label:'Parcel 06', area:3624,
+    pts:[[0.04,0.48],[0.85,0.48],[0.82,0.53],[0.74,0.68],[0.65,0.71],[0.04,0.71]],
+    color:'#4bafd4', colorDim:'rgba(75,175,212,0.15)'
+  },
+  {
+    // Parcel 07 — 2,866 m² — bottom section
+    // Top ~63.5m, bottom ~45.7m, left height ~50.5m
+    // Right: 23.6m + 28.1m curved segments narrowing down
+    id:'07', label:'Parcel 07', area:2866,
+    pts:[[0.04,0.72],[0.65,0.72],[0.57,0.80],[0.46,0.87],[0.35,0.93],[0.04,0.93]],
+    color:'#5b50e8', colorDim:'rgba(91,80,232,0.15)'
+  }
+];
+
+// Rates are derived LIVE from the Financial Model tab sliders so the two views
+// never drift apart. Office & retail come straight from the model; mixed is the
+// average of the two; library is a fixed discount off the office rate.
+function getUseRates(){
+  // Fall back to model defaults if the model sliders aren't in the DOM yet.
+  const off = $('sl-off')    ? parseInt($('sl-off').value)    : 150000;
+  const ret = $('sl-ret')    ? parseInt($('sl-ret').value)    : 150000;
+  const scO = $('sl-sc-off') ? parseInt($('sl-sc-off').value) : 55000;
+  const scR = $('sl-sc-ret') ? parseInt($('sl-sc-ret').value) : 55000;
+  return {
+    office:  { rent:off,                 sc:scO,            label:'Office/Co-working' },
+    retail:  { rent:ret,                 sc:scR,            label:'Retail' },
+    mixed:   { rent:Math.round((off+ret)/2), sc:Math.round((scO+scR)/2), label:'Mixed Use' },
+    library: { rent:Math.round(off*0.76), sc:60000,         label:'Paid Library' }
+  };
+}
+// Kept as a live proxy so existing `USE_RATES[use]` lookups read current values.
+const USE_RATES = new Proxy({}, { get:(_,key)=>getUseRates()[key] });
+
+function setLandView(v){
+  landView = v;
+  ['occ','val','use'].forEach(k=>{
+    const el=$('vbtn-'+k);if(el)el.classList.toggle('active',
+      (k==='occ'&&v==='occupancy')||(k==='val'&&v==='value')||(k==='use'&&v==='use'));
+  });
+  drawLand();
+}
+
+// When sync is on, each parcel's occupancy is pulled from the Financial Model
+// occupancy sliders, mapped by the parcel's use type. When off, the per-parcel
+// sliders are used directly.
+function modelOccFor(use){
+  const occO = $('sl-occ-off') ? parseInt($('sl-occ-off').value)/100 : 0.85;
+  const occR = $('sl-occ-ret') ? parseInt($('sl-occ-ret').value)/100 : 0.80;
+  if(use==='office'||use==='library') return occO;
+  if(use==='retail')                  return occR;
+  return (occO+occR)/2; // mixed
+}
+
+function occSyncOn(){ const c=$('l-occ-sync'); return c ? c.checked : true; }
+
+// Developed (commercialized) share from the master slider on the Financial Model.
+function devRatio(){ return $('sl-dev') ? parseInt($('sl-dev').value)/100 : 1; }
+
+function getLandData(){
+  const uses = {
+    '03': $('l-use-03').value,
+    '05': $('l-use-05').value,
+    '06': $('l-use-06').value,
+    '07': $('l-use-07').value,
+  };
+  const synced = occSyncOn();
+  const occs = {};
+  ['03','05','06','07'].forEach(id=>{
+    occs[id] = synced ? modelOccFor(uses[id]) : parseInt($('l-occ-'+id).value)/100;
+  });
+  return {occs, uses, dev:devRatio()};
+}
+
+// Enable/disable the per-parcel sliders and push synced values into them so the
+// slider positions reflect the model when sync is active.
+function toggleOccSync(){
+  const synced = occSyncOn();
+  const uses = {
+    '03': $('l-use-03').value, '05': $('l-use-05').value,
+    '06': $('l-use-06').value, '07': $('l-use-07').value,
+  };
+  ['03','05','06','07'].forEach(id=>{
+    const sl=$('l-occ-'+id);
+    if(synced){
+      sl.value=Math.round(modelOccFor(uses[id])*100);
+      sl.disabled=true; sl.style.opacity='0.45'; sl.style.cursor='not-allowed';
+    } else {
+      sl.disabled=false; sl.style.opacity=''; sl.style.cursor='pointer';
+    }
+  });
+  $('l-occ-sync-note').style.display = synced ? '' : 'none';
+  updateLand();
+}
+
+function fmtLand(n){
+  if(n>=1e9) return 'Rp '+(n/1e9).toFixed(2)+' B';
+  if(n>=1e6) return 'Rp '+(n/1e6).toFixed(1)+' Jt';
+  return 'Rp '+Math.round(n).toLocaleString('id-ID');
+}
+
+function occColor(occ){
+  if(occ>=0.8) return '#4caf82';
+  if(occ>=0.6) return '#d4a84b';
+  return '#d45c4b';
+}
+
+function drawLand(){
+  const canvas = $('land-canvas');
+  if(!canvas) return;
+  const wrap = $('land-canvas-wrap');
+  const W = wrap.clientWidth - 40;
+  const H = 520;
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+
+  const {occs, uses, dev} = getLandData();
+
+  // Background grid
+  ctx.strokeStyle = (typeof chartGrid==='function')?chartGrid():'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  // Scale factor — fit parcels in canvas with margin
+  const PAD = 20;
+  const scaleX = (W - PAD*2);
+  const scaleY = (H - PAD*2) * 0.88; // leave room for labels
+  const offX = PAD;
+  const offY = PAD + 10;
+
+  PARCELS.forEach(p=>{
+    const occ = occs[p.id];
+    const use = uses[p.id];
+    const rate = USE_RATES[use];
+    const devArea = p.area * dev;
+    const prodArea = devArea * occ;
+    const annualRev = prodArea * (rate.rent + rate.sc) * 12;
+
+    // Scale polygon
+    const scaled = p.pts.map(([nx,ny])=>[offX+nx*scaleX, offY+ny*scaleY]);
+
+    // Draw fill
+    ctx.beginPath();
+    scaled.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y));
+    ctx.closePath();
+
+    let fillColor;
+    if(landView==='occupancy'){
+      // Gradient from dim to full based on occupancy
+      const r = parseInt(p.color.slice(1,3),16);
+      const g = parseInt(p.color.slice(3,5),16);
+      const b = parseInt(p.color.slice(5,7),16);
+      fillColor = `rgba(${r},${g},${b},${0.15 + occ*0.65})`;
+    } else if(landView==='value'){
+      const revPsm = (rate.rent + rate.sc) * occ * 12;
+      const maxRev = 12000000;
+      const t = Math.min(revPsm/maxRev,1);
+      // red -> amber -> green gradient
+      if(t<0.5){
+        const tt=t*2;
+        fillColor=`rgba(${Math.round(212+40*(1-tt))},${Math.round(92+76*tt)},${Math.round(75)},0.75)`;
+      } else {
+        const tt=(t-0.5)*2;
+        fillColor=`rgba(${Math.round(212-136*tt)},${Math.round(168+7*tt)},${Math.round(75+55*tt)},0.75)`;
+      }
+    } else {
+      // use type colors
+      const uc = {office:'rgba(76,175,130,0.6)',retail:'rgba(75,175,212,0.6)',mixed:'rgba(200,212,132,0.6)',library:'rgba(212,168,75,0.6)'};
+      fillColor = uc[use]||'rgba(150,150,150,0.5)';
+    }
+    ctx.fillStyle = fillColor;
+    ctx.fill();
+
+    // Hatch pattern for unoccupied portion
+    if(landView==='occupancy' && occ < 1){
+      ctx.save();
+      ctx.clip();
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.lineWidth = 1;
+      for(let i=-H;i<W+H;i+=12){
+        ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i+H,H);ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // Border
+    ctx.beginPath();
+    scaled.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y));
+    ctx.closePath();
+    ctx.strokeStyle = p.color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Open space / undeveloped overlay — bottom band of the parcel = park / not commercialized.
+    if(dev < 1){
+      const minYd=Math.min(...scaled.map(([,y])=>y));
+      const maxYd=Math.max(...scaled.map(([,y])=>y));
+      const pHd=maxYd-minYd;
+      const openTop=minYd+pHd*dev; // developed occupies top `dev` share; rest is open space
+      ctx.save();
+      ctx.beginPath();
+      scaled.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y));
+      ctx.closePath();
+      ctx.clip();
+      // dim the open-space band
+      ctx.fillStyle='rgba(10,12,9,0.55)';
+      ctx.fillRect(0,openTop,W,maxYd-openTop);
+      // green park hatch
+      ctx.strokeStyle='rgba(120,160,90,0.35)';
+      ctx.lineWidth=1;
+      for(let i=-H;i<W+H;i+=9){
+        ctx.beginPath();ctx.moveTo(i,openTop);ctx.lineTo(i+ (maxYd-openTop), maxYd);ctx.stroke();
+      }
+      // divider line
+      ctx.strokeStyle='rgba(120,160,90,0.6)';
+      ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(0,openTop);ctx.lineTo(W,openTop);ctx.stroke();
+      ctx.restore();
+    }
+
+    // Occupancy fill bar overlay (left edge)
+    const minY=Math.min(...scaled.map(([,y])=>y));
+    const maxY=Math.max(...scaled.map(([,y])=>y));
+    const pHeight=maxY-minY;
+    const fillH=pHeight*occ;
+    ctx.save();
+    ctx.beginPath();
+    scaled.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y));
+    ctx.closePath();
+    ctx.clip();
+    const r2 = parseInt(p.color.slice(1,3),16);
+    const g2 = parseInt(p.color.slice(3,5),16);
+    const b2 = parseInt(p.color.slice(5,7),16);
+    // Subtle right-side fill indicator
+    if(landView==='occupancy'){
+      ctx.fillStyle=`rgba(${r2},${g2},${b2},0.08)`;
+      ctx.fillRect(W-30,minY,20,pHeight);
+      ctx.fillStyle=`rgba(${r2},${g2},${b2},0.5)`;
+      ctx.fillRect(W-30,maxY-fillH,20,fillH);
+      ctx.strokeStyle=`rgba(${r2},${g2},${b2},0.4)`;
+      ctx.lineWidth=1;
+      ctx.strokeRect(W-30,minY,20,pHeight);
+    }
+    ctx.restore();
+
+    // Labels
+    const cx = scaled.reduce((s,[x])=>s+x,0)/scaled.length;
+    const cy = scaled.reduce((s,[,y])=>s+y,0)/scaled.length;
+
+    ctx.fillStyle = '#f0ede6';
+    ctx.font = `600 ${W>600?14:11}px Geist,sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(p.id, cx, cy-14);
+
+    ctx.fillStyle = 'rgba(240,237,230,0.7)';
+    ctx.font = `${W>600?11:9}px Geist,sans-serif`;
+    ctx.fillText(p.area.toLocaleString()+' m²', cx, cy+2);
+
+    // Occupancy label
+    const occTxt = Math.round(occ*100)+'%';
+    ctx.font = `500 ${W>600?12:10}px DM Mono,monospace`;
+    ctx.fillStyle = occColor(occ);
+    ctx.fillText(occTxt, cx, cy+17);
+
+    // Rev density
+    if(landView==='value'){
+      const revPsm = (rate.rent+rate.sc)*occ;
+      ctx.font = `10px DM Mono,monospace`;
+      ctx.fillStyle='rgba(91,80,232,0.9)';
+      ctx.fillText('Rp '+Math.round(revPsm/1000)+'k/m²/mo',cx,cy+30);
+    }
+
+    // Use type label
+    if(landView==='use'){
+      ctx.font = `10px Geist,sans-serif`;
+      ctx.fillStyle='rgba(240,237,230,0.6)';
+      ctx.fillText(USE_RATES[use].label,cx,cy+30);
+    }
+  });
+
+  // Compass / North indicator
+  ctx.save();
+  ctx.translate(W-24, H-24);
+  ctx.fillStyle='rgba(255,255,255,0.15)';
+  ctx.beginPath();ctx.arc(0,0,14,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.5)';
+  ctx.font='bold 10px DM Mono,monospace';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('N',0,0);
+  ctx.restore();
+
+  // Scale bar
+  ctx.fillStyle='rgba(255,255,255,0.25)';
+  ctx.fillRect(offX, H-14, 60, 2);
+  ctx.fillStyle='rgba(255,255,255,0.4)';
+  ctx.font='9px DM Mono,monospace';
+  ctx.textAlign='center';ctx.textBaseline='bottom';
+  ctx.fillText('~50m',offX+30,H-4);
+}
+
+function updateLand(){
+  const {occs, uses, dev} = getLandData();
+
+  // Update slider labels from the *effective* occupancy (synced or manual)
+  ['03','05','06','07'].forEach(id=>{
+    $('l-occ-'+id+'-lbl').textContent=Math.round(occs[id]*100)+'%';
+  });
+
+  // Compute metrics. Each parcel's developed (commercialized) area = gross × dev;
+  // the rest is open space / park and earns nothing. Productive = developed × occupancy.
+  let totalProd=0, totalRev=0, totalArea=0, totalDev=0;
+  PARCELS.forEach(p=>{
+    const occ=occs[p.id];
+    const use=uses[p.id];
+    const rate=USE_RATES[use];
+    const devArea=p.area*dev;
+    const prod=Math.round(devArea*occ);
+    const rev=prod*(rate.rent+rate.sc)*12;
+    totalProd+=prod; totalRev+=rev; totalArea+=p.area; totalDev+=devArea;
+
+    $('lmt-'+p.id+'-occ').textContent=Math.round(occ*100)+'%';
+    $('lmt-'+p.id+'-prod').textContent=prod.toLocaleString()+' m²';
+    $('lmt-'+p.id+'-rev').textContent=fmtLand(rev);
+    $('lmt-'+p.id+'-rpsm').textContent='Rp '+Math.round((rate.rent+rate.sc)*occ/1000)+'k/m²/mo';
+  });
+
+  const weightedOcc = PARCELS.reduce((s,p)=>s+occs[p.id]*p.area,0)/totalArea;
+  $('lkpi-occ').textContent=Math.round(weightedOcc*100)+'%';
+  $('lkpi-prod').textContent=totalProd.toLocaleString()+' m²';
+  $('lkpi-rev').textContent=fmtLand(totalRev);
+  // Developed-area KPI (reuse the area card sub-line)
+  if($('lkpi-area'))$('lkpi-area').innerHTML=Math.round(totalDev).toLocaleString()+' m²';
+  if($('lkpi-area-sub'))$('lkpi-area-sub').textContent=Math.round(dev*100)+'% of '+Math.round(totalArea).toLocaleString()+' m²';
+  $('lmt-total-occ').textContent=Math.round(weightedOcc*100)+'%';
+  $('lmt-total-prod').textContent=totalProd.toLocaleString()+' m²';
+  $('lmt-total-rev').textContent=fmtLand(totalRev);
+  $('lmt-total-rpsm').textContent=totalProd>0?'Rp '+Math.round(totalRev/(totalProd*12)/1000)+'k/m²/mo':'—';
+
+  // Productivity chart — productive (occupied developed) vs idle developed vs open space
+  const labels=['Parcel 03','Parcel 05','Parcel 06','Parcel 07'];
+  const prodData=PARCELS.map(p=>Math.round(p.area*dev*occs[p.id]));
+  const idleData=PARCELS.map(p=>Math.round(p.area*dev*(1-occs[p.id])));
+  const openData=PARCELS.map(p=>Math.round(p.area*(1-dev)));
+
+  if(chartProd){
+    chartProd.data.datasets[0].data=prodData;
+    chartProd.data.datasets[1].data=idleData;
+    if(chartProd.data.datasets[2])chartProd.data.datasets[2].data=openData;
+    chartProd.update('none');
+  } else {
+    chartProd=new Chart($('land-chart-prod'),{
+      type:'bar',
+      data:{labels,datasets:[
+        {label:'Productive (occupied)',data:prodData,backgroundColor:['rgba(212,168,75,0.7)','rgba(76,175,130,0.7)','rgba(75,175,212,0.7)','rgba(91,80,232,0.7)'],borderRadius:3},
+        {label:'Idle (unoccupied)',data:idleData,backgroundColor:['rgba(212,168,75,0.15)','rgba(76,175,130,0.15)','rgba(75,175,212,0.15)','rgba(200,212,212,0.15)'],borderColor:['rgba(212,168,75,0.3)','rgba(76,175,130,0.3)','rgba(75,175,212,0.3)','rgba(200,212,132,0.3)'],borderWidth:1,borderRadius:3},
+        {label:'Open space / park',data:openData,backgroundColor:'rgba(120,160,90,0.25)',borderColor:'rgba(120,160,90,0.5)',borderWidth:1,borderRadius:3}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},
+          tooltip:{backgroundColor:'#1e1f1c',titleColor:'#9a9890',bodyColor:'#f0ede6',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,callbacks:{label:ctx=>' '+ctx.dataset.label+': '+ctx.parsed.y.toLocaleString()+' m²'}}},
+        scales:{
+          x:{stacked:true,grid:{display:false},ticks:{color:'#5a5a56',font:{size:11,family:'Geist'}}},
+          y:{stacked:true,grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#5a5a56',font:{size:10,family:'DM Mono'},callback:v=>v.toLocaleString()+' m²'}}
+        }}
+    });
+  }
+
+  computeMix(occs, uses, dev);
+  drawLand();
+}
+
+// ── OFFICE vs COMMERCIAL (RETAIL) MIX ──
+// Categorize each parcel by use type. Office & library count as "office/workspace";
+// retail counts as "commercial"; mixed-use splits 50/50 across both buckets.
+// Area & revenue reflect the developed (commercialized) portion only.
+function computeMix(occs, uses, dev){
+  if(dev===undefined) dev=devRatio();
+  let areaOff=0, areaRet=0, revOff=0, revRet=0;
+  PARCELS.forEach(p=>{
+    const use=uses[p.id], occ=occs[p.id], rate=USE_RATES[use];
+    const devArea=p.area*dev;
+    const prod=devArea*occ;
+    const rev=prod*(rate.rent+rate.sc)*12;
+    if(use==='retail'){ areaRet+=devArea; revRet+=rev; }
+    else if(use==='mixed'){ areaOff+=devArea*0.5; areaRet+=devArea*0.5; revOff+=rev*0.5; revRet+=rev*0.5; }
+    else { areaOff+=devArea; revOff+=rev; } // office + library
+  });
+  const areaTot=areaOff+areaRet, revTot=revOff+revRet;
+  const aOffPct=areaTot?areaOff/areaTot*100:0, aRetPct=100-aOffPct;
+  const rOffPct=revTot?revOff/revTot*100:0,   rRetPct=100-rOffPct;
+
+  // Area card
+  $('mix-area-off').textContent=Math.round(aOffPct)+'%';
+  $('mix-area-ret').textContent=Math.round(aRetPct)+'%';
+  $('mix-area-bar-off').style.width=aOffPct.toFixed(1)+'%';
+  $('mix-area-bar-ret').style.width=aRetPct.toFixed(1)+'%';
+  $('mix-area-bar-off').textContent=aOffPct>=12?Math.round(aOffPct)+'%':'';
+  $('mix-area-bar-ret').textContent=aRetPct>=12?Math.round(aRetPct)+'%':'';
+  $('mix-area-off-m').textContent=Math.round(areaOff).toLocaleString()+' m²';
+  $('mix-area-ret-m').textContent=Math.round(areaRet).toLocaleString()+' m²';
+
+  // Economics card
+  $('mix-rev-off').textContent=Math.round(rOffPct)+'%';
+  $('mix-rev-ret').textContent=Math.round(rRetPct)+'%';
+  $('mix-rev-bar-off').style.width=rOffPct.toFixed(1)+'%';
+  $('mix-rev-bar-ret').style.width=rRetPct.toFixed(1)+'%';
+  $('mix-rev-bar-off').textContent=rOffPct>=12?Math.round(rOffPct)+'%':'';
+  $('mix-rev-bar-ret').textContent=rRetPct>=12?Math.round(rRetPct)+'%':'';
+  $('mix-rev-off-v').textContent=fmtLand(revOff)+'/yr';
+  $('mix-rev-ret-v').textContent=fmtLand(revRet)+'/yr';
+
+  // Insight note: compare revenue share to area share
+  let note;
+  if(Math.abs(rOffPct-aOffPct)<2){
+    note='Revenue split closely tracks the area split — office and retail earn at similar per-m² rates under current model assumptions.';
+  } else if(rOffPct>aOffPct){
+    note='Office occupies '+Math.round(aOffPct)+'% of area but generates '+Math.round(rOffPct)+'% of revenue — office is the higher-yielding use per m² at current rates.';
+  } else {
+    note='Retail occupies '+Math.round(aRetPct)+'% of area but generates '+Math.round(rRetPct)+'% of revenue — retail is the higher-yielding use per m² at current rates.';
+  }
+  $('mix-note').textContent=note;
+}
+
+// Tooltip on hover
+function initLandTooltip(){
+  const canvas=$('land-canvas');
+  if(!canvas||canvas._ttInited)return;
+  canvas._ttInited=true;
+  const tt=$('land-tt');
+  canvas.addEventListener('mousemove',function(e){
+    const rect=canvas.getBoundingClientRect();
+    const mx=(e.clientX-rect.left)*(canvas.width/rect.width);
+    const my=(e.clientY-rect.top)*(canvas.height/rect.height);
+    const W=canvas.width, H=canvas.height;
+    const PAD=20,scaleX=W-PAD*2,scaleY=(H-PAD*2)*0.88,offX=PAD,offY=PAD+10;
+    const {occs,uses,dev}=getLandData();
+    let hit=null;
+    PARCELS.forEach(p=>{
+      const scaled=p.pts.map(([nx,ny])=>[offX+nx*scaleX,offY+ny*scaleY]);
+      if(pointInPoly(mx,my,scaled))hit=p;
+    });
+    if(hit){
+      const occ=occs[hit.id],use=uses[hit.id],rate=USE_RATES[use];
+      const devArea=Math.round(hit.area*dev),openArea=hit.area-devArea;
+      const prod=Math.round(devArea*occ),rev=prod*(rate.rent+rate.sc)*12;
+      tt.style.display='block';
+      tt.style.left=Math.min(e.offsetX+14, rect.width-180)+'px';
+      tt.style.top=Math.max(e.offsetY-72,10)+'px';
+      tt.innerHTML='<div class="tt-title">Parcel '+hit.id+'</div>'+
+        'Gross area: <b>'+hit.area.toLocaleString()+' m²</b><br>'+
+        'Developed: <b>'+devArea.toLocaleString()+' m²</b> ('+Math.round(dev*100)+'%)<br>'+
+        'Open space: <b style="color:#8aa05a">'+openArea.toLocaleString()+' m²</b><br>'+
+        'Occupancy: <b style="color:'+occColor(occ)+'">'+Math.round(occ*100)+'%</b><br>'+
+        'Productive: <b>'+prod.toLocaleString()+' m²</b><br>'+
+        'Use type: <b>'+rate.label+'</b><br>'+
+        'Est. rev/yr: <b style="color:#4bafd4">'+fmtLand(rev)+'</b>';
+    } else {
+      tt.style.display='none';
+    }
+  });
+  canvas.addEventListener('mouseleave',()=>{tt.style.display='none';});
+}
+
+function pointInPoly(px,py,pts){
+  let inside=false;
+  for(let i=0,j=pts.length-1;i<pts.length;j=i++){
+    const [xi,yi]=pts[i],[xj,yj]=pts[j];
+    if(((yi>py)!==(yj>py))&&(px<(xj-xi)*(py-yi)/(yj-yi)+xi))inside=!inside;
+  }
+  return inside;
+}
+
+function initLand(){
+  if(!landInited){
+    landInited=true;
+    toggleOccSync(); // applies sync state, sets slider values, then calls updateLand
+    initLandTooltip();
+  } else {
+    if(occSyncOn())toggleOccSync(); else updateLand();
+    initLandTooltip();
+  }
+}
+
+// PARCELS and land helpers now exist — refresh the dashboard so its office/retail
+// mix uses real parcel data on the initial (dashboard-first) load.
+if(typeof renderDashboard==='function') renderDashboard();
+
+// ── BUILD COST TAB ──
+function fmtJt(n){ // format Rp value emphasising millions (juta)
+  if(n>=1e9)return 'Rp '+(n/1e9).toFixed(2)+' B';
+  if(n>=1e6)return 'Rp '+(n/1e6).toFixed(1)+' Jt';
+  return 'Rp '+Math.round(n).toLocaleString('id-ID');
+}
+function setBuildPreset(rate){
+  const sl=$('sl-buildrate'); if(!sl)return;
+  sl.value=rate;
+  calcBuild();
+}
+function calcBuild(){
+  if(!$('panel-build'))return;
+  const rate=getBuildRate(), parkRate=getParkRate();
+  const commM=getCommM(), parkM=getParkM(), builtM=getBuiltM();
+  const commCost=commM*rate, parkCost=parkM*parkRate, total=commCost+parkCost;
+  const prodRatio=builtM>0?commM/builtM*100:100;
+
+  // Preset highlight (match nearest, commercialized rate)
+  ['eco','std','prem'].forEach(k=>{const el=$('bp-'+k);if(el)el.classList.remove('active');});
+  if(rate<=3500000){const e=$('bp-eco');if(e)e.classList.add('active');}
+  else if(rate<=6000000){const e=$('bp-std');if(e)e.classList.add('active');}
+  else {const e=$('bp-prem');if(e)e.classList.add('active');}
+
+  // Sidebar labels
+  $('b-lbl-rate').textContent=fmtJt(rate)+'/m²';
+  $('b-lbl-parkrate').textContent=fmtJt(parkRate)+'/m²';
+  $('b-lbl-park').textContent='+'+Math.round(getParkPct()*100)+'%';
+  $('b-area-comm').textContent=Math.round(commM).toLocaleString()+' m²';
+  $('b-area-park').textContent=Math.round(parkM).toLocaleString()+' m²';
+  $('b-area-built').textContent=Math.round(builtM).toLocaleString()+' m²';
+  $('b-area-ratio').textContent=Math.round(prodRatio)+'% productive';
+
+  // Hero
+  $('b-total').textContent=fmtB(total);
+  $('b-total-sub').textContent=Math.round(commM).toLocaleString()+' m² comm. @ '+fmtJt(rate)+' + '+Math.round(parkM).toLocaleString()+' m² park @ '+fmtJt(parkRate);
+  $('b-rate').textContent='Rp '+(total/builtM/1e6).toFixed(1)+' Jt';
+  $('b-payback') && ($('b-payback').textContent='');
+
+  // KPIs
+  $('b-k-rate').textContent='Rp '+(total/builtM/1e6).toFixed(1)+' Jt';
+  $('b-k-area').textContent=Math.round(builtM).toLocaleString()+' m²';
+  $('b-k-total').textContent=fmtB(total);
+
+  // Productive vs non-productive composition (the headline split)
+  const bar=$('b-bar');
+  if(bar){
+    const commShare=total>0?commCost/total*100:100, parkShare=100-commShare;
+    bar.innerHTML=
+      '<div class="build-seg" style="background:#4caf82;width:'+commShare.toFixed(1)+'%;">'+(commShare>=14?Math.round(commShare)+'% productive':'')+'</div>'+
+      '<div class="build-seg" style="background:rgba(120,160,90,0.7);width:'+parkShare.toFixed(1)+'%;">'+(parkShare>=14?Math.round(parkShare)+'% park':'')+'</div>';
+  }
+  // Component table now reflects the two-tier split
+  $('b-c-struct') && ($('b-c-struct').textContent=fmtB(commCost*0.55)); // structure+shell of commercial
+  $('b-c-fitout') && ($('b-c-fitout').textContent=fmtB(commCost*0.30));
+  $('b-c-mep') && ($('b-c-mep').textContent=fmtB(commCost*0.15));
+  $('b-c-site') && ($('b-c-site').textContent=fmtB(parkCost));
+  $('b-c-total') && ($('b-c-total').textContent=fmtB(total));
+
+  // Link to projection cumulatives
+  const P=window.PROJ_RESULTS;
+  if(P){
+    const ratio=P.cumRw>0?(total/P.cumRw):0;
+    $('b-k-ratio').textContent=ratio.toFixed(2)+'×';
+    $('b-note').textContent='Built area is '+Math.round(builtM).toLocaleString()+' m² ('+Math.round(commM).toLocaleString()+' m² productive + '+Math.round(parkM).toLocaleString()+' m² park/amenity). Total build cost '+fmtB(total)+', of which '+fmtB(parkCost)+' ('+Math.round(parkCost/total*100)+'%) is carried by non-revenue space. Against the projected 10-year Redwoods net of '+fmtB(P.cumRw)+', total cost is '+ratio.toFixed(2)+'× — recovered by '+P.payback+'.';
+  } else {
+    $('b-k-ratio').textContent='—';
+  }
+
+  // Sensitivity chart — total cost across commercialized-rate range (park held at current)
+  const rates=[]; for(let r=2000000;r<=20000000;r+=2000000)rates.push(r);
+  const labels=rates.map(r=>'Rp '+(r/1e6)+'Jt');
+  const totals=rates.map(r=>toB(commM*r+parkCost));
+  const colors=rates.map(r=>Math.abs(r-rate)<1000000?'rgba(91,80,232,0.9)':'rgba(76,175,130,0.45)');
+  if(chartBuild){
+    chartBuild.data.labels=labels;chartBuild.data.datasets[0].data=totals;chartBuild.data.datasets[0].backgroundColor=colors;chartBuild.update('none');
+  } else {
+    chartBuild=new Chart($('b-chart'),{type:'bar',data:{labels,datasets:[{label:'Total build cost',data:totals,backgroundColor:colors,borderRadius:3}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e1f1c',titleColor:'#9a9890',bodyColor:'#f0ede6',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,callbacks:{label:c=>' Rp '+c.parsed.y.toFixed(2)+' B'}}},
+        scales:{x:{grid:{display:false},ticks:{color:'#5a5a56',font:{size:9,family:'DM Mono'}}},y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#5a5a56',font:{size:10,family:'DM Mono'},callback:v=>'Rp '+v.toFixed(0)+'B'}}}}});
+  }
+
+  // Cascade everywhere
+  if($('hbadge-build'))$('hbadge-build').textContent=fmtB(total)+' build cost';
+  calcProjection();
+  if(typeof renderDashboard==='function')renderDashboard();
+}
+
+// Wire build-cost sliders — recompute everything build-cost depends on
+['sl-buildrate','sl-parkrate','sl-parkpct'].forEach(id=>{const el=$(id);if(el)el.addEventListener('input',calcBuild);});
+// Initialise build labels + header badge on load
+calcBuild();
+// Ensure charts pick up the active (light) theme colors on first paint
+if(typeof applyChartTheme==='function')setTimeout(applyChartTheme,30);
+
+</script>
+
+  </div><!-- /content -->
+</div><!-- /app -->
+</body>
+</html>
