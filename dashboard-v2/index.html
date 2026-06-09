@@ -498,6 +498,26 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       </div>
     </div>
     <div class="s-group">
+      <div class="s-group-title">Creative-economy revenue /yr</div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Function hall &amp; events</span><span class="s-val" id="lbl-fhall">Rp 2.5 B</span></div>
+        <input type="range" min="0" max="6" step="0.5" value="2.5" id="sl-fhall">
+      </div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Material Library</span><span class="s-val" id="lbl-matlib">Rp 1.2 B</span></div>
+        <input type="range" min="0" max="4" step="0.1" value="1.2" id="sl-matlib">
+      </div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Sponsorship / CSR</span><span class="s-val" id="lbl-spons">Rp 1.0 B</span></div>
+        <input type="range" min="0" max="5" step="0.5" value="1" id="sl-spons">
+      </div>
+      <div class="s-row">
+        <div class="s-row-top"><span class="s-label">Weekend &amp; design market</span><span class="s-val" id="lbl-market">Rp 0.8 B</span></div>
+        <input type="range" min="0" max="3" step="0.1" value="0.8" id="sl-market">
+      </div>
+      <div class="s-note" style="line-height:1.5;">BDD &amp; programming streams on top of office/retail. These feed the P&amp;L, the 10-year projection and the Revenue Plan tab. Membership &amp; co-working are already in the model above.</div>
+    </div>
+    <div class="s-group">
       <div class="s-group-title">Cost &amp; profit sharing</div>
       <div class="s-row">
         <div class="s-row-top"><span class="s-label">Operating cost ratio</span><span class="s-val" id="lbl-opex">40%</span></div>
@@ -567,6 +587,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       <div class="pnl-row indent"><span class="pnl-label">Office service charge</span><span class="pnl-amount pos" id="pnl-sc-off">&mdash;</span></div>
       <div class="pnl-row indent"><span class="pnl-label">Retail service charge</span><span class="pnl-amount pos" id="pnl-sc-ret">&mdash;</span></div>
       <div class="pnl-row indent"><span class="pnl-label">Membership fees</span><span class="pnl-amount pos" id="pnl-mem">&mdash;</span></div>
+      <div class="pnl-row indent"><span class="pnl-label">Creative programs (hall · library · sponsorship · market)</span><span class="pnl-amount pos" id="pnl-creative">&mdash;</span></div>
       <div class="pnl-row subtotal"><span class="pnl-label">Gross revenue</span><span class="pnl-amount pos" id="pnl-gross">&mdash;</span></div>
       <div class="pnl-row subtotal"><span class="pnl-label">Operating expenses</span><span class="pnl-amount"></span></div>
       <div class="pnl-row indent"><span class="pnl-label">Staff &amp; management (40%)</span><span class="pnl-amount neg" id="pnl-staff">&mdash;</span></div>
@@ -829,7 +850,7 @@ function switchTab(tab){
   if(tab==='land'){setTimeout(()=>initLand(),50);}
   if(tab==='build')calcBuild();
   if(tab==='zones'&&typeof czSelect==='function'){czSelect(window.__czSel||'office');}
-  if(tab==='revenue2'&&typeof cvSelect==='function'){setTimeout(()=>cvSelect(window.__cvSel||'base'),30);}
+  if(tab==='revenue2'&&typeof cvRefresh==='function'){calcProjection();setTimeout(cvRefresh,30);}
 }
 
 function toggleTheme(){
@@ -847,10 +868,12 @@ function toggleTheme(){
 
 function tag(id,val,lo,hi){const el=$(id);if(!el)return;if(val<lo){el.textContent='below market';el.className='s-tag tag-below';}else if(val<=hi){el.textContent='at market';el.className='s-tag tag-within';}else{el.textContent='above market';el.className='s-tag tag-above';}}
 
-function getM(){return{offR:parseInt($('sl-off').value),retR:parseInt($('sl-ret').value),scO:parseInt($('sl-sc-off').value),scR:parseInt($('sl-sc-ret').value),occO:parseInt($('sl-occ-off').value)/100,occR:parseInt($('sl-occ-ret').value)/100,memB:parseFloat($('sl-mem').value)*1e9,opexR:parseInt($('sl-opex').value)/100,ps:parseInt($('sl-ps').value)/100,dev:($('sl-dev')?parseInt($('sl-dev').value):100)/100};}
+function getM(){return{offR:parseInt($('sl-off').value),retR:parseInt($('sl-ret').value),scO:parseInt($('sl-sc-off').value),scR:parseInt($('sl-sc-ret').value),occO:parseInt($('sl-occ-off').value)/100,occR:parseInt($('sl-occ-ret').value)/100,memB:parseFloat($('sl-mem').value)*1e9,opexR:parseInt($('sl-opex').value)/100,ps:parseInt($('sl-ps').value)/100,dev:($('sl-dev')?parseInt($('sl-dev').value):100)/100,
+  fhall:($('sl-fhall')?parseFloat($('sl-fhall').value):0)*1e9,matlib:($('sl-matlib')?parseFloat($('sl-matlib').value):0)*1e9,spons:($('sl-spons')?parseFloat($('sl-spons').value):0)*1e9,market:($('sl-market')?parseFloat($('sl-market').value):0)*1e9};}
 
 function calcModel(){
-  const{offR,retR,scO,scR,occO,occR,memB,opexR,ps,dev}=getM();
+  const{offR,retR,scO,scR,occO,occR,memB,opexR,ps,dev,fhall,matlib,spons,market}=getM();
+  const creT=fhall+matlib+spons+market;
   // Developed (commercialized) leasable area scales with the master slider.
   const offArea=OFF_AREA*dev, retArea=RET_AREA*dev;
   const devTotM=Math.round((OFF_AREA+RET_AREA)*dev), openTotM=Math.round((OFF_AREA+RET_AREA)*(1-dev));
@@ -861,11 +884,12 @@ function calcModel(){
   $('lbl-sc-off').textContent=fmtR(scO)+'/m²/mo';$('lbl-sc-ret').textContent=fmtR(scR)+'/m²/mo';
   $('lbl-occ-off').textContent=Math.round(occO*100)+'%';$('lbl-occ-ret').textContent=Math.round(occR*100)+'%';
   $('lbl-mem').textContent='Rp '+parseFloat($('sl-mem').value).toFixed(1)+' B';
+  if($('lbl-fhall'))$('lbl-fhall').textContent='Rp '+(fhall/1e9).toFixed(1)+' B';if($('lbl-matlib'))$('lbl-matlib').textContent='Rp '+(matlib/1e9).toFixed(1)+' B';if($('lbl-spons'))$('lbl-spons').textContent='Rp '+(spons/1e9).toFixed(1)+' B';if($('lbl-market'))$('lbl-market').textContent='Rp '+(market/1e9).toFixed(1)+' B';
   $('lbl-opex').textContent=Math.round(opexR*100)+'%';$('lbl-ps').textContent=Math.round(ps*100)+'%';
   tag('tag-off',offR,90000,175000);tag('tag-ret',retR,90000,175000);tag('tag-sc-off',scO,50000,60000);tag('tag-sc-ret',scR,50000,60000);
   const offRev=offArea*offR*occO*12,retRev=retArea*retR*occR*12;
   const scOff=offArea*scO*occO*12,scRet=retArea*scR*occR*12,scTot=scOff+scRet;
-  const totRev=offRev+retRev+scOff+scRet+memB,opex=totRev*opexR,netPre=totRev-opex;
+  const totRev=offRev+retRev+scOff+scRet+memB+creT,opex=totRev*opexR,netPre=totRev-opex;
   const psOut=netPre*ps,rwNet=netPre-psOut,surplus=psOut-LAND,covPct=(psOut/LAND)*100,margin=(rwNet/totRev)*100;
   const staff=opex*.4,maint=opex*.3,mktg=opex*.2,admin=opex*.1;
   const strip=$('cov-strip');$('cov-pct').textContent=Math.round(covPct)+'%';
@@ -879,11 +903,11 @@ function calcModel(){
   $('p-ret-mo').textContent=fmtR(retR)+'/m²/mo';$('p-sc-ret').textContent=fmtR(scR)+'/m²/mo';$('p-ret-allin').textContent=fmtR(retAI)+'/m²/mo';$('p-cafe').textContent=fmtR(retAI*40);$('p-resto').textContent=fmtR(retAI*200);$('p-mart').textContent=fmtR(retAI*60);$('p-boutique').textContent=fmtR(retAI*30);$('p-salon').textContent=fmtR(retAI*35);$('p-pharma').textContent=fmtR(retAI*50);$('p-sc-total').textContent=fmtB(scTot)+'/yr';
   if(memB>0){$('mem-box').style.display='block';const avgM=(350000+850000+1750000)/3;$('mem-total').textContent=Math.ceil(memB/(avgM*12))+' members';}else{$('mem-box').style.display='none';}
   $('kpi-rev').textContent=fmtB(totRev);$('kpi-costs').textContent=fmtB(opex+psOut);$('kpi-rw2').textContent=fmtB(rwNet);$('kpi-margin').textContent=margin.toFixed(1)+'%';
-  $('pnl-off').textContent=fmtB(offRev);$('pnl-ret').textContent=fmtB(retRev);$('pnl-sc-off').textContent=fmtB(scOff);$('pnl-sc-ret').textContent=fmtB(scRet);$('pnl-mem').textContent=memB>0?fmtB(memB):'Rp 0';$('pnl-gross').textContent=fmtB(totRev);$('pnl-staff').textContent=fmtNeg(staff);$('pnl-maint').textContent=fmtNeg(maint);$('pnl-mktg').textContent=fmtNeg(mktg);$('pnl-admin').textContent=fmtNeg(admin);$('pnl-opex').textContent=fmtNeg(opex);$('pnl-net-b').textContent=fmtB(netPre);$('pnl-ps-pct').textContent=Math.round(ps*100);$('pnl-ps-out').textContent=fmtNeg(psOut);
+  $('pnl-off').textContent=fmtB(offRev);$('pnl-ret').textContent=fmtB(retRev);$('pnl-sc-off').textContent=fmtB(scOff);$('pnl-sc-ret').textContent=fmtB(scRet);$('pnl-mem').textContent=memB>0?fmtB(memB):'Rp 0';if($('pnl-creative'))$('pnl-creative').textContent=creT>0?fmtB(creT):'Rp 0';$('pnl-gross').textContent=fmtB(totRev);$('pnl-staff').textContent=fmtNeg(staff);$('pnl-maint').textContent=fmtNeg(maint);$('pnl-mktg').textContent=fmtNeg(mktg);$('pnl-admin').textContent=fmtNeg(admin);$('pnl-opex').textContent=fmtNeg(opex);$('pnl-net-b').textContent=fmtB(netPre);$('pnl-ps-pct').textContent=Math.round(ps*100);$('pnl-ps-out').textContent=fmtNeg(psOut);
   const se=$('pnl-surplus');se.textContent=surplus>=0?fmtB(surplus):fmtNeg(Math.abs(surplus));se.className='pnl-amount '+(surplus>=0?'pos':'neg');$('pnl-rw').textContent=fmtB(rwNet);
-  const cv=[toB(offRev),toB(retRev),toB(scTot),memB>0?toB(memB):null,toB(-staff),toB(-maint),toB(-mktg),toB(-admin),toB(-psOut),toB(rwNet)].filter(x=>x!==null);
-  const cl=['Off rent','Ret rent','Serv chg',memB>0?'Membership':null,'Staff','Maint','Mktg','Admin','Profit share','RW net'].filter(x=>x!==null);
-  const cc=['#4caf82','#4caf82','#4bafd4',memB>0?'#4bafd4':null,'#d45c4b','#d45c4b','#d45c4b','#d45c4b','#d45c4b','#5b50e8'].filter(x=>x!==null);
+  const cv=[toB(offRev),toB(retRev),toB(scTot),memB>0?toB(memB):null,creT>0?toB(creT):null,toB(-staff),toB(-maint),toB(-mktg),toB(-admin),toB(-psOut),toB(rwNet)].filter(x=>x!==null);
+  const cl=['Off rent','Ret rent','Serv chg',memB>0?'Membership':null,creT>0?'Programs':null,'Staff','Maint','Mktg','Admin','Profit share','RW net'].filter(x=>x!==null);
+  const cc=['#4caf82','#4caf82','#4bafd4',memB>0?'#4bafd4':null,creT>0?'#7a72f0':null,'#d45c4b','#d45c4b','#d45c4b','#d45c4b','#d45c4b','#5b50e8'].filter(x=>x!==null);
   if(chartModel){chartModel.data.labels=cl;chartModel.data.datasets[0].data=cv;chartModel.data.datasets[0].backgroundColor=cc;chartModel.update('none');}
   else{chartModel=new Chart($('chart-model'),{type:'bar',data:{labels:cl,datasets:[{data:cv,backgroundColor:cc,borderRadius:3,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const v=ctx.parsed.y;return(v<0?'(':'')+ ' Rp '+Math.abs(v).toFixed(2)+' B'+(v<0?')':'')}},backgroundColor:'#1e1f1c',titleColor:'#9a9890',bodyColor:'#f0ede6',borderColor:'rgba(255,255,255,0.1)',borderWidth:1}},scales:{x:{grid:{display:false},ticks:{color:'#5a5a56',font:{size:10,family:'DM Mono'},maxRotation:35,autoSkip:false}},y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#5a5a56',font:{size:10,family:'DM Mono'},callback:v=>'Rp '+v.toFixed(1)+'B'}}}}});}
 }
@@ -942,7 +966,8 @@ function renderDashboard(){
   const offArea=OFF_AREA*m.dev, retArea=RET_AREA*m.dev;
   const offRev=offArea*m.offR*m.occO*12, retRev=retArea*m.retR*m.occR*12;
   const scOff=offArea*m.scO*m.occO*12, scRet=retArea*m.scR*m.occR*12;
-  const totRev=offRev+retRev+scOff+scRet+m.memB;
+  const creT=m.fhall+m.matlib+m.spons+m.market;
+  const totRev=offRev+retRev+scOff+scRet+m.memB+creT;
   const opex=totRev*m.opexR, netPre=totRev-opex;
   const psOut=netPre*m.ps, rwNet=netPre-psOut;
   const covPct=psOut/land*100, surplus=psOut-land, margin=totRev>0?rwNet/totRev*100:0;
@@ -1144,7 +1169,10 @@ function calcProjection(){
     const offRev=offArea*offR*occ*12,retRev=retArea*retR*occ*12;
     const scOff=offArea*scO*occ*12,scRet=retArea*scR*occ*12,scTot=scOff+scRet;
     const memB=m.memB*(yr>=2?1:0.5);
-    const totRev=offRev+retRev+scOff+scRet+memB;
+    // Creative streams ramp to maturity by Year 3 and escalate with the rent multiplier.
+    const creRamp=yr>=3?1:(yr===2?0.85:0.65);
+    const cre=(m.fhall+m.matlib+m.spons+m.market)*creRamp*rm;
+    const totRev=offRev+retRev+scOff+scRet+memB+cre;
     const opex=totRev*m.opexR*om,netPre=totRev-opex;
     const psOut=netPre*m.ps,rwNet=netPre-psOut;
     const covPct=(psOut/LAND)*100;
@@ -1171,7 +1199,7 @@ function calcProjection(){
     const deferredIncome=totRev*0.04;
     // Equity = cumulative retained earnings
     // These will be computed cumulatively below
-    return{yr,occ,offRev,retRev,scTot,memB,totRev,opex,netPre,psOut,rwNet,covPct,
+    return{yr,occ,offRev,retRev,scTot,memB,cre,totRev,opex,netPre,psOut,rwNet,covPct,
       staff:opex*.4,maint:opex*.3,mktg:opex*.2,admin:opex*.1,
       depr,wcChange,capex,opCF,fcf,accumDepr,propertyNet,receivables,sponsorLoan,deferredIncome};
   });
@@ -1212,6 +1240,7 @@ function calcProjection(){
     {label:'Revenue',cls:'row-subtotal',empty:true},
     {label:'Office rent',cls:'row-indent',key:'offRev'},{label:'Retail rent',cls:'row-indent',key:'retRev'},
     {label:'Service charge',cls:'row-indent',key:'scTot'},{label:'Membership',cls:'row-indent',key:'memB'},
+    {label:'Creative programs',cls:'row-indent',key:'cre'},
     {label:'Gross revenue',cls:'row-subtotal',key:'totRev'},
     {label:'Opex (total)',cls:'row-neg',key:'opex'},
     {label:'Net profit (pre-share)',cls:'row-subtotal',fn:d=>d.netPre},
@@ -1389,7 +1418,7 @@ function chartOpts(unit,multi){
     scales:{x:{grid:{display:false},ticks:{color:'#5a5a56',font:{size:10,family:'DM Mono'}}},y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#5a5a56',font:{size:10,family:'DM Mono'},callback:v=>'Rp '+v.toFixed(1)+'B'}}}};
 }
 
-['sl-dev','sl-off','sl-ret','sl-sc-off','sl-sc-ret','sl-occ-off','sl-occ-ret','sl-mem','sl-opex','sl-ps'].forEach(id=>{$(id).addEventListener('input',()=>{calcModel();if(typeof calcBuild==='function'&&id==='sl-dev')calcBuild();calcProjection();if(typeof renderDashboard==='function')renderDashboard();if(typeof landInited!=='undefined'&&landInited){if(typeof occSyncOn==='function'&&occSyncOn())toggleOccSync();else updateLand();}});});
+['sl-dev','sl-off','sl-ret','sl-sc-off','sl-sc-ret','sl-occ-off','sl-occ-ret','sl-mem','sl-fhall','sl-matlib','sl-spons','sl-market','sl-opex','sl-ps'].forEach(id=>{const el=$(id);if(!el)return;el.addEventListener('input',()=>{calcModel();if(typeof calcBuild==='function'&&id==='sl-dev')calcBuild();calcProjection();if(typeof renderDashboard==='function')renderDashboard();if(typeof cvRefresh==='function'&&$('panel-revenue2')&&$('panel-revenue2').classList.contains('active'))cvRefresh();if(typeof landInited!=='undefined'&&landInited){if(typeof occSyncOn==='function'&&occSyncOn())toggleOccSync();else updateLand();}});});
 ['p-sl-openyr','p-sl-esc','p-sl-opexg','p-sl-occ1','p-sl-occS'].forEach(id=>{$(id).addEventListener('input',()=>{calcProjection();if(typeof renderDashboard==='function')renderDashboard();});});
 calcModel();
 refreshBenchLabels();
@@ -1981,8 +2010,8 @@ renderDashboard();
     </div>
 
     <div class="cv-chartwrap">
-      <div class="ct">Year 1 revenue by stream <span style="font-weight:600;color:var(--text3);font-size:0.74rem;">&mdash; Base case</span></div>
-      <div class="cs">Eight categories, ~Rp 14.4 B total. Office lease anchors; Material Library is the most defensible.</div>
+      <div class="ct">Year 1 revenue by stream <span id="cv-capscen" style="font-weight:600;color:var(--text3);font-size:0.74rem;">&mdash;</span></div>
+      <div class="cs" id="cv-cap">Computed live from the Financial Model tab.</div>
       <div class="cv-canvas-box"><canvas id="cv-chart"></canvas></div>
     </div>
 
@@ -1992,19 +2021,19 @@ renderDashboard();
         <div class="n">01 &middot; HIGH-MARGIN VENUE</div>
         <h4>Function Hall by-the-hour</h4>
         <p>Corporate venue hire for the BSD / Bintaro corridor (Samsung, Astra, Unilever). ~Rp 50 jt / full day, filled 2&ndash;3 days a week.</p>
-        <div class="amt">~Rp 2&ndash;3 B / yr</div>
+        <div class="amt" id="cv-s-fhall">&mdash;</div>
       </div>
       <div class="cv-stream">
         <div class="n">02 &middot; RECURRING</div>
         <h4>"Redwoods Card" membership</h4>
         <p>One card, all zones &mdash; library, co-working day pass, sport, workshop discounts. Makes the community sticky.</p>
-        <div class="amt">~Rp 2.1 B / yr</div>
+        <div class="amt" id="cv-s-mem">&mdash;</div>
       </div>
       <div class="cv-stream">
         <div class="n">03 &middot; DEFENSIBLE</div>
         <h4>Material Library (reversed)</h4>
         <p>Brands <em>pay</em> to display to visiting architects &amp; designers. 150&ndash;400 cabinets at Rp 300&ndash;500k/mo, near-zero opex.</p>
-        <div class="amt">~Rp 0.7&ndash;2.4 B / yr</div>
+        <div class="amt" id="cv-s-matlib">&mdash;</div>
       </div>
     </div>
 
@@ -2045,7 +2074,7 @@ renderDashboard();
       </div>
     </div>
 
-    <p class="ce-note">Scenario totals: Conservative Rp 9.2 B &rarr; 16.5 B &middot; Base Rp 14.4 B &rarr; 26.8 B &middot; Optimistic Rp 20.2 B &rarr; 36.2 B (Year 1 &rarr; Year 3). Planning estimates derived from the shared concept &mdash; for discussion, not committed figures.</p>
+    <p class="ce-note" id="cv-note">Figures are computed live from the Financial Model and 10-year Projection.</p>
   </div>
 </div>
 <!-- ===== /CREATIVE ECONOMY TABS ===== -->
@@ -2703,29 +2732,42 @@ if(typeof applyChartTheme==='function')setTimeout(applyChartTheme,30);
       '<div class="cz-rev"><div class="k">Revenue model</div><div class="v">'+z.rev+'</div></div>';
   };
 
-  // ---- Revenue scenarios ----
-  const SC = {
-    conservative:{y1:9.2,y3:16.5},
-    base:{y1:14.4,y3:26.8},
-    optimistic:{y1:20.2,y3:36.2}
-  };
-  // Base-case Year-1 streams (Rp B) — scaled proportionally for other scenarios
-  const STREAMS = [
-    ['Office lease',4.3],['Function hall & events',2.5],['Membership (Redwoods Card)',2.1],
-    ['F&B & retail',1.8],['Material Library',1.2],['Sponsorship / CSR',1.0],
-    ['Weekend & design market',0.8],['Co-working & studio',0.7]
-  ];
+  // ---- Revenue Plan: read LIVE from the financial model & projection ----
+  // Scenario buttons map to the model's master Low/Mid/High scenario so every tab stays in sync.
+  const CV_MAP={conservative:'low',base:'mid',optimistic:'high'};
+  const CV_RMAP={low:'conservative',mid:'base',high:'optimistic'};
   let cvChart = null;
 
-  function drawChart(scale){
+  function cvData(){
+    if(typeof getM!=='function') return null;
+    if(!window.PROJ_RESULTS && typeof calcProjection==='function') calcProjection();
+    const P = window.PROJ_RESULTS; if(!P || !P.data || !P.data[0] || !P.data[2]) return null;
+    const m = getM();
+    const d1 = P.data[0], d3 = P.data[2];
+    const creSum = (m.fhall+m.matlib+m.spons+m.market) || 1;
+    const cre1 = d1.cre || 0; // Year-1 creative lump (already ramped in the projection)
+    const streams = [
+      ['Office rent', d1.offRev],
+      ['Retail / F&B rent', d1.retRev],
+      ['Service charges', d1.scTot],
+      ['Membership', d1.memB],
+      ['Function hall & events', cre1*(m.fhall/creSum)],
+      ['Material Library', cre1*(m.matlib/creSum)],
+      ['Sponsorship / CSR', cre1*(m.spons/creSum)],
+      ['Weekend & design market', cre1*(m.market/creSum)]
+    ];
+    return { streams, y1:d1.totRev, y3:d3.totRev, m };
+  }
+
+  function cvDraw(streams){
     const cv = document.getElementById('cv-chart'); if(!cv || typeof Chart==='undefined') return;
     const accent = CSS('--accent','#5b50e8'), text2 = CSS('--text2','#6b7385'), border = CSS('--border','rgba(0,0,0,0.08)');
-    const labels = STREAMS.map(s=>s[0]);
-    const data = STREAMS.map(s=>Math.round(s[1]*scale*10)/10);
+    const labels = streams.map(s=>s[0]);
+    const data = streams.map(s=>Math.round(s[1]/1e9*10)/10);
     if(cvChart) cvChart.destroy();
     cvChart = new Chart(cv.getContext('2d'),{
       type:'bar',
-      data:{labels:labels,datasets:[{data:data,backgroundColor:accent,borderRadius:6,maxBarThickness:34}]},
+      data:{labels:labels,datasets:[{data:data,backgroundColor:accent,borderRadius:6,maxBarThickness:30}]},
       options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
         plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'Rp '+c.parsed.x+' B'}}},
         scales:{
@@ -2735,15 +2777,34 @@ if(typeof applyChartTheme==='function')setTimeout(applyChartTheme,30);
     });
   }
 
+  const cvB = n => 'Rp '+(n/1e9).toFixed(1);
+
+  // Refresh the display from the CURRENT model state (does NOT change the scenario).
+  window.cvRefresh = function(){
+    const D = cvData(); if(!D) return;
+    const fs = (typeof activeFinScenario!=='undefined') ? activeFinScenario : 'mid';
+    const scen = CV_RMAP[fs] || 'base';
+    window.__cvSel = scen;
+    document.querySelectorAll('#cv-scen button').forEach(b=>b.classList.toggle('active', b.getAttribute('data-s')===scen));
+    const y1=document.getElementById('cv-y1'), y3=document.getElementById('cv-y3'), mu=document.getElementById('cv-mult');
+    if(y1) y1.innerHTML = cvB(D.y1)+'<small> B</small>';
+    if(y3) y3.innerHTML = cvB(D.y3)+'<small> B</small>';
+    if(mu) mu.innerHTML = (D.y1>0 ? (Math.round(D.y3/D.y1*10)/10) : 0)+'&times;';
+    const cap=document.getElementById('cv-cap'); if(cap) cap.textContent='Eight streams, live from the Financial Model — Rp '+(D.y1/1e9).toFixed(1)+' B total in Year 1.';
+    const cs=document.getElementById('cv-capscen'); if(cs) cs.textContent='— '+scen.charAt(0).toUpperCase()+scen.slice(1)+' case';
+    const sf=document.getElementById('cv-s-fhall'); if(sf) sf.textContent = cvB(D.m.fhall)+' B / yr';
+    const sm=document.getElementById('cv-s-mem'); if(sm) sm.textContent = (D.m.memB>0 ? cvB(D.m.memB)+' B / yr' : 'set on Model tab');
+    const sl=document.getElementById('cv-s-matlib'); if(sl) sl.textContent = cvB(D.m.matlib)+' B / yr';
+    const nt=document.getElementById('cv-note'); if(nt) nt.textContent='Figures computed live from the Financial Model & 10-year Projection. Conservative / Base / Optimistic move the master Low / Mid / High scenario across every tab; fine-tune any stream on the Financial Model tab.';
+    cvDraw(D.streams);
+  };
+
+  // Clicking a scenario drives the master scenario (which recomputes every tab), then refreshes.
   window.cvSelect = function(name){
-    const s = SC[name]; if(!s) return;
-    window.__cvSel = name;
-    document.querySelectorAll('#cv-scen button').forEach(b=>b.classList.toggle('active', b.getAttribute('data-s')===name));
-    const y1 = document.getElementById('cv-y1'), y3 = document.getElementById('cv-y3'), mu = document.getElementById('cv-mult');
-    if(y1) y1.innerHTML = 'Rp '+s.y1.toFixed(1)+'<small> B</small>';
-    if(y3) y3.innerHTML = 'Rp '+s.y3.toFixed(1)+'<small> B</small>';
-    if(mu) mu.innerHTML = (Math.round(s.y3/s.y1*10)/10)+'&times;';
-    drawChart(s.y1 / SC.base.y1); // scale the Base-case stream mix to the chosen scenario's Year-1 total
+    const t = CV_MAP[name];
+    if(t && typeof setFinScenario==='function') setFinScenario(t);
+    else if(typeof calcProjection==='function') calcProjection();
+    cvRefresh();
   };
 
   // Repaint chart on theme toggle if the revenue tab is visible
@@ -2751,7 +2812,7 @@ if(typeof applyChartTheme==='function')setTimeout(applyChartTheme,30);
   if(typeof _tt === 'function'){
     window.toggleTheme = function(){ _tt.apply(this, arguments);
       const p = document.getElementById('panel-revenue2');
-      if(p && p.classList.contains('active')) cvSelect(window.__cvSel||'base');
+      if(p && p.classList.contains('active') && typeof cvRefresh==='function') cvRefresh();
     };
   }
 })();
