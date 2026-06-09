@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Projects — Redwoods Solutions</title>
+<link rel="icon" href="../assets/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -31,11 +35,9 @@
   /* Header */
   .top{display:flex;align-items:center;gap:13px;margin-bottom:0.4rem;}
   .logo{
-    width:42px;height:42px;border-radius:12px;
-    background:linear-gradient(135deg,var(--accent),var(--accent-2));
-    display:flex;align-items:center;justify-content:center;
-    color:#fff;font-weight:800;font-size:1.1rem;flex-shrink:0;
-    box-shadow:0 6px 16px rgba(91,80,232,0.30);
+    width:42px;height:42px;border-radius:12px;flex-shrink:0;
+    object-fit:cover;display:block;
+    box-shadow:0 6px 16px rgba(13,0,30,0.25);
   }
   .top .brand{font-size:0.7rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);}
   .top h1{font-size:1.5rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1;}
@@ -94,7 +96,7 @@
 <body>
   <div class="wrap">
     <div class="top">
-      <div class="logo">R</div>
+      <img class="logo" src="../assets/logo.png" alt="Redwoods logo" width="42" height="42">
       <div>
         <div class="brand">Redwoods Solutions</div>
         <h1>Projects</h1>

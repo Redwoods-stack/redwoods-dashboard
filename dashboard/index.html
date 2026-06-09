@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Redwoods Park — Financial Dashboard</title>
+<link rel="icon" href="../assets/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
@@ -39,7 +43,7 @@ body{font-family:'Plus Jakarta Sans','Geist',sans-serif;background:var(--bg);col
 .app{display:grid;grid-template-columns:230px 1fr;min-height:100vh;}
 .rail{background:var(--rail);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
 .rail-brand{padding:1.6rem 1.4rem 1.3rem;display:flex;align-items:center;gap:11px;}
-.rail-logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#8b83f5);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:1rem;box-shadow:0 4px 12px var(--accent-soft);}
+.rail-logo{width:34px;height:34px;border-radius:10px;flex-shrink:0;object-fit:cover;display:block;box-shadow:0 4px 12px var(--accent-soft);}
 .rail-brand h1{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.05rem;font-weight:800;color:var(--text);letter-spacing:-0.02em;line-height:1.05;}
 .rail-brand p{font-size:0.6rem;color:var(--text3);margin-top:2px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;}
 .rail-nav{display:flex;flex-direction:column;padding:0.5rem 0.8rem;gap:3px;flex:1;}
@@ -243,7 +247,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 <div class="app">
   <aside class="rail">
     <div class="rail-brand">
-      <div class="rail-logo">R</div>
+      <img class="rail-logo" src="../assets/logo.png" alt="Redwoods logo" width="34" height="34">
       <div>
         <h1>Redwoods Park</h1>
         <p>Bintaro Project</p>
