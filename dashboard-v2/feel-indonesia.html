@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feel Indonesia in 6 Senses — Redwoods</title>
+<style>
+  :root{
+    --dark:#070710; --surface:#0F0F1A; --card:#13131F;
+    --border:#ffffff0d; --borderHi:#ffffff1a;
+    --muted:#6B6B85; --body:#B8B8D0; --white:#EDEDF8;
+    --vc:#C8F250; --impact:#5CB8FF; --gov:#FF9E5C;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--dark);color:var(--white);font-family:'Inter','Helvetica Neue',sans-serif;min-height:100vh;}
+  button{font-family:inherit;}
+  em{font-style:italic;}
+  /* nav */
+  .topbar{position:sticky;top:0;z-index:50;background:#070710f2;backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 32px;min-height:56px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .logo{width:28px;height:28px;border-radius:6px;background:var(--vc);display:flex;align-items:center;justify-content:center;font-size:14px;}
+  .brand-name{font-weight:900;font-size:14px;letter-spacing:0.06em;text-transform:uppercase;}
+  .brand-tag{color:var(--muted);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;}
+  .navbtns{display:flex;gap:2px;flex-wrap:wrap;}
+  .navbtn{background:transparent;color:var(--muted);border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px;transition:all 0.12s;}
+  .navbtn:hover{color:var(--white);}
+  .navbtn.active{background:#ffffff10;color:var(--white);font-weight:600;}
+  .colorbar{display:flex;height:3px;}
+  .colorbar div{flex:1;}
+  .container{max-width:980px;margin:0 auto;padding:48px 32px 80px;}
+  /* shared */
+  .pill{display:inline-block;border-radius:4px;padding:2px 9px;font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;white-space:nowrap;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;}
+  h2.sec{font-size:32px;font-weight:900;color:var(--white);line-height:1.2;margin:14px 0 10px;max-width:660px;}
+  .sec-sub{color:var(--body);font-size:15px;line-height:1.75;max-width:600px;}
+  .hidden{display:none;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .grid2sm{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  .grid6{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;}
+  .label-up{font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;}
+  .tabbtn{cursor:pointer;text-align:center;transition:all 0.15s;border-radius:10px;}
+  .footer-nav{border-top:1px solid var(--border);padding:16px 32px;max-width:980px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;}
+  .navprev{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:8px 20px;cursor:pointer;font-size:13px;}
+  .navnext{background:var(--vc);border:none;color:var(--dark);border-radius:8px;padding:8px 20px;cursor:pointer;font-size:13px;font-weight:700;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{text-align:left;padding:8px 12px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid var(--border);}
+  td{padding:12px;border-bottom:1px solid var(--border);}
+  @media(max-width:768px){
+    .grid2,.grid2sm,.grid4{grid-template-columns:1fr;}
+    .grid6{grid-template-columns:repeat(3,1fr);}
+    .container{padding:32px 18px 60px;}
+    h2.sec{font-size:24px;}
+    .topbar{padding:10px 18px;}
+  }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">🌳</div>
+      <span class="brand-name">REDWOODS</span>
+      <span class="brand-tag">Feel Indonesia in 6 Senses</span>
+    </div>
+    <div class="navbtns" id="navbtns"></div>
+  </div>
+  <div class="colorbar" id="colorbar"></div>
+  <div class="container" id="content"></div>
+  <div class="footer-nav">
+    <button class="navprev" id="prevBtn">← Prev</button>
+    <span style="color:var(--muted);font-size:12px;" id="pageNum"></span>
+    <button class="navnext" id="nextBtn">Next →</button>
+  </div>
+
+<script>
+const C={dark:"#070710",surface:"#0F0F1A",card:"#13131F",border:"#ffffff0d",borderHi:"#ffffff1a",muted:"#6B6B85",body:"#B8B8D0",white:"#EDEDF8",vc:"#C8F250",impact:"#5CB8FF",gov:"#FF9E5C"};
+
+const senses=[
+{id:"sight",sense:"SIGHT",verb:"See Indonesia",icon:"👁",color:"#E17055",line:"The visual story of the archipelago.",sectors:["Film","Art","Fashion","Tourism","Gaming","Literature"],realAsset:"Horror & mythology IP — Joko Anwar's Nightmares & Daydreams hit US Netflix Top 10. Indonesian visual storytelling (kuntilanak, pocong, Nusantara lore) is the world's most under-exploited cinematic universe.",work:["Joko Anwar","Kimo Stamboel","Visinema","Riri Riza / Miles Films","JAFF (Jogja Film Festival)"],globalPartners:["Netflix","A24","Mubi","Cannes Marché","Production I.G. (anime crossover)"],ownFest:"NUSANTARA SCREEN — a touring Indonesian film festival"},
+{id:"sound",sense:"SOUND",verb:"Hear Indonesia",icon:"🎵",color:"#6C5CE7",line:"The sound of 17,000 islands.",sectors:["Music","Soundtrack","Alternative Genre","Traditional Instrument"],realAsset:"The 88rising diaspora (Rich Brian 10M+ listeners, NIKI, Warren Hue) proves the talent is global. Gamelan influenced Reich, Eno, and every music academy. Yet Indonesia owns none of this IP.",work:["Rich Brian","Pamungkas","Ramengvrl","Senyawa","Weird Genius","Nadin Amizah"],globalPartners:["88rising","Spotify Editorial","Java Jazz","Primavera Sound","Sublime Frequencies"],ownFest:"PESTA NUSANTARA — Indonesian music festival, exported"},
+{id:"scent",sense:"SCENT",verb:"Smell Indonesia",icon:"🌺",color:"#FD79A8",line:"The fragrance of the spice islands.",sectors:["Perfumery","Essential Oil","Indonesian Incense","Spices & Flowers"],realAsset:"Indonesia supplies 85% of the world's patchouli — in 90%+ of luxury perfumes. Export price $70/kg; finished perfume $10,000/litre. The entire premium is captured in Paris. This is the single biggest value-capture opportunity.",work:["Sumatran patchouli cooperatives","BPOM (halal cert)","BDD fragrance library","Grasse-trained ID perfumers"],globalPartners:["Byredo","Aesop","Givaudan / Firmenich","Le Labo","Parfums de Marly"],ownFest:"SCENT OF NUSANTARA — sensory fragrance exhibition"},
+{id:"savour",sense:"SAVOUR",verb:"Taste Indonesia",icon:"🍜",color:"#FDCB6E",line:"The flavour the world already loves.",sectors:["National Dishes","Halal Food","Food Spices","Coffee & Tea"],realAsset:"Indonesian cuisine ranked 7th globally (TasteAtlas). Rendang = #1 most delicious food on earth (CNN). Yet zero Indonesian fine-dining brand exists at the Nobu / Momofuku level. Spice exports remain unbranded commodity.",work:["Chef Marinka","Will Meyrick (Mama San)","Indonesian coffee estates","ISCC (specialty coffee)"],globalPartners:["René Redzepi / Noma","TasteAtlas","Six Senses F&B","Singapore Michelin circuit"],ownFest:"RASA — Indonesian culinary festival, global capitals"},
+{id:"sensation",sense:"SENSATION",verb:"Touch Indonesia",icon:"🌿",color:"#00B894",line:"The feeling of craft, healing, and play.",sectors:["Traditional Crafts","Wood & Stone Work","Massage","Bath Ritual","Sports"],realAsset:"Jamu is UNESCO-listed; the traditional-medicine market is $175B → $350B. Indonesia has the world's most complete wellness system. Mutual Golf (Redwoods portfolio) can become SEA's youth golf IP. Matcha did it for Japan — jamu is next.",work:["Sido Muncul (knowledge)","SukkhaCitta","Bali wellness network","Mutual Golf (in-portfolio)"],globalPartners:["Six Senses","Aman Resorts","COMO Hotels","Global Wellness Institute"],ownFest:"RUANG NUSANTARA — wellness + craft retreat festival"},
+{id:"spirit",sense:"SPIRIT",verb:"Feel Indonesia",icon:"✨",color:"#a78bfa",line:"The soul beneath everything — the reason it all coheres.",sectors:["Way of Life","Local Culture","Traditions & Behaviour","Meme & Humour","Spiritual","Storytelling"],realAsset:"Gotong royong, Bhinneka Tunggal Ika, the Indonesian worldview. The deepest, most durable soft power — and the connective tissue of the other five senses. This is the 'Collective Micro Narrative → Macro Trust' from the deck made real.",work:["Indonesian storytellers","Diaspora creators","Indigenous knowledge keepers","Meme / digital culture creators"],globalPartners:["TED","Nas Daily-tier creators","UNESCO","Cultural diplomacy networks"],ownFest:"NUSANTARA — the umbrella festival uniting all 6 senses"}
+];
+
+const sixP=[
+{p:"PEOPLE",icon:"👥",color:C.vc,deckLine:"Talent and creator pipeline.",deckProblem:"High talent, low scalability.",solution:"Redwoods Creator Pipeline feeding from Impact Layer (grants/incubator) → VC Layer (investment) → Platform (distribution). Tap the 250M+ community and 44-portfolio network.",portfolio:"Infia Group community (audience), Maple Media (talent reach)",work:["JAFF talent pool","BDD creator network","88rising diaspora","Redwoods fellowship cohorts"],kpi:"500+ creators in pipeline by Year 3"},
+{p:"PRODUCT",icon:"🎬",color:C.impact,deckLine:"Film, music, food, wellness, IP, etc.",deckProblem:"Strong cultural output, weak global expansion.",solution:"The 6 Senses portfolio IS the product strategy. Each sense produces flagship IP that Redwoods co-owns and packages for global markets.",portfolio:"Maple Media (content production), Mutual Golf (sports IP)",work:["Joko Anwar (film)","Rich Brian (music)","Tanah Air (fragrance)","Jamu House (wellness)"],kpi:"50+ IP products by Year 3"},
+{p:"PLATFORM",icon:"📡",color:C.gov,deckLine:"Media, OTT, festivals, retail, cultural houses.",deckProblem:"Distribution channels fragmented and limited globally.",solution:"Three-layer distribution: (1) own 100M+ social via Infia/Maple, (2) OTT + festival partnerships, (3) Redwoods Park + Cultural Houses abroad. PLUS our own festivals in each sense.",portfolio:"Infia Group (100M+ social audience), Maple Media (media assets)",work:["Netflix","Spotify","Cannes/JAFF/SXSW","Redwoods Park (BDD)","Cultural Houses"],kpi:"3 OTT deals + 2 cultural houses + 6 owned festivals by Year 4"},
+{p:"PRODUCTION CAPITAL",icon:"💰",color:C.vc,deckLine:"Funds, CSR, grants.",deckProblem:"Creative IP lacks structured financing.",solution:"Three-pool stack: VC Fund ($5–100M, 17–26%), Impact ($80–300M, 2–3% + pinjaman), Gov grants/match. Redwoods comes in as STRATEGIC partner, not just financial.",portfolio:"Redwoods Digital Growth Group (GP), cross-portfolio synergy",work:["CT Corp / Sinar Mas (LP)","Telkomsel/BCA (CSR)","IFC/ADB (impact)","Kemenparekraf (grants)"],kpi:"$500M+ across all three pools by Year 5"},
+{p:"POSITIONING",icon:"🗺",color:C.impact,deckLine:"Narrative, branding, diplomacy.",deckProblem:"Indonesia has many stories, but no unified global identity.",solution:"THE BIG NARRATIVE: 'Feel Indonesia in 6 Senses.' One coherent story replacing fragmented messaging. Collective Micro Narrative → Macro Trust. Every output passes the 6-sense fit test.",portfolio:"Maple Media (narrative engine), Infia (amplification)",work:["Brand Finance (data)","Kemlu (diplomacy)","Global press","WEF/Davos distribution"],kpi:"Indonesia top 30 Soft Power Index by Year 7"},
+{p:"POLICY & GOVERNANCE",icon:"🏛",color:C.gov,deckLine:"Regulation, incentives, coordination.",deckProblem:"High friction and weak cross-sector alignment.",solution:"Redwoods as policy advocate via Kemenparekraf MoU. Push film tax incentive (UK EIS model), IP-backed lending, export credits. Synchronize the 5 engines: Institution, Economy, Talent, Social, Narrative.",portfolio:"Redwoods institutional credibility + government relationships",work:["Kemenparekraf","Kemlu","Bank Indonesia","LPEI (export credit)","ASEAN Secretariat"],kpi:"2 enabling policies enacted by Year 3"}
+];
+
+const festivalStrategy={
+tapInto:[
+{fest:"Cannes Film Market",sense:"SIGHT",country:"France",move:"Rent a national pavilion. Present 3 Indonesian films/year as a curated slate with international sales agents.",color:"#E17055"},
+{fest:"Sundance",sense:"SIGHT",country:"USA",move:"Target one Indonesian film in competition by Year 2. Hire CAA/WME sales agent.",color:"#E17055"},
+{fest:"Primavera Sound",sense:"SOUND",country:"Spain",move:"Senyawa already played here. Fund 2 Indonesian acts/year onto the lineup.",color:"#6C5CE7"},
+{fest:"SXSW",sense:"SOUND",country:"USA",move:"'Indonesia at SXSW' — music showcase + film + tech-meets-culture panels. Convergence story.",color:"#6C5CE7"},
+{fest:"Paris Fragrance Week",sense:"SCENT",country:"France",move:"Launch Tanah Air fragrance brand here. Co-brand with Byredo or Le Labo.",color:"#FD79A8"},
+{fest:"Frieze Art Fair",sense:"SIGHT",country:"UK / USA",move:"Commission Batak, Dayak, Papuan contemporary artists. Redwoods as gallery + IP owner.",color:"#E17055"},
+{fest:"Salone del Mobile",sense:"SENSATION",country:"Italy",move:"Indonesian craft + design showcase. BDD already partners with Italian Embassy.",color:"#00B894"},
+{fest:"Madrid Fusión",sense:"SAVOUR",country:"Spain",move:"World's top gastronomy congress. Present Indonesian cuisine with Chef Marinka.",color:"#FDCB6E"}
+],
+buildOwn:[
+{name:"NUSANTARA",sense:"SPIRIT (Umbrella)",icon:"✨",color:"#a78bfa",concept:"The flagship. A multi-sensory festival that bundles all 6 senses into one immersive 'Feel Indonesia' experience. Film + music + fragrance + food + wellness + storytelling under one roof.",home:"Redwoods Park, BDD (annual)",export:[{city:"Singapore",year:"Year 2",why:"First international test. 15K diaspora, SEA gateway."},{city:"Dubai",year:"Year 3",why:"6M Indonesians in Gulf. Halal-aligned. Expo legacy infra."},{city:"Tokyo",year:"Year 4",why:"Japan's deep Indonesia bond. Anime crossover audience."},{city:"London",year:"Year 5",why:"Global culture capital. Frieze + diaspora + press."}]},
+{name:"NUSANTARA SCREEN",sense:"SIGHT",icon:"👁",color:"#E17055",concept:"Touring Indonesian film festival. Showcases the Nusantara Universe (mythology IP) + arthouse + horror. Travels to diaspora cities and film markets.",home:"Redwoods Park + JAFF partnership",export:[{city:"Los Angeles",year:"Year 3",why:"Industry access. Pitch to A24, Netflix, studios in person."},{city:"Busan (within BIFF)",year:"Year 2",why:"Asia's top film festival. Co-programmed Indonesian sidebar."}]},
+{name:"PESTA NUSANTARA",sense:"SOUND",icon:"🎵",color:"#6C5CE7",concept:"Indonesian music festival, exported. Gamelan-fusion to hip-hop to indie. The Indonesian Coachella, built to travel.",home:"Redwoods Park amphitheatre",export:[{city:"Singapore",year:"Year 2",why:"Strong SEA music market, festival infrastructure."},{city:"Amsterdam / Berlin",year:"Year 4",why:"European electronic + world music audience. Senyawa fanbase."}]},
+{name:"RASA",sense:"SAVOUR",icon:"🍜",color:"#FDCB6E",concept:"Indonesian culinary festival. Chef-driven, immersive. Pop-up Bumbu fine dining + street food + spice market + cooking masterclasses.",home:"Redwoods Park market zone",export:[{city:"Dubai",year:"Year 3",why:"Global F&B hub, halal market, luxury dining scene."},{city:"London",year:"Year 4",why:"World's most diverse food city. Press + Michelin attention."}]}
+]
+};
+
+const softPowerMove=[
+{title:"Strengthen Local",icon:"🌱",desc:"Build solid creative ecosystem. Support creators & IP locally first.",color:C.vc},
+{title:"Go Global",icon:"🌏",desc:"Export culture using diplomacy, collaboration, media, and storytelling.",color:C.gov},
+{title:"Stay Cultural",icon:"🤝",desc:"Be human, creative, globally relatable. No cultural exploitation. Avoid conflict-driven positioning.",color:C.impact},
+{title:"Avoid Zero-Sum",icon:"♾️",desc:"Shift from competition to collaboration. No price war — focus on quality & differentiation.",color:"#a78bfa"}
+];
+
+const nav=[{id:"narrative",label:"The Big Narrative"},{id:"senses",label:"6 Senses"},{id:"sixp",label:"6P System"},{id:"festivals",label:"Festival Strategy"},{id:"kols",label:"KOLs & Faces"},{id:"brands",label:"Underrated Brands"},{id:"activation",label:"Activation"}];
+
+const tiers={
+global:{label:"Global Ambassador",color:C.gov,note:"Already globally recognized. Represents Indonesia on the world stage."},
+taste:{label:"Taste-Maker",color:C.vc,note:"Cult credibility. Defines what's cool. The class Hindia / No Na / Ali sit in."},
+rising:{label:"Rising / Diaspora",color:C.impact,note:"Breaking out now. Best value to sign early before they're global."}
+};
+const kols={
+sight:[
+{name:"Nicholas Saputra",tier:"global",role:"Actor / Producer",why:"Indonesia's most respected actor (Ada Apa Dengan Cinta, Gie). UNICEF National Ambassador. Architecture grad, environmentalist, runs Tanakhir Films. The dignified, intellectual face of Indonesia.",use:"Lead face of 'Feel Indonesia' campaign. Festival ambassador. Cannes/Berlinale presence."},
+{name:"Joko Anwar",tier:"global",role:"Director",why:"The auteur who put Indonesian cinema on Netflix's US Top 10. Nightmares & Daydreams creator. The architect of any Nusantara Universe.",use:"Creative Director of Redwoods Film. Builds the mythology IP."},
+{name:"Dian Sastrowardoyo",tier:"global",role:"Actress",why:"Iconic since AADC. Wears Sejauh Mata Memandang to international festivals — already a soft-power carrier for local brands.",use:"Fashion + film bridge ambassador. Brand collab anchor."},
+{name:"Reza Rahadian",tier:"taste",role:"Actor",why:"Indonesia's most prolific serious actor. Paragon Pictures slate, Filmart presence. Critically untouchable at home.",use:"Lead in internationally-positioned Redwoods films."},
+{name:"Tissa Biani / Iqbaal Ramadhan",tier:"rising",role:"Actor / Gen-Z",why:"Iqbaal (ex-CJR, Dilan) bridges music + film + huge Gen-Z reach. Tissa is the new generation (Agak Laen, Cigarette Girl).",use:"Gen-Z audience capture. Social-first campaigns."}
+],
+sound:[
+{name:"Hindia (Baskara Putra)",tier:"taste",role:"Musician / Sun Eater",why:"The voice of a generation. .Feast + Hindia + Lomba Sihir, 5 AMI Awards, Fortune 40 Under 40. Sun Eater label = the coolest ecosystem in Indonesian indie. Cult credibility money can't buy.",use:"Sound ambassador. Sun Eater = ready-made roster partnership. Pesta Nusantara headliner."},
+{name:"NIKI / No Na",tier:"global",role:"Singer (88rising)",why:"NIKI plays Coachella, global arenas. No Na is the next 88rising breakout. The class that proves Indonesian artists belong on the world's biggest stages.",use:"Global stage credibility. Bridge to 88rising partnership."},
+{name:"Rich Brian",tier:"global",role:"Rapper (88rising)",why:"10M+ Spotify, Marvel OST, world tour opened in Jakarta. The single most globally recognized Indonesian musician.",use:"Global ambassador + label JV target (Redwoods Records)."},
+{name:"Pamungkas",tier:"taste",role:"Singer-songwriter",why:"4.6M Spotify, fully independent, DIY empire. Proof you can be global without a Western label.",use:"Model for Redwoods Records' IP-ownership pitch to artists."},
+{name:"Ramengvrl",tier:"taste",role:"Rapper",why:"Fierce, bilingual female hip-hop — globally underrepresented archetype. International collab history.",use:"Female-forward global positioning. Festival circuit."},
+{name:"Senyawa",tier:"taste",role:"Experimental",why:"Already on Sublime Frequencies (US), played Primavera Sound. The world's most critically acclaimed Indonesian avant-garde act. Gamelan-meets-noise.",use:"Gamelan × electronic IP. Sync licensing for luxury brands. Highbrow credibility."}
+],
+savour:[
+{name:"Renatta Moeloek",tier:"taste",role:"Chef",why:"Le Cordon Bleu Paris trained. MasterChef Indonesia judge — instantly recognizable. Cooked Indonesian food on French TV, toured 5 European countries. Tatler 'Tastemaker'. The face of modern Indonesian fine dining.",use:"Lead chef for 'RASA' festival + Bumbu fine-dining concept. Culinary ambassador."},
+{name:"Will Meyrick",tier:"taste",role:"Chef (Mama San)",why:"'Street food chef' who built globally-known SE Asian restaurants from Bali. Deep Indonesian ingredient knowledge, Western-market fluency.",use:"International restaurant expansion partner."},
+{name:"Chef Juna",tier:"global",role:"Chef",why:"MasterChef fame + serious fine-dining pedigree. Mass recognition + culinary authority.",use:"Mainstream culinary credibility for content + TV."},
+{name:"Ragil Imam Wibowo",tier:"taste",role:"Chef (Nusa)",why:"Nusa Gastronomy — the chef doing the most serious work elevating pure Indonesian cuisine to fine dining. Critically respected, under-famous.",use:"Authenticity anchor for premium Indonesian culinary IP."}
+],
+scent_sensation_spirit:[
+{name:"Chitra Subyakto",tier:"taste",role:"Founder, Sejauh Mata Memandang",why:"Former stylist (Laskar Pelangi) turned textile visionary. Built a brand respected from Singapore to Milan. The spirit + sensation crossover — craft, sustainability, heritage.",use:"Craft + textile ambassador. Material storytelling for 'Sensation' festival."},
+{name:"Andra Matin",tier:"taste",role:"Architect",why:"World-renowned Indonesian architect, BDD curator. The spatial visionary who can design Redwoods Park + Cultural Houses.",use:"Designs the physical Redwoods experience. Architecture-as-soft-power."},
+{name:"Diaspora creators / storytellers",tier:"rising",role:"Digital / Spirit",why:"The 'meme & humour + storytelling' layer from the deck. Indonesian digital culture creators with global reach.",use:"Spirit narrative — values, humour, way of life. Social amplification."}
+]
+};
+const brands=[
+{name:"Sejauh Mata Memandang",sense:"SIGHT / SENSATION",color:"#E17055",cat:"Textile & Slow Fashion",home:"Seen as 'just batik scarves' by mass market.",abroad:"Sold in Singapore & Malaysia, exhibited internationally, worn by Dian Sastro at festivals abroad and Gabber Modus Operandi in Singapore. Zero-waste pioneer.",move:"Anchor brand for the SIGHT festival fashion showcase. Back international retail expansion (Paris/Tokyo concept stores). Co-create Redwoods × Sejauh capsule."},
+{name:"Pijak Bumi",sense:"SENSATION",color:"#00B894",cat:"Sustainable Footwear",home:"Niche eco-sneaker, small following.",abroad:"Only Southeast Asian brand at MICAM Milano 2020. Selected as one of 12 of the world's most innovative shoe designers. Uses water hyacinth + recycled tires.",move:"Sustainability hero for global press. Pitch a Redwoods-backed collab with a global sneaker name (the Nike/Adidas batik play). Milan + Paris design fairs."},
+{name:"SukkhaCitta",sense:"SENSATION / SPIRIT",color:"#a78bfa",cat:"Artisan Social Enterprise",home:"Premium-priced, seen as expensive locally.",abroad:"NYT & Vogue coverage. Global sustainability credibility. Direct rural-artisan model, regenerative cotton.",move:"Impact Layer flagship — exactly the 'commerce + healing + community' story. Showcase as proof that Indonesian craft commands global premium."},
+{name:"Sun Eater",sense:"SOUND",color:"#6C5CE7",cat:"Music Label / Collective",home:"Indie label, cult following.",abroad:"Home of Hindia, .Feast, Lomba Sihir. The aesthetic engine of cool Indonesian music. The taste-defining ecosystem.",move:"Strategic partnership, not acquisition. Co-develop Pesta Nusantara festival. Redwoods Records learns the Sun Eater playbook."},
+{name:"Potato Head",sense:"SAVOUR / SPIRIT",color:"#FDCB6E",cat:"Hospitality / Lifestyle",home:"Seen as a Bali beach club.",abroad:"Globally recognized 'good times, good cause' design-led hospitality brand. Sustainability + art + music + food convergence. Hosts Renatta.",move:"Template for Redwoods Park's experiential model. Partner for RASA festival in Bali. Study their global brand-building."},
+{name:"Kana Goods",sense:"SENSATION",color:"#5CB8FF",cat:"Natural-Dye Apparel",home:"Small Bandung indie label.",abroad:"Japanese-minimalist, indigo natural dye (Indigofera). Strong international following among design-conscious buyers.",move:"Craft + design story for SENSATION. Tokyo Cultural House launch partner (Japan aesthetic alignment)."},
+{name:"Tanakhir Films",sense:"SIGHT / SPIRIT",color:"#FF9E5C",cat:"Documentary Production",home:"Quiet, low-profile production house.",abroad:"Nicholas Saputra's company. Environmental + cultural documentaries (SEMES7A). Serious, values-driven content.",move:"Co-produce the 'Feel Indonesia' documentary series. The Spirit-layer narrative engine."}
+];
+const activationStrategy=[
+{title:"Don't pay for endorsements — co-own",icon:"🤝",desc:"The taste-maker class (Hindia, Senyawa, Renatta) can't be bought with sponsorship money — it reads as fake. Instead, co-create IP and share upside. Hindia headlines Pesta Nusantara AND co-owns a piece of it."},
+{title:"Global names open doors, taste-makers build trust",icon:"🚪",desc:"Use Nicholas Saputra / Rich Brian / NIKI to get the world's attention. Use Hindia / Renatta / Senyawa to make it credible to the people who actually shape culture."},
+{title:"Sign rising/diaspora early",icon:"📈",desc:"No Na, Tissa Biani, rising Sun Eater acts — the best value is signing relationships before they're global. The 88rising lesson: don't let the next Rich Brian flow to an LA label."},
+{title:"Brands ARE ambassadors",icon:"🏷",desc:"Sejauh, Pijak Bumi, SukkhaCitta are loved abroad, undervalued at home. Elevating them at Redwoods festivals fixes the 'prophet not honored at home' problem AND gives the world tangible proof of Indonesian quality."}
+];
+const rosterSenseTabs=[
+{id:"sight",label:"👁 Sight",color:"#E17055"},
+{id:"sound",label:"🎵 Sound",color:"#6C5CE7"},
+{id:"savour",label:"🍜 Savour",color:"#FDCB6E"},
+{id:"scent_sensation_spirit",label:"🌺 Scent · Sensation · Spirit",color:"#a78bfa"}
+];
+const activationTable=[
+["Nicholas Saputra","Sight","Face of 'Feel Indonesia' + NUSANTARA festival ambassador",C.gov],
+["Hindia / Sun Eater","Sound","Pesta Nusantara headliner + label partnership",C.vc],
+["Rich Brian / NIKI","Sound","Global stage credibility + 88rising bridge",C.gov],
+["Senyawa","Sound","Gamelan × electronic IP, luxury sync licensing",C.vc],
+["Renatta Moeloek","Savour","Lead chef, RASA festival + Bumbu concept",C.vc],
+["Sejauh Mata Memandang","Sight/Sensation","Fashion showcase + intl retail expansion",C.impact],
+["Pijak Bumi","Sensation","Global sneaker collab (Nike/Adidas batik play)",C.impact],
+["SukkhaCitta","Spirit","Impact Layer flagship — craft + community proof",C.impact]
+];
+
+/* ---------- helpers ---------- */
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+function pill(t,color,size){size=size||11;return `<span class="pill" style="background:${color}20;color:${color};border:1px solid ${color}44;font-size:${size}px;">${t}</span>`;}
+
+/* ---------- sections ---------- */
+function Narrative(){
+  let sensesRow=senses.map(s=>`<div style="display:flex;align-items:center;gap:6px;background:${s.color}15;border:1px solid ${s.color}33;border-radius:20px;padding:6px 14px;"><span style="font-size:16px;">${s.icon}</span><span style="color:${s.color};font-size:12px;font-weight:700;letter-spacing:0.05em;">${s.sense}</span></div>`).join("");
+  let spm=softPowerMove.map(m=>`<div class="card" style="border-top:3px solid ${m.color};text-align:center;"><div style="font-size:30px;margin-bottom:10px;">${m.icon}</div><div style="font-weight:800;color:${m.color};font-size:14px;margin-bottom:8px;">${m.title}</div><p style="color:var(--body);font-size:12px;line-height:1.6;">${m.desc}</p></div>`).join("");
+  const steps=[{t:"Support Creator",s:"Grants, incubator",c:C.impact},{t:"Create IP",s:"Film/music/scent",c:C.vc},{t:"Global Distribution",s:"Netflix, Cannes, festivals",c:C.gov},{t:"Multiplier",s:"Tourism, food, music, product",c:"#a78bfa"}];
+  let flow=steps.map((step,i)=>`<div style="display:flex;align-items:center;gap:8px;"><div style="background:${step.c}15;border:1px solid ${step.c}44;border-radius:10px;padding:14px 18px;text-align:center;min-width:130px;"><div style="font-weight:700;color:${step.c};font-size:13px;margin-bottom:4px;">${step.t}</div><div style="color:var(--muted);font-size:11px;">${step.s}</div></div>${i<steps.length-1?'<span style="color:var(--muted);font-size:20px;">→</span>':''}</div>`).join("");
+  return `
+  <div style="text-align:center;padding:20px 0 48px;border-bottom:1px solid var(--border);margin-bottom:40px;">
+    ${pill("The Big Narrative",C.vc)}
+    <h1 style="font-size:52px;font-weight:900;color:var(--white);line-height:1.05;margin:20px 0 16px;letter-spacing:-0.02em;">Feel Indonesia<br><span style="color:var(--vc);">in 6 Senses.</span></h1>
+    <p style="color:var(--body);font-size:17px;line-height:1.7;max-width:560px;margin:0 auto;">One story to replace the fragments. The world doesn't visit a country — it <em>experiences</em> one. Indonesia becomes something you can see, hear, smell, taste, touch, and feel.</p>
+    <div style="display:flex;justify-content:center;gap:8px;margin-top:28px;flex-wrap:wrap;">${sensesRow}</div>
+  </div>
+  <div class="grid2" style="margin-bottom:48px;">
+    <div class="card" style="background:#ff4d4d0a;border:1px solid #ff4d4d33;"><div style="color:#ff6b6b;" class="label-up">The Problem (from your deck)</div><p style="color:var(--body);font-size:14px;line-height:1.7;margin-top:10px;">"Indonesia has many stories, but no unified global identity." Fragmented narrative = weak pricing power = <strong style="color:var(--white);">Soft Power Gap = Economic Gap.</strong></p></div>
+    <div class="card" style="background:${C.vc}0a;border:1px solid ${C.vc}33;"><div style="color:var(--vc);" class="label-up">The Fix</div><p style="color:var(--white);font-size:14px;line-height:1.7;margin-top:10px;font-weight:500;">"Collective Micro Narrative → Macro Trust." Every creator, dish, song, and film becomes a micro-story inside ONE macro-frame: the 6 Senses. Coherence creates trust. Trust creates premium.</p></div>
+  </div>
+  <div style="margin-bottom:48px;">
+    <div style="color:var(--muted);letter-spacing:0.1em;margin-bottom:20px;" class="label-up">The Soft Power Move — Four Principles</div>
+    <div class="grid4">${spm}</div>
+  </div>
+  <div class="card">
+    <div style="color:var(--muted);letter-spacing:0.1em;margin-bottom:20px;text-align:center;" class="label-up">How the Narrative Becomes Economy — 1 Output → 5 Layers</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;">${flow}</div>
+    <div style="text-align:center;margin-top:20px;color:var(--muted);font-size:13px;font-style:italic;">"Low Meaning → Low Multiple Economy." The 6-sense frame is what adds meaning — and meaning is what multiplies.</div>
+  </div>`;
+}
+
+function sectionHead(tag,titleHtml,sub,color){color=color||C.vc;return `<div style="margin-bottom:40px;">${pill(tag,color)}<h2 class="sec">${titleHtml}</h2>${sub?`<p class="sec-sub">${sub}</p>`:""}</div>`;}
+
+function Senses(active){
+  active=active||0;const s=senses[active];
+  let tabs=senses.map((s2,i)=>`<button class="tabbtn" onclick="setSub('senses',${i})" style="background:${active===i?s2.color+'22':C.surface};border:1px solid ${active===i?s2.color+'88':C.border};padding:16px 8px;"><div style="font-size:26px;margin-bottom:6px;">${s2.icon}</div><div style="font-size:11px;font-weight:800;letter-spacing:0.06em;color:${active===i?s2.color:C.muted};">${s2.sense}</div><div style="font-size:9px;color:var(--muted);margin-top:3px;">${s2.verb}</div></button>`).join("");
+  let sectors=s.sectors.map(sec=>`<span style="background:${s.color}15;color:${s.color};border:1px solid ${s.color}33;border-radius:20px;padding:3px 12px;font-size:12px;">${sec}</span>`).join("");
+  let work=s.work.map(w=>pill(w,C.vc)).join(" ");
+  let partners=s.globalPartners.map(w=>pill(w,C.gov)).join(" ");
+  return sectionHead("The Six Senses",`Six Senses. <span style="color:${s.color};">One Indonesia.</span>`,"Each sense is a sector cluster (exactly as defined in your deck), a real global opportunity, a set of collaborators, and its own exportable festival.",s.color)+`
+  <div class="grid6" style="margin-bottom:32px;">${tabs}</div>
+  <div class="card" style="border-top:3px solid ${s.color};margin-bottom:16px;">
+    <div style="display:flex;align-items:flex-start;gap:20px;margin-bottom:18px;">
+      <div style="font-size:48px;">${s.icon}</div>
+      <div style="flex:1;">
+        <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap;">${pill(s.sense,s.color)}<span style="color:var(--white);font-size:18px;font-weight:800;">${s.verb}</span></div>
+        <p style="color:var(--body);font-size:15px;font-style:italic;margin-bottom:12px;">"${s.line}"</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">${sectors}</div>
+      </div>
+    </div>
+    <div style="background:${s.color}0a;border:1px solid ${s.color}22;border-radius:8px;padding:14px 16px;">
+      <div style="color:${s.color};font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">The Real Global Opportunity</div>
+      <p style="color:var(--white);font-size:13px;line-height:1.7;">${s.realAsset}</p>
+    </div>
+  </div>
+  <div class="grid2sm" style="margin-bottom:12px;">
+    <div class="card"><div style="color:var(--vc);margin-bottom:12px;" class="label-up">Who to Work With (Local)</div><div style="display:flex;gap:8px;flex-wrap:wrap;">${work}</div></div>
+    <div class="card"><div style="color:var(--gov);margin-bottom:12px;" class="label-up">Global Partners</div><div style="display:flex;gap:8px;flex-wrap:wrap;">${partners}</div></div>
+  </div>
+  <div class="card" style="background:${s.color}0a;border:1px solid ${s.color}33;display:flex;align-items:center;gap:16px;">
+    <div style="font-size:28px;">🎪</div>
+    <div><div style="color:${s.color};font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px;">Redwoods' Own Festival for this Sense</div><div style="color:var(--white);font-size:16px;font-weight:800;">${s.ownFest}</div></div>
+  </div>`;
+}
+
+function SixP(active){
+  active=active||0;const p=sixP[active];
+  let tabs=sixP.map((item,i)=>`<button class="tabbtn" onclick="setSub('sixp',${i})" style="background:${active===i?item.color+'22':C.surface};border:1px solid ${active===i?item.color+'88':C.border};padding:14px 6px;"><div style="font-size:22px;margin-bottom:6px;">${item.icon}</div><div style="font-size:9.5px;font-weight:700;letter-spacing:0.04em;color:${active===i?item.color:C.muted};line-height:1.3;">${item.p}</div></button>`).join("");
+  let work=p.work.map(w=>pill(w,p.color,10)).join(" ");
+  return sectionHead("Operating System",`The 6P System<br><span style="color:${C.impact};">Powered by Redwoods' Portfolio</span>`,"Verbatim from your deck — but now each P is mapped to a Redwoods asset (Maple Media, Infia, Mutual Golf, 250M+ community) and real collaborators.",C.impact)+`
+  <div class="grid6" style="margin-bottom:32px;">${tabs}</div>
+  <div class="card" style="border-top:3px solid ${p.color};margin-bottom:16px;">
+    <div style="display:flex;align-items:flex-start;gap:18px;">
+      <div style="font-size:38px;">${p.icon}</div>
+      <div style="flex:1;">
+        ${pill(p.p,p.color)}
+        <div style="color:var(--body);font-size:14px;margin:10px 0;">${p.deckLine}</div>
+        <div style="background:#ff4d4d12;border:1px solid #ff4d4d30;border-radius:8px;padding:8px 14px;"><span style="color:#ff6b6b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">Problem: </span><span style="color:var(--white);font-size:13px;font-weight:600;">${p.deckProblem}</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="grid2sm" style="margin-bottom:12px;">
+    <div class="card" style="background:${p.color}0a;border:1px solid ${p.color}33;"><div style="color:${p.color};margin-bottom:10px;" class="label-up">Redwoods Solution</div><p style="color:var(--white);font-size:13px;line-height:1.7;">${p.solution}</p></div>
+    <div class="card"><div style="color:var(--muted);margin-bottom:10px;" class="label-up">Portfolio Asset Deployed</div><p style="color:var(--body);font-size:13px;line-height:1.7;margin-bottom:14px;">${p.portfolio}</p><div style="color:var(--muted);margin-bottom:10px;" class="label-up">Work With</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${work}</div></div>
+  </div>
+  <div class="card" style="display:flex;align-items:center;gap:16px;"><div style="font-size:26px;">🎯</div><div><div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">KPI</div><div style="font-weight:800;color:${p.color};font-size:16px;">${p.kpi}</div></div></div>`;
+}
+
+function Festivals(mode){
+  mode=mode||"own";
+  let toggle=[["own","🎪 Build Our Own"],["tap","🌍 Tap Into Existing"]].map(([k,lbl])=>`<button onclick="setSub('festivals','${k}')" style="background:${mode===k?C.gov+'22':'transparent'};border:${mode===k?'1px solid '+C.gov+'55':'1px solid transparent'};color:${mode===k?C.gov:C.muted};border-radius:7px;padding:8px 18px;cursor:pointer;font-size:13px;font-weight:${mode===k?700:400};transition:all 0.15s;">${lbl}</button>`).join("");
+  let inner="";
+  if(mode==="tap"){
+    let cards=festivalStrategy.tapInto.map(f=>`<div class="card" style="border-left:3px solid ${f.color};"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-weight:800;color:var(--white);font-size:15px;">${f.fest}</span>${pill(f.sense,f.color,10)}</div><div style="color:var(--muted);font-size:11px;margin-bottom:8px;">📍 ${f.country}</div><p style="color:var(--body);font-size:13px;line-height:1.6;">${f.move}</p></div>`).join("");
+    inner=`<p style="color:var(--body);font-size:14px;line-height:1.7;margin-bottom:20px;">Strategy: send Indonesian creators, films, music, and brands into the festivals where the world's tastemakers already gather. Earn the credibility, build the relationships, study the format.</p><div class="grid2sm">${cards}</div>`;
+  } else {
+    let cards=festivalStrategy.buildOwn.map(f=>{
+      let exp=f.export.map(e=>`<div style="border-left:2px solid ${f.color}66;padding-left:10px;"><div style="font-weight:700;color:var(--white);font-size:13px;margin-bottom:3px;">🌏 ${e.city}</div>${pill(e.year,f.color,9)}<p style="color:var(--muted);font-size:11px;line-height:1.5;margin-top:6px;">${e.why}</p></div>`).join("");
+      return `<div class="card" style="border-top:3px solid ${f.color};margin-bottom:14px;">
+        <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:14px;">
+          <div style="font-size:32px;">${f.icon}</div>
+          <div style="flex:1;"><div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap;"><span style="font-weight:900;color:var(--white);font-size:20px;">${f.name}</span>${pill(f.sense,f.color)}</div><p style="color:var(--body);font-size:13px;line-height:1.7;margin-bottom:8px;">${f.concept}</p><div style="color:var(--muted);font-size:12px;">🏠 Home base: <span style="color:var(--white);font-weight:600;">${f.home}</span></div></div>
+        </div>
+        <div style="background:${f.color}08;border-radius:8px;padding:14px 16px;"><div style="color:${f.color};font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:12px;">Export Roadmap</div><div style="display:grid;grid-template-columns:repeat(${f.export.length},1fr);gap:10px;">${exp}</div></div>
+      </div>`;
+    }).join("");
+    inner=`<p style="color:var(--body);font-size:14px;line-height:1.7;margin-bottom:24px;">Strategy: build Indonesia's own festival brands — anchored at Redwoods Park (BDD), then exported to global cities. Each sense gets its own festival; <strong style="color:var(--white);">NUSANTARA</strong> is the umbrella that unites all six.</p>${cards}`;
+  }
+  return sectionHead("Festival Strategy",`Tap In. Then <span style="color:${C.gov};">Build Our Own.</span>`,"First, infiltrate the world's existing festivals to earn credibility. Then export Indonesia's own festivals — one per sense — to global cities. This is how Indonesia stops being a guest and becomes a host.",C.gov)+`
+  <div style="display:flex;gap:6px;margin-bottom:32px;background:var(--surface);padding:6px;border-radius:10px;border:1px solid var(--border);width:fit-content;">${toggle}</div>${inner}`;
+}
+
+function KOLs(active){
+  active=active||"sound";const list=kols[active];
+  let tierCards=Object.keys(tiers).map(k=>{const t=tiers[k];return `<div style="display:flex;align-items:center;gap:8px;background:${t.color}0f;border:1px solid ${t.color}33;border-radius:8px;padding:8px 14px;flex:1;min-width:200px;"><div style="width:8px;height:8px;border-radius:50%;background:${t.color};flex-shrink:0;"></div><div><div style="font-weight:700;color:${t.color};font-size:12px;">${t.label}</div><div style="color:var(--muted);font-size:11px;line-height:1.4;margin-top:2px;">${t.note}</div></div></div>`;}).join("");
+  let tabs=rosterSenseTabs.map(t=>`<button onclick="setSub('kols','${t.id}')" style="background:${active===t.id?t.color+'22':C.surface};border:1px solid ${active===t.id?t.color+'88':C.border};color:${active===t.id?t.color:C.muted};border-radius:8px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:${active===t.id?700:400};transition:all 0.15s;">${t.label}</button>`).join("");
+  let cards=list.map(k=>{const t=tiers[k.tier];return `<div class="card" style="margin-bottom:10px;border-left:3px solid ${t.color};"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;flex-wrap:wrap;gap:8px;"><div><span style="font-weight:800;color:var(--white);font-size:17px;">${k.name}</span><span style="color:var(--muted);font-size:13px;margin-left:10px;">${k.role}</span></div>${pill(t.label,t.color)}</div><p style="color:var(--body);font-size:13px;line-height:1.7;margin-bottom:12px;">${k.why}</p><div style="background:${t.color}0a;border:1px solid ${t.color}22;border-radius:8px;padding:10px 14px;"><span style="color:${t.color};font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">How Redwoods Uses Them: </span><span style="color:var(--white);font-size:13px;">${k.use}</span></div></div>`;}).join("");
+  return sectionHead("The Roster",`Who Represents Indonesia.<br><span style="color:${C.gov};">By Class.</span>`,"Three tiers: Global Ambassadors open doors, Taste-Makers build credibility, Rising/Diaspora are the early-signing value. The taste-maker class — Hindia, No Na, Senyawa, Renatta — is the one money can't fake.",C.gov)+`
+  <div style="display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;">${tierCards}</div>
+  <div style="display:flex;gap:6px;margin-bottom:24px;flex-wrap:wrap;">${tabs}</div>${cards}`;
+}
+
+function Brands(){
+  let cards=brands.map(b=>`<div class="card" style="margin-bottom:10px;border-top:3px solid ${b.color};">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:8px;"><div><span style="font-weight:800;color:var(--white);font-size:18px;">${b.name}</span><div style="color:var(--muted);font-size:12px;margin-top:3px;">${b.cat}</div></div>${pill(b.sense,b.color)}</div>
+    <div class="grid2sm" style="margin-bottom:12px;">
+      <div style="background:#ff4d4d0a;border:1px solid #ff4d4d22;border-radius:8px;padding:10px 14px;"><div style="color:#ff6b6b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">At Home</div><div style="color:var(--body);font-size:12px;line-height:1.6;">${b.home}</div></div>
+      <div style="background:${b.color}0a;border:1px solid ${b.color}22;border-radius:8px;padding:10px 14px;"><div style="color:${b.color};font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Abroad</div><div style="color:var(--white);font-size:12px;line-height:1.6;">${b.abroad}</div></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--vc);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;flex-shrink:0;padding-top:2px;">Redwoods Move:</span><span style="color:var(--body);font-size:13px;line-height:1.6;">${b.move}</span></div>
+  </div>`).join("");
+  return sectionHead("Hidden Gems",`Loved Abroad.<br><span style="color:${C.vc};">Undervalued at Home.</span>`,"The 'prophet not honored in their own land' problem. These Indonesian brands win at Milan, Vogue, and the NYT — but get treated as niche locally. Redwoods elevates them as living proof of Indonesian quality.",C.vc)+cards;
+}
+
+function Activation(){
+  const tops=[C.vc,C.impact,C.gov,"#a78bfa"];
+  let cards=activationStrategy.map((s,i)=>`<div class="card" style="border-top:3px solid ${tops[i]};"><div style="font-size:28px;margin-bottom:10px;">${s.icon}</div><div style="font-weight:800;color:var(--white);font-size:15px;margin-bottom:8px;line-height:1.3;">${s.title}</div><p style="color:var(--body);font-size:13px;line-height:1.7;">${s.desc}</p></div>`).join("");
+  let rows=activationTable.map((r,i)=>`<tr style="background:${i%2===0?'#ffffff03':'transparent'};"><td style="color:var(--white);font-weight:600;">${r[0]}</td><td>${pill(r[1],r[3],10)}</td><td style="color:var(--body);font-size:12px;">${r[2]}</td></tr>`).join("");
+  return sectionHead("Activation Principles",`How to Actually<br><span style="color:${C.impact};">Work With Them.</span>`,"The difference between a brand that buys endorsements and an institution that builds culture. These four principles keep Redwoods credible with the taste-making class.",C.impact)+`
+  <div class="grid2sm" style="margin-bottom:32px;">${cards}</div>
+  <div style="color:var(--muted);letter-spacing:0.1em;margin-bottom:16px;" class="label-up">Quick Map: Who → Which Festival / Initiative</div>
+  <div style="overflow-x:auto;"><table><thead><tr><th>Talent / Brand</th><th>Sense</th><th>Best Deployment</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+/* ---------- state + render ---------- */
+const subState={senses:0,sixp:0,festivals:"own",kols:"sound"};
+let active="narrative";
+function render(){
+  const el=document.getElementById("content");
+  if(active==="narrative")el.innerHTML=Narrative();
+  else if(active==="senses")el.innerHTML=Senses(subState.senses);
+  else if(active==="sixp")el.innerHTML=SixP(subState.sixp);
+  else if(active==="festivals")el.innerHTML=Festivals(subState.festivals);
+  else if(active==="kols")el.innerHTML=KOLs(subState.kols);
+  else if(active==="brands")el.innerHTML=Brands();
+  else if(active==="activation")el.innerHTML=Activation();
+  // nav buttons
+  document.querySelectorAll("#navbtns .navbtn").forEach(b=>b.classList.toggle("active",b.dataset.id===active));
+  const idx=nav.findIndex(n=>n.id===active);
+  document.getElementById("pageNum").textContent=(idx+1)+" / "+nav.length;
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function setActive(id){active=id;render();}
+function setSub(section,val){subState[section]=val;render();}
+
+// build nav
+const nb=document.getElementById("navbtns");
+nav.forEach(n=>{const b=document.createElement("button");b.className="navbtn";b.dataset.id=n.id;b.textContent=n.label;b.onclick=()=>setActive(n.id);nb.appendChild(b);});
+// color bar
+const cb=document.getElementById("colorbar");
+senses.forEach(s=>{const d=document.createElement("div");d.style.background=s.color;cb.appendChild(d);});
+// footer
+document.getElementById("prevBtn").onclick=()=>{const i=nav.findIndex(n=>n.id===active);if(i>0)setActive(nav[i-1].id);};
+document.getElementById("nextBtn").onclick=()=>{const i=nav.findIndex(n=>n.id===active);if(i<nav.length-1)setActive(nav[i+1].id);};
+
+render();
+</script>
+</body>
+</html>
