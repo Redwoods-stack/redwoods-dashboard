@@ -263,6 +263,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
     <div class="rail-foot">
       <a href="../projects/" class="theme-toggle" style="text-decoration:none;margin-bottom:8px;"><span>&larr; All projects</span><span>⌂</span></a>
       <button class="theme-toggle" onclick="toggleTheme()"><span id="theme-label">Light mode</span><span id="theme-icon">☀</span></button>
+      <button class="theme-toggle" onclick="rwdReset()" title="Clear saved changes and reload defaults" style="margin-top:8px;justify-content:center;font-size:0.68rem;color:var(--text3);">↺ Reset to defaults</button>
     </div>
   </aside>
 
@@ -2386,5 +2387,75 @@ if(typeof applyChartTheme==='function')setTimeout(applyChartTheme,30);
 
   </div><!-- /content -->
 </div><!-- /app -->
+
+<script>
+// ===== STATE PERSISTENCE (localStorage) =====
+// Keeps every slider / scenario / theme / active tab across reloads, on this browser.
+(function(){
+  const KEY='rwd-v1-state-v2';
+  let t=null;
+  const controls=()=>document.querySelectorAll('input[type=range], select');
+
+  function doSave(){
+    try{
+      const v={};
+      controls().forEach(el=>{ if(el.id) v[el.id]=el.value; });
+      localStorage.setItem(KEY, JSON.stringify({
+        v:v,
+        theme:document.documentElement.getAttribute('data-theme'),
+        tab:window.__rwdTab||null,
+        fs:(typeof activeFinScenario!=='undefined')?activeFinScenario:null,
+        sc:(typeof activeScenario!=='undefined')?activeScenario:null
+      }));
+    }catch(e){}
+  }
+  function save(){ clearTimeout(t); t=setTimeout(doSave,250); }
+
+  function applyTheme(th){
+    if(!th) return;
+    document.documentElement.setAttribute('data-theme',th);
+    const l=document.getElementById('theme-label'), i=document.getElementById('theme-icon');
+    if(l) l.textContent=(th==='light'?'Light':'Dark')+' mode';
+    if(i) i.textContent=(th==='light'?'☀':'◐');
+    if(typeof applyChartTheme==='function'){ try{applyChartTheme();}catch(e){} }
+  }
+  function applyBadges(fs,sc){
+    if(fs){ try{ activeFinScenario=fs; }catch(e){}
+      ['low','mid','high'].forEach(k=>{
+        const a=document.getElementById('fs-'+k); if(a)a.classList.toggle('active',k===fs);
+        const b=document.getElementById('dfs-'+k); if(b)b.classList.toggle('active',k===fs);
+      });
+    }
+    if(sc){ try{ activeScenario=sc; }catch(e){}
+      ['base','bear','bull'].forEach(k=>{ const e=document.getElementById('sc-'+k); if(e)e.classList.toggle('active',k===sc); });
+    }
+  }
+
+  function restore(){
+    let s=null;
+    try{ const raw=localStorage.getItem(KEY); if(raw) s=JSON.parse(raw); }catch(e){}
+    if(s){
+      if(s.v) Object.keys(s.v).forEach(id=>{ const el=document.getElementById(id); if(el) el.value=s.v[id]; });
+      applyTheme(s.theme);
+      applyBadges(s.fs,s.sc);
+      ['calcModel','refreshBenchLabels','calcProjection','calcBuild','renderDashboard'].forEach(fn=>{
+        if(typeof window[fn]==='function'){ try{ window[fn](); }catch(e){} }
+      });
+      if(s.tab){ window.__rwdTab=s.tab; if(typeof window.switchTab==='function'){ try{ window.switchTab(s.tab); }catch(e){} } }
+    }
+    document.addEventListener('input', save, true);
+    document.addEventListener('change', save, true);
+    ['toggleTheme','setFinScenario','setScenario','setBuildPreset','toggleOccSync','updateLand'].forEach(fn=>{
+      if(typeof window[fn]==='function'){ const o=window[fn]; window[fn]=function(){ const r=o.apply(this,arguments); save(); return r; }; }
+    });
+    if(typeof window.switchTab==='function'){ const o=window.switchTab; window.switchTab=function(tab){ window.__rwdTab=tab; const r=o.apply(this,arguments); save(); return r; }; }
+  }
+
+  window.rwdReset=function(){ try{ localStorage.removeItem(KEY); }catch(e){} location.reload(); };
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',restore);
+  else setTimeout(restore,0);
+})();
+</script>
 </body>
 </html>
