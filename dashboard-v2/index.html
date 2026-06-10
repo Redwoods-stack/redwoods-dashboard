@@ -370,6 +370,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
     <div class="dash-kpi k-amber"><div class="dash-kpi-lbl">Redwoods net / yr</div><div class="dash-kpi-val amber" id="dash-k-rw">&mdash;</div><div class="dash-kpi-sub" id="dash-k-rw-sub">bottom line</div></div>
     <div class="dash-kpi k-teal"><div class="dash-kpi-lbl">Profit share to Bintaro</div><div class="dash-kpi-val teal" id="dash-k-ps">&mdash;</div><div class="dash-kpi-sub" id="dash-k-ps-sub">&mdash;</div></div>
     <div class="dash-kpi"><div class="dash-kpi-lbl">Build cost payback</div><div class="dash-kpi-val" id="dash-k-payback">&mdash;</div><div class="dash-kpi-sub" id="dash-k-payback-sub">&mdash;</div></div>
+    <div class="dash-kpi k-teal"><div class="dash-kpi-lbl">Human capacity</div><div class="dash-kpi-val teal" id="dash-k-cap">&mdash;</div><div class="dash-kpi-sub" id="dash-k-cap-sub">at 8 m&sup2; / person</div></div>
   </div>
 
   <div class="dash-cols">
@@ -1000,6 +1001,10 @@ function renderDashboard(){
   $('dash-k-rw-sub').textContent=margin.toFixed(0)+'% net margin';
   $('dash-k-ps').textContent=fmtB(psOut);
   $('dash-k-ps-sub').textContent=Math.round(m.ps*100)+'% of net · '+Math.round(covPct)+'% of benchmark';
+  // Human capacity — developed leasable area ÷ 8 m²/person
+  const devAreaM=(OFF_AREA+RET_AREA)*m.dev, capacity=Math.round(devAreaM/8);
+  if($('dash-k-cap'))$('dash-k-cap').textContent='~'+capacity.toLocaleString()+' people';
+  if($('dash-k-cap-sub'))$('dash-k-cap-sub').textContent=Math.round(devAreaM).toLocaleString()+' m² ÷ 8 m²/person';
 
   // Year-1 economics flow bars (scaled to gross revenue)
   const setBar=(id,val)=>{const el=$(id);if(el)el.style.width=(totRev>0?Math.min(Math.abs(val)/totRev*100,100):0).toFixed(1)+'%';};
