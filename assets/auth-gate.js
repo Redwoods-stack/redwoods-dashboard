@@ -16,7 +16,13 @@
 
   function api(action, opts) {
     opts = opts || {};
-    return fetch(API + '?action=' + encodeURIComponent(action), {
+    var url = API + '?action=' + encodeURIComponent(action);
+    if (opts.query) {
+      Object.keys(opts.query).forEach(function (k) {
+        url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(opts.query[k]);
+      });
+    }
+    return fetch(url, {
       method: opts.method || 'GET',
       headers: { 'Content-Type': 'application/json', 'X-RWD': '1' },
       credentials: 'same-origin',
@@ -173,7 +179,7 @@
   // ---------------------------------------------------------------- cloud state (dashboards)
   function loadCloud() {
     updateChip('loading…');
-    api('load?project=' + encodeURIComponent(PROJECT)).then(function (res) {
+    api('load', { query: { project: PROJECT } }).then(function (res) {
       if (res.ok && res.j && res.j.ok) {
         if (res.j.data && window.RWDState && window.RWDState.apply) {
           try { window.RWDState.apply(res.j.data); } catch (e) {}
