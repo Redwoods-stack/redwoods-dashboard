@@ -34,9 +34,12 @@ if (($_SERVER['HTTP_X_RWD'] ?? '') !== '1') {
 }
 
 // --- Harden the session cookie, then start the session ---
+// Keep users signed in ~30 days (so closing the browser doesn't log them out).
+$lifetime = 60 * 60 * 24 * 30;
+@ini_set('session.gc_maxlifetime', (string)$lifetime);
 $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
 session_set_cookie_params([
-  'lifetime' => 0,
+  'lifetime' => $lifetime,
   'path'     => '/',
   'httponly' => true,
   'secure'   => $secure,
