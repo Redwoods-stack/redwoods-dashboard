@@ -1,0 +1,5 @@
+# Block direct web access to sensitive files in /api.
+# api.php remains reachable; config and schema do not.
+<FilesMatch "(^config.*\.php$|\.sql$|\.example\.php$)">
+  Require all denied
+</FilesMatch>

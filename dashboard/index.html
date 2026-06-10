@@ -2453,9 +2453,27 @@ if(typeof applyChartTheme==='function')setTimeout(applyChartTheme,30);
 
   window.rwdReset=function(){ try{ localStorage.removeItem(KEY); }catch(e){} location.reload(); };
 
+  // Expose state read/apply so the cloud-sync layer can reuse the same serialization.
+  window.RWDState={
+    read:function(){ const v={}; controls().forEach(el=>{ if(el.id) v[el.id]=el.value; });
+      return {v:v, theme:document.documentElement.getAttribute('data-theme'), tab:window.__rwdTab||null,
+        fs:(typeof activeFinScenario!=='undefined')?activeFinScenario:null,
+        sc:(typeof activeScenario!=='undefined')?activeScenario:null}; },
+    apply:function(s){ if(!s) return;
+      if(s.v) Object.keys(s.v).forEach(id=>{ const el=document.getElementById(id); if(el) el.value=s.v[id]; });
+      applyTheme(s.theme); applyBadges(s.fs,s.sc);
+      ['calcModel','refreshBenchLabels','calcProjection','calcBuild','renderDashboard'].forEach(fn=>{ if(typeof window[fn]==='function'){ try{ window[fn](); }catch(e){} } });
+      if(s.tab){ window.__rwdTab=s.tab; if(typeof window.switchTab==='function'){ try{ window.switchTab(s.tab); }catch(e){} } }
+      try{ doSave(); }catch(e){} },
+    localSave:function(){ try{ doSave(); }catch(e){} }
+  };
+
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',restore);
   else setTimeout(restore,0);
 })();
 </script>
+
+<script>window.RWD_PROJECT='v1';</script>
+<script src="../assets/cloud-sync.js" defer></script>
 </body>
 </html>

@@ -33,3 +33,6 @@ build/
 
 # Claude Code local settings (machine-specific)
 .claude/settings.local.json
+
+# Server-side secrets — created directly on the server, never committed
+api/config.php
