@@ -11,10 +11,17 @@ header('X-Content-Type-Options: nosniff');
 header('Cache-Control: no-store');
 
 // --- Load server-side config (DB creds + signup code). Never committed to git. ---
-$cfgPath = __DIR__ . '/config.php';
-if (!is_file($cfgPath)) {
+// Preferred location is ABOVE public_html so the Git deploy (clean checkout) can
+// never delete it and the web server can never serve it. Falls back to /api/config.php.
+$cfgCandidates = [
+  dirname(__DIR__, 2) . '/rwd-config.php',  // e.g. domains/<site>/rwd-config.php  (deploy-safe)
+  __DIR__ . '/config.php',                  // inside /api (convenient, but wiped on each deploy)
+];
+$cfgPath = null;
+foreach ($cfgCandidates as $cand) { if (is_file($cand)) { $cfgPath = $cand; break; } }
+if ($cfgPath === null) {
   http_response_code(500);
-  echo json_encode(['error' => 'API not configured yet (missing config.php).']);
+  echo json_encode(['error' => 'API not configured yet (missing config).']);
   exit;
 }
 $config = require $cfgPath;
