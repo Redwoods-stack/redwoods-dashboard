@@ -259,6 +259,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       <button class="rail-tab" onclick="switchTab('projection')" role="tab"><span class="dot"></span>Financial Projection</button>
       <button class="rail-tab" onclick="switchTab('land')" role="tab"><span class="dot"></span>Land Visualisation</button>
       <button class="rail-tab" onclick="switchTab('build')" role="tab"><span class="dot"></span>Build Cost</button>
+      <button class="rail-tab" onclick="switchTab('captable')" role="tab"><span class="dot"></span>Cap Table</button>
       <div style="font-size:0.58rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);padding:0.9rem 14px 0.3rem;">Creative Economy</div>
       <button class="rail-tab" onclick="switchTab('concept')" role="tab"><span class="dot"></span>Concept &amp; Model</button>
       <button class="rail-tab" onclick="switchTab('zones')" role="tab"><span class="dot"></span>Zone Layout</button>
@@ -850,8 +851,8 @@ function fmtNeg(n){return '('+fmtB(Math.abs(n))+')'; }
 function toB(n){return Math.round(n/1e9*100)/100;}
 
 function switchTab(tab){
-  const names=['dashboard','model','projection','land','build','concept','zones','revenue2'];
-  const titles={dashboard:['Dashboard','Financial overview'],model:['Financial Model','Year-1 assumptions & P&L'],projection:['Financial Projection','10-year outlook'],land:['Land Visualisation','Parcels & development'],build:['Build Cost','Construction budget'],concept:['Concept & Model','Creative Economy Hub'],zones:['Zone Layout','Master plan · 1.5 ha'],revenue2:['Revenue Plan','Creative-economy scenarios']};
+  const names=['dashboard','model','projection','land','build','captable','concept','zones','revenue2'];
+  const titles={dashboard:['Dashboard','Financial overview'],model:['Financial Model','Year-1 assumptions & P&L'],projection:['Financial Projection','10-year outlook'],land:['Land Visualisation','Parcels & development'],build:['Build Cost','Construction budget'],captable:['Cap Table','Equity & valuation'],concept:['Concept & Model','Creative Economy Hub'],zones:['Zone Layout','Master plan · 1.5 ha'],revenue2:['Revenue Plan','Creative-economy scenarios']};
   document.querySelectorAll('.rail-tab').forEach((b,i)=>b.classList.toggle('active',names[i]===tab));
   names.forEach(p=>{const el=$('panel-'+p);if(el)el.classList.toggle('active',p===tab);});
   const t=titles[tab];if(t&&$('topbar-title'))$('topbar-title').innerHTML=t[0]+'<span>'+t[1]+'</span>';
@@ -861,6 +862,7 @@ function switchTab(tab){
   if(tab==='build')calcBuild();
   if(tab==='zones'&&typeof czSelect==='function'){czSelect(window.__czSel||'office');}
   if(tab==='revenue2'&&typeof cvRefresh==='function'){calcProjection();setTimeout(cvRefresh,30);}
+  if(tab==='captable'&&typeof renderCap==='function'){calcProjection();setTimeout(function(){renderCap(true);},30);}
 }
 
 function toggleTheme(){
@@ -1432,8 +1434,8 @@ function chartOpts(unit,multi){
     scales:{x:{grid:{display:false},ticks:{color:'#5a5a56',font:{size:10,family:'DM Mono'}}},y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#5a5a56',font:{size:10,family:'DM Mono'},callback:v=>'Rp '+v.toFixed(1)+'B'}}}};
 }
 
-['sl-dev','sl-off','sl-ret','sl-sc-off','sl-sc-ret','sl-occ-off','sl-occ-ret','sl-mem','sl-fhall','sl-matlib','sl-spons','sl-market','sl-opex','sl-ps'].forEach(id=>{const el=$(id);if(!el)return;el.addEventListener('input',()=>{calcModel();if(typeof calcBuild==='function'&&id==='sl-dev')calcBuild();calcProjection();if(typeof renderDashboard==='function')renderDashboard();if(typeof cvRefresh==='function'&&$('panel-revenue2')&&$('panel-revenue2').classList.contains('active'))cvRefresh();if(typeof landInited!=='undefined'&&landInited){if(typeof occSyncOn==='function'&&occSyncOn())toggleOccSync();else updateLand();}});});
-['p-sl-openyr','p-sl-esc','p-sl-opexg','p-sl-occ1','p-sl-occS'].forEach(id=>{$(id).addEventListener('input',()=>{calcProjection();if(typeof renderDashboard==='function')renderDashboard();});});
+['sl-dev','sl-off','sl-ret','sl-sc-off','sl-sc-ret','sl-occ-off','sl-occ-ret','sl-mem','sl-fhall','sl-matlib','sl-spons','sl-market','sl-opex','sl-ps'].forEach(id=>{const el=$(id);if(!el)return;el.addEventListener('input',()=>{calcModel();if(typeof calcBuild==='function'&&id==='sl-dev')calcBuild();calcProjection();if(typeof renderDashboard==='function')renderDashboard();if(typeof cvRefresh==='function'&&$('panel-revenue2')&&$('panel-revenue2').classList.contains('active'))cvRefresh();if(typeof renderCap==='function'&&$('panel-captable')&&$('panel-captable').classList.contains('active'))renderCap(false);if(typeof landInited!=='undefined'&&landInited){if(typeof occSyncOn==='function'&&occSyncOn())toggleOccSync();else updateLand();}});});
+['p-sl-openyr','p-sl-esc','p-sl-opexg','p-sl-occ1','p-sl-occS'].forEach(id=>{$(id).addEventListener('input',()=>{calcProjection();if(typeof renderDashboard==='function')renderDashboard();if(typeof renderCap==='function'&&$('panel-captable')&&$('panel-captable').classList.contains('active'))renderCap(false);});});
 calcModel();
 refreshBenchLabels();
 calcProjection();
@@ -1812,6 +1814,96 @@ renderDashboard();
   </main>
 </div>
 </div>
+
+<!-- ===== CAP TABLE TAB (added) ===== -->
+<style>
+.eq-wrap{padding:1.5rem 1.9rem 3.5rem;max-width:1180px;}
+.eq-eyebrow{font-size:0.66rem;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent);}
+.eq-title{font-size:1.4rem;font-weight:800;letter-spacing:-0.02em;margin:0.35rem 0 0.3rem;}
+.eq-lede{color:var(--text2);font-size:0.86rem;margin-bottom:1.2rem;max-width:760px;line-height:1.55;}
+.eq-top{display:grid;grid-template-columns:1fr 1fr;gap:1.3rem;align-items:start;}
+.eq-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:1.3rem 1.4rem;box-shadow:var(--shadow);}
+.eq-h{font-size:0.95rem;font-weight:800;margin-bottom:0.9rem;}
+.eq-field{margin-bottom:0.9rem;}
+.eq-field label{display:block;font-size:0.72rem;font-weight:600;color:var(--text2);margin-bottom:5px;}
+.eq-field select{width:100%;padding:9px 11px;border:1px solid var(--border2);border-radius:9px;background:var(--bg3);color:var(--text);font-family:inherit;font-size:0.85rem;}
+.eq-row-top{display:flex;justify-content:space-between;align-items:baseline;}
+.eq-row-top span{font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--text);}
+.eq-field input[type=range]{width:100%;}
+.eq-bigval{margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);}
+.eq-bigval .k{font-size:0.64rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);font-weight:700;}
+.eq-bigval .v{font-size:1.9rem;font-weight:800;letter-spacing:-0.025em;color:var(--accent);margin-top:3px;}
+.eq-bigval .s{font-size:0.72rem;color:var(--text3);margin-top:3px;}
+.eq-note{font-size:0.72rem;color:var(--text3);margin-top:0.7rem;}
+.eq-table-head,.eq-row,.eq-table-foot{display:grid;grid-template-columns:18px 1.4fr 0.9fr 0.95fr 1fr 1.1fr 26px;gap:8px;align-items:center;}
+.eq-table-head{font-size:0.6rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);font-weight:700;padding:0 0 8px;border-bottom:1px solid var(--border);margin-top:0.4rem;}
+.eq-row{padding:7px 0;border-bottom:1px solid var(--border);}
+.eq-table-foot{padding-top:10px;font-weight:800;font-size:0.85rem;}
+.eq-dot{width:11px;height:11px;border-radius:3px;}
+.eq-in{border:1px solid var(--border2);border-radius:7px;background:var(--bg3);color:var(--text);font-family:inherit;font-size:0.82rem;padding:6px 8px;width:100%;box-sizing:border-box;}
+.eq-pctwrap{display:flex;align-items:center;gap:3px;font-size:0.8rem;color:var(--text2);}
+.eq-pct{width:58px;}
+.eq-val{font-size:0.82rem;font-weight:700;color:var(--text);}
+.eq-prof{color:var(--green);font-weight:600;font-size:0.78rem;}
+.eq-x{background:none;border:none;color:var(--text3);font-size:1.15rem;cursor:pointer;line-height:1;}
+.eq-x:hover{color:var(--red);}
+.eq-btn{font-family:inherit;font-size:0.76rem;font-weight:700;color:#fff;background:var(--accent);border:none;border-radius:9px;padding:7px 13px;cursor:pointer;}
+.eq-btn:hover{background:#4b41d6;}
+.eq-info{list-style:none;margin:0;padding:0;}
+.eq-info li{font-size:0.8rem;color:var(--text2);line-height:1.55;padding:5px 0 5px 16px;position:relative;}
+.eq-info li::before{content:"•";position:absolute;left:2px;color:var(--accent);}
+@media(max-width:880px){.eq-top{grid-template-columns:1fr;}.eq-table-head{display:none;}.eq-row,.eq-table-foot{grid-template-columns:14px 1fr 1fr;}}
+</style>
+
+<div id="panel-captable" class="tab-panel">
+  <div class="eq-wrap">
+    <div class="eq-eyebrow">Ownership &middot; Cap Table</div>
+    <h2 class="eq-title">Equity &amp; valuation</h2>
+    <p class="eq-lede">Add owners and their stake, and see how it translates into company valuation and each holder's equity &mdash; derived live from the Financial Projection. Change any assumption on the Model/Projection tabs and these numbers move with it.</p>
+
+    <div class="eq-top">
+      <div class="eq-card">
+        <div class="eq-h">Company valuation</div>
+        <div class="eq-field"><label>Valuation basis</label>
+          <select id="eq-basis">
+            <option value="net10">Stabilised annual net profit (Yr 10)</option>
+            <option value="rev10">Stabilised annual revenue (Yr 10)</option>
+            <option value="cumnet">10-year cumulative net profit</option>
+            <option value="cumrev">10-year cumulative revenue</option>
+          </select>
+        </div>
+        <div class="eq-field"><div class="eq-row-top"><label>Valuation multiple</label><span id="eq-mult-lbl">5.0&times;</span></div>
+          <input type="range" id="eq-mult" min="0.5" max="15" step="0.5" value="5">
+        </div>
+        <div class="eq-bigval"><div class="k">Implied company valuation</div><div class="v" id="eq-valuation">&mdash;</div><div class="s" id="eq-basis-note">&mdash;</div></div>
+      </div>
+      <div class="eq-card">
+        <div class="eq-h">Ownership breakdown</div>
+        <div style="height:250px;position:relative;"><canvas id="eq-pie" role="img" aria-label="Ownership pie chart">Ownership</canvas></div>
+        <div class="eq-note" id="eq-alloc-note">&mdash;</div>
+      </div>
+    </div>
+
+    <div class="eq-card" style="margin-top:1.3rem;">
+      <div class="eq-h" style="display:flex;justify-content:space-between;align-items:center;">Cap table <button class="eq-btn" id="eq-add">+ Add owner</button></div>
+      <div class="eq-table-head"><span></span><span>Owner</span><span>Class</span><span>Ownership</span><span>Equity value</span><span>Annual profit share</span><span></span></div>
+      <div id="eq-owners"></div>
+      <div class="eq-table-foot"><span></span><span>Total</span><span></span><span id="eq-total-pct">&mdash;</span><span id="eq-total-val">&mdash;</span><span id="eq-total-profit">&mdash;</span><span></span></div>
+    </div>
+
+    <div class="eq-card" style="margin-top:1.3rem;">
+      <div class="eq-h">How this works &amp; what a cap table tracks</div>
+      <ul class="eq-info">
+        <li><b>Valuation</b> is computed live from the Financial Projection &mdash; change a slider on the Model/Projection tabs and this updates.</li>
+        <li><b>Equity value</b> per owner = ownership % &times; company valuation.</li>
+        <li><b>Annual profit share</b> = ownership % &times; stabilised (Yr-10) Redwoods net profit &mdash; a simple dividend proxy.</li>
+        <li>Ownership should total <b>100%</b>; any gap shows as &ldquo;unallocated&rdquo; in the pie.</li>
+        <li>Full cap tables also track <b>share class, capital invested, price per share, an option pool, and dilution</b> across funding rounds &mdash; tell me and I'll extend this into a round-by-round model.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+<!-- ===== /CAP TABLE TAB ===== -->
 
 <!-- ===== CREATIVE ECONOMY TABS (added) ===== -->
 <style>
@@ -2833,6 +2925,106 @@ if(typeof applyChartTheme==='function')setTimeout(applyChartTheme,30);
 </script>
 
 <script>
+// ===== CAP TABLE / EQUITY (V2) =====
+(function(){
+  var KEY='rwd-v2-captable-v1';
+  var PIE=null;
+  var COLORS=['#5b50e8','#3aa0e0','#1faf6b','#e08a2b','#e5533c','#8b83f5','#46b0ea','#34c281','#e6a23c','#ef6450'];
+  var owners=loadOwners();
+
+  function loadOwners(){
+    try{ var r=localStorage.getItem(KEY); if(r){ var a=JSON.parse(r); if(Array.isArray(a)) return a; } }catch(e){}
+    return [{name:'Owner A',cls:'Common',pct:60},{name:'Owner B',cls:'Common',pct:30},{name:'Owner C',cls:'Common',pct:10}];
+  }
+  function saveOwners(){ try{ localStorage.setItem(KEY, JSON.stringify(owners)); }catch(e){} }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function $(id){ return document.getElementById(id); }
+  function money(n){ return (typeof fmtB==='function') ? fmtB(n) : ('Rp '+Math.round(n||0).toLocaleString()); }
+
+  // Exposed so cloud sync (RWDState) carries the cap table across devices.
+  window.RWDCap={ get:function(){ return owners; }, set:function(a){ if(Array.isArray(a)){ owners=a; saveOwners(); if($('panel-captable')) renderCap(true); } } };
+
+  function valuation(){
+    var P=window.PROJ_RESULTS;
+    if((!P||!P.data) && typeof calcProjection==='function'){ try{ calcProjection(); }catch(e){} P=window.PROJ_RESULTS; }
+    if(!P||!P.data||!P.data.length) return { val:0, annual:0, label:'Projection not ready yet' };
+    var basis=$('eq-basis')?$('eq-basis').value:'net10';
+    var mult=$('eq-mult')?parseFloat($('eq-mult').value):5;
+    var d=P.data[P.data.length-1], base=0, lab='';
+    if(basis==='rev10'){ base=d.totRev; lab='Yr-10 revenue '+money(d.totRev)+' × '+mult.toFixed(1)+'×'; }
+    else if(basis==='cumnet'){ base=P.cumRw; lab='10-yr cumulative net '+money(P.cumRw)+' × '+mult.toFixed(1)+'×'; }
+    else if(basis==='cumrev'){ base=P.cumRev; lab='10-yr cumulative revenue '+money(P.cumRev)+' × '+mult.toFixed(1)+'×'; }
+    else { base=d.rwNet; lab='Yr-10 net profit '+money(d.rwNet)+' × '+mult.toFixed(1)+'×'; }
+    return { val: base*mult, annual: d.rwNet, label: lab };
+  }
+
+  function paint(v){
+    var total=owners.reduce(function(a,o){ return a+(parseFloat(o.pct)||0); },0);
+    var box=$('eq-owners');
+    if(box){ box.querySelectorAll('.eq-row').forEach(function(row,i){ if(!owners[i])return; var pct=parseFloat(owners[i].pct)||0;
+      var ve=row.querySelector('.eq-val'); if(ve) ve.textContent=money(v.val*pct/100);
+      var pe=row.querySelector('.eq-prof'); if(pe) pe.textContent=money(v.annual*pct/100)+'/yr';
+    }); }
+    if($('eq-mult-lbl')&&$('eq-mult')) $('eq-mult-lbl').textContent=parseFloat($('eq-mult').value).toFixed(1)+'×';
+    if($('eq-valuation')) $('eq-valuation').textContent=money(v.val);
+    if($('eq-basis-note')) $('eq-basis-note').textContent=v.label;
+    if($('eq-total-pct')){ $('eq-total-pct').textContent=total.toFixed(0)+'%'; $('eq-total-pct').style.color=(Math.abs(total-100)<0.5)?'var(--green)':'var(--amber)'; }
+    if($('eq-total-val')) $('eq-total-val').textContent=money(v.val*Math.min(total,100)/100);
+    if($('eq-total-profit')) $('eq-total-profit').textContent=money(v.annual*Math.min(total,100)/100)+'/yr';
+    var n=$('eq-alloc-note');
+    if(n){ if(Math.abs(total-100)<0.5){ n.textContent='Fully allocated (100%).'; n.style.color='var(--text3)'; }
+      else if(total<100){ n.textContent=(100-total).toFixed(0)+'% unallocated.'; n.style.color='var(--amber)'; }
+      else { n.textContent='Over-allocated by '+(total-100).toFixed(0)+'%.'; n.style.color='var(--red)'; } }
+    drawPie(total);
+  }
+
+  function buildRows(){
+    var box=$('eq-owners'); if(!box) return; box.innerHTML='';
+    owners.forEach(function(o,i){
+      var row=document.createElement('div'); row.className='eq-row';
+      row.innerHTML=
+        '<span class="eq-dot" style="background:'+COLORS[i%COLORS.length]+'"></span>'+
+        '<input class="eq-in" value="'+esc(o.name)+'" data-i="'+i+'" data-f="name" aria-label="Owner name">'+
+        '<input class="eq-in" value="'+esc(o.cls||'Common')+'" data-i="'+i+'" data-f="cls" aria-label="Share class">'+
+        '<span class="eq-pctwrap"><input class="eq-in eq-pct" type="number" min="0" max="100" step="1" value="'+(parseFloat(o.pct)||0)+'" data-i="'+i+'" data-f="pct" aria-label="Ownership percent"><span>%</span></span>'+
+        '<span class="eq-val">&mdash;</span>'+
+        '<span class="eq-prof">&mdash;</span>'+
+        '<button class="eq-x" data-i="'+i+'" title="Remove owner" aria-label="Remove owner">×</button>';
+      box.appendChild(row);
+    });
+    box.querySelectorAll('.eq-in').forEach(function(inp){
+      inp.addEventListener('input',function(){ var i=+this.getAttribute('data-i'), f=this.getAttribute('data-f'); if(!owners[i])return;
+        if(f==='pct') owners[i].pct=parseFloat(this.value)||0; else owners[i][f]=this.value;
+        saveOwners(); paint(valuation()); });
+    });
+    box.querySelectorAll('.eq-x').forEach(function(b){
+      b.addEventListener('click',function(){ var i=+this.getAttribute('data-i'); owners.splice(i,1); saveOwners(); renderCap(true); });
+    });
+  }
+
+  window.renderCap=function(rebuild){ if(!$('panel-captable')) return; if(rebuild!==false) buildRows(); paint(valuation()); };
+
+  function drawPie(total){
+    var cv=$('eq-pie'); if(!cv || typeof Chart==='undefined') return;
+    var labels=owners.map(function(o){ return o.name||'—'; });
+    var data=owners.map(function(o){ return parseFloat(o.pct)||0; });
+    var cols=owners.map(function(o,i){ return COLORS[i%COLORS.length]; });
+    if(total<100){ labels.push('Unallocated'); data.push(100-total); cols.push('rgba(150,160,180,0.35)'); }
+    var txt=(typeof cssVar==='function')?(cssVar('--text2')||'#6b7385'):'#6b7385';
+    if(PIE){ PIE.data.labels=labels; PIE.data.datasets[0].data=data; PIE.data.datasets[0].backgroundColor=cols; PIE.options.plugins.legend.labels.color=txt; PIE.update('none'); return; }
+    PIE=new Chart(cv.getContext('2d'),{type:'doughnut',data:{labels:labels,datasets:[{data:data,backgroundColor:cols,borderWidth:0}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'bottom',labels:{color:txt,font:{size:11},boxWidth:12,padding:10}},tooltip:{callbacks:{label:function(c){ return c.label+': '+c.parsed+'%'; }}}}}});
+  }
+
+  document.addEventListener('DOMContentLoaded',function(){
+    var b=$('eq-basis'); if(b) b.addEventListener('change',function(){ paint(valuation()); });
+    var m=$('eq-mult'); if(m) m.addEventListener('input',function(){ paint(valuation()); });
+    var add=$('eq-add'); if(add) add.addEventListener('click',function(){ owners.push({name:'Owner '+String.fromCharCode(65+(owners.length%26)),cls:'Common',pct:0}); saveOwners(); renderCap(true); });
+  });
+})();
+</script>
+
+<script>
 // ===== STATE PERSISTENCE (localStorage) =====
 // Keeps every slider / scenario / theme / active tab across reloads, on this browser.
 (function(){
@@ -2905,10 +3097,12 @@ if(typeof applyChartTheme==='function')setTimeout(applyChartTheme,30);
     read:function(){ const v={}; controls().forEach(el=>{ if(el.id) v[el.id]=el.value; });
       return {v:v, theme:document.documentElement.getAttribute('data-theme'), tab:window.__rwdTab||null,
         fs:(typeof activeFinScenario!=='undefined')?activeFinScenario:null,
-        sc:(typeof activeScenario!=='undefined')?activeScenario:null}; },
+        sc:(typeof activeScenario!=='undefined')?activeScenario:null,
+        cap:(window.RWDCap&&window.RWDCap.get)?window.RWDCap.get():null}; },
     apply:function(s){ if(!s) return;
       if(s.v) Object.keys(s.v).forEach(id=>{ const el=document.getElementById(id); if(el) el.value=s.v[id]; });
       applyTheme(s.theme); applyBadges(s.fs,s.sc);
+      if(s.cap && window.RWDCap && window.RWDCap.set){ try{ window.RWDCap.set(s.cap); }catch(e){} }
       ['calcModel','refreshBenchLabels','calcProjection','calcBuild','renderDashboard'].forEach(fn=>{ if(typeof window[fn]==='function'){ try{ window[fn](); }catch(e){} } });
       if(s.tab){ window.__rwdTab=s.tab; if(typeof window.switchTab==='function'){ try{ window.switchTab(s.tab); }catch(e){} } }
       try{ doSave(); }catch(e){} },
