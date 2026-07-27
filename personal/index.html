@@ -247,6 +247,15 @@
   .att-row a.nm:hover{color:var(--accent);text-decoration:underline;}
   .att-row .rm{border:none;background:none;color:var(--text3);cursor:pointer;font-size:1.1rem;line-height:1;padding:0 2px;flex-shrink:0;}
   .att-row .rm:hover{color:var(--red);}
+  .field .dropzone{display:block;border:1.5px dashed var(--border2);border-radius:12px;padding:14px 12px;text-align:center;cursor:pointer;background:var(--card2);transition:border-color .15s,background .15s;margin-bottom:8px;text-transform:none;letter-spacing:normal;font-weight:400;}
+  .field .dropzone:hover{border-color:var(--accent);}
+  .field .dropzone.drag{border-color:var(--accent);background:var(--accent-soft);}
+  .field .dropzone.busy{opacity:0.65;pointer-events:none;}
+  .dz-main{font-size:0.86rem;color:var(--text2);font-weight:600;}
+  .dz-main b{color:var(--text);}
+  .dz-browse{color:var(--accent);text-decoration:underline;}
+  .dz-ic{font-size:1rem;}
+  .dz-sub{font-size:0.7rem;color:var(--text3);margin-top:3px;}
   .attadd{display:flex;gap:7px;flex-wrap:wrap;}
   .attadd #fAttUrl{flex:2;min-width:170px;padding:9px 11px;border:1px solid var(--border2);border-radius:10px;background:var(--card2);color:var(--text);font-family:inherit;font-size:0.83rem;}
   .attadd #fAttLabel{flex:1;min-width:110px;padding:9px 11px;border:1px solid var(--border2);border-radius:10px;background:var(--card2);color:var(--text);font-family:inherit;font-size:0.83rem;}
@@ -431,12 +440,17 @@
     <div class="field">
       <label>Attachments</label>
       <div class="atts" id="fAtts"></div>
+      <label class="dropzone" id="fDrop" for="fFile">
+        <input type="file" id="fFile" hidden>
+        <div class="dz-main"><span class="dz-ic">⬆</span> <b>Drop a file</b> or <span class="dz-browse">browse</span></div>
+        <div class="dz-sub">PDF, Excel, Word, PPT, images · up to 100 MB · stored on your server</div>
+      </label>
       <div class="attadd">
-        <input id="fAttUrl" placeholder="Paste a link — Drive, Sheets, PDF, Excel…" autocomplete="off">
+        <input id="fAttUrl" placeholder="…or paste a link — Drive, Sheets, PDF…" autocomplete="off">
         <input id="fAttLabel" placeholder="Label (optional)" autocomplete="off">
         <button type="button" class="btn outline sm" id="fAttAdd">Add</button>
       </div>
-      <div class="hint">Tip: for PDF or Excel files, upload to Google Drive and paste the share link here.</div>
+      <div class="hint" id="fAttHint">Upload a file, or paste a Google Drive / URL link. Both sync across your devices.</div>
     </div>
     <div class="field">
       <label>Notes</label>
@@ -535,8 +549,16 @@
     if(/\.pdf($|\?)/.test(u)) return 'pdf';
     return 'link';
   }
-  var ATT_ICON={ sheet:'📊', slides:'📽️', doc:'📝', drive:'📁', pdf:'📄', link:'🔗' };
+  var ATT_ICON={ sheet:'📊', slides:'📽️', doc:'📝', drive:'📁', pdf:'📄', image:'🖼️', file:'📎', link:'🔗' };
   function attIcon(k){ return ATT_ICON[k]||'🔗'; }
+  function attKindByExt(ext){ ext=(ext||'').toLowerCase();
+    if(ext==='pdf') return 'pdf';
+    if(['xls','xlsx','csv'].indexOf(ext)>=0) return 'sheet';
+    if(['doc','docx'].indexOf(ext)>=0) return 'doc';
+    if(['ppt','pptx'].indexOf(ext)>=0) return 'slides';
+    if(['png','jpg','jpeg','gif','webp'].indexOf(ext)>=0) return 'image';
+    return 'file';
+  }
   function hostOf(url){ try{ return new URL(url).hostname.replace(/^www\./,''); }catch(e){ return url; } }
 
   // ---- cloud sync bridge (auth-gate.js reads this) ----
@@ -700,12 +722,44 @@
         '<button type="button" class="rm" data-i="'+i+'" title="Remove">×</button></div>';
     }).join('');
   }
-  function normalizeUrl(u){ u=(u||'').trim(); if(!u) return ''; if(!/^https?:\/\//i.test(u) && /\./.test(u)) u='https://'+u; return u; }
+  function normalizeUrl(u){ u=(u||'').trim(); if(!u) return '';
+    if(!/^https?:\/\//i.test(u) && /\./.test(u)) u='https://'+u;
+    if(!/^https?:\/\//i.test(u)) return ''; // only allow http(s); block javascript:, data:, etc.
+    return u; }
   function addAtt(){
     var url=normalizeUrl($('fAttUrl').value); if(!url){ $('fAttUrl').focus(); return; }
     var label=$('fAttLabel').value.trim();
     modalAtts.push({ url:url, label:label, kind:attKind(url) });
     $('fAttUrl').value=''; $('fAttLabel').value=''; renderAtts(); $('fAttUrl').focus();
+  }
+  // ---- file upload (isolated /api/upload.php; files stored above public_html) ----
+  function setDropState(s, text){
+    var dz=$('fDrop'), hint=$('fAttHint'); if(!dz) return;
+    dz.classList.toggle('busy', s==='uploading');
+    dz.querySelector('.dz-main').innerHTML = (s==='uploading')
+      ? 'Uploading '+esc(text||'')+' …'
+      : '<span class="dz-ic">⬆</span> <b>Drop a file</b> or <span class="dz-browse">browse</span>';
+    if(hint){
+      if(s==='error'){ hint.textContent=text||'Upload failed.'; hint.style.color='var(--red)'; }
+      else { hint.textContent='Upload a file, or paste a Google Drive / URL link. Both sync across your devices.'; hint.style.color=''; }
+    }
+  }
+  function uploadFile(file){
+    if(!file) return;
+    if(file.size > 104857600){ setDropState('error','That file is over 100 MB.'); return; }
+    var fd=new FormData(); fd.append('file', file);
+    setDropState('uploading', file.name);
+    fetch('/api/upload.php?action=upload', { method:'POST', headers:{'X-RWD':'1'}, credentials:'same-origin', body:fd })
+      .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ return {ok:r.ok,status:r.status,j:j}; }); })
+      .then(function(res){
+        if(res.ok && res.j && res.j.ok){
+          modalAtts.push({ url:res.j.url, label:res.j.name, kind:attKindByExt(res.j.ext), uploaded:true });
+          renderAtts(); setDropState('idle');
+        } else {
+          setDropState('error', (res.j&&res.j.error) || (res.status===401?'Sign in to upload files.':'Upload failed.'));
+        }
+      })
+      .catch(function(){ setDropState('error','Upload failed — check your connection.'); });
   }
   function openModal(id){
     var p=id?state.projects.find(function(x){return x.id===id;}):null;
@@ -721,8 +775,8 @@
     $('fUrgency').value=p?p.urgency||'normal':'normal';
     $('fStatus').value=p?p.status||'active':'active';
     $('fNotes').value=p?p.notes||'':'';
-    modalAtts=(p&&Array.isArray(p.attachments))?p.attachments.map(function(a){ return {url:a.url,label:a.label,kind:a.kind||attKind(a.url)}; }):[];
-    renderAtts();
+    modalAtts=(p&&Array.isArray(p.attachments))?p.attachments.map(function(a){ return {url:a.url,label:a.label,kind:a.kind||attKind(a.url),uploaded:a.uploaded}; }):[];
+    renderAtts(); setDropState('idle');
     $('fAttUrl').value=''; $('fAttLabel').value='';
     $('fDelete').style.display=p?'block':'none';
     $('modalBg').classList.add('show');
@@ -738,6 +792,13 @@
   $('fAttUrl').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); addAtt(); } });
   $('fAttLabel').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); addAtt(); } });
   $('fAtts').addEventListener('click',function(e){ var b=e.target.closest('.rm'); if(!b) return; modalAtts.splice(parseInt(b.getAttribute('data-i'),10),1); renderAtts(); });
+  // drag & drop / file picker
+  $('fFile').addEventListener('change',function(){ if(this.files&&this.files[0]){ uploadFile(this.files[0]); this.value=''; } });
+  (function(){ var dz=$('fDrop');
+    ['dragenter','dragover'].forEach(function(ev){ dz.addEventListener(ev,function(e){ e.preventDefault(); e.stopPropagation(); dz.classList.add('drag'); }); });
+    ['dragleave','dragend'].forEach(function(ev){ dz.addEventListener(ev,function(e){ e.preventDefault(); dz.classList.remove('drag'); }); });
+    dz.addEventListener('drop',function(e){ e.preventDefault(); e.stopPropagation(); dz.classList.remove('drag'); var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; if(f) uploadFile(f); });
+  })();
   $('fSave').addEventListener('click',function(){
     var name=$('fName').value.trim(); if(!name){ $('fName').focus(); return; }
     var id=$('fId').value;
