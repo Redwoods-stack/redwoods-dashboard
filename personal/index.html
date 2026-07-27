@@ -230,6 +230,10 @@
   .modal-actions{display:flex;gap:0.6rem;margin-top:1.3rem;}
   .modal-actions .btn{flex:1;justify-content:center;}
   .modal-actions .del{margin-right:auto;background:none;border:none;color:var(--red);font-family:inherit;font-weight:700;font-size:0.83rem;cursor:pointer;padding:0 6px;}
+  .cb{display:flex;align-items:center;gap:8px;font-size:0.86rem;font-weight:600;color:var(--text2);margin-bottom:0.95rem;cursor:pointer;}
+  .cb input{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;}
+  .hint{font-size:0.72rem;color:var(--text3);margin-top:5px;line-height:1.4;}
+  .evmsg{font-size:0.8rem;min-height:18px;color:var(--red);font-weight:600;}
 </style>
 </head>
 <body>
@@ -259,6 +263,7 @@
         <span class="cal-loading" id="calStatus"></span>
       </div>
       <div class="cal-nav" id="calNav" style="display:none;">
+        <button class="btn sm" id="calNew" style="box-shadow:none;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Event</button>
         <button class="cal-btn" id="calToday">Today</button>
         <div class="cal-arrows">
           <button class="cal-arrow" id="calPrev" aria-label="Previous">‹</button>
@@ -395,6 +400,40 @@
   </div>
 </div>
 
+<!-- New Google Calendar event modal -->
+<div class="modal-bg" id="evModalBg">
+  <div class="modal">
+    <h3>New calendar event</h3>
+    <div class="field">
+      <label>Title</label>
+      <input id="evTitle" placeholder="e.g. Investor call — Acme" autocomplete="off">
+    </div>
+    <label class="cb"><input type="checkbox" id="evAllday"> All-day event</label>
+    <div class="frow">
+      <div class="field"><label>Starts</label><input id="evStart" type="datetime-local"></div>
+      <div class="field"><label>Ends</label><input id="evEnd" type="datetime-local"></div>
+    </div>
+    <div class="field">
+      <label>Location</label>
+      <input id="evLoc" placeholder="Address, room, or meeting link" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Guests</label>
+      <input id="evGuests" placeholder="name@email.com, name2@email.com" autocomplete="off">
+      <div class="hint">Comma-separated. Google emails each guest an invite when you create.</div>
+    </div>
+    <div class="field">
+      <label>Description</label>
+      <textarea id="evDesc" placeholder="Agenda, notes, dial-in…"></textarea>
+    </div>
+    <div class="evmsg" id="evMsg"></div>
+    <div class="modal-actions">
+      <button class="btn outline" id="evCancel">Cancel</button>
+      <button class="btn" id="evSave">Create event</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 /* ============================================================================
@@ -408,7 +447,7 @@
   var GCID_KEY='rwd_gcid';         // Google OAuth client id
   var GTOK_KEY='rwd_gtoken';       // {access_token, expires_at}
   var GCONN_KEY='rwd_gconnected';  // '1' once the user has authorized at least once
-  var SCOPES='https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/tasks';
+  var SCOPES='https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/tasks';
   // Default OAuth client id (public — protected by Authorized JavaScript origins).
   // Users can still override it in the UI (stored in localStorage per device).
   var DEFAULT_GCID='1044344951421-l3q5j3d3pvqb5n91ao97dsouv8cvfph9.apps.googleusercontent.com';
@@ -682,7 +721,7 @@
         if(it.allDay) return '<div class="ev allday" style="background:'+c+'" title="'+title+'">'+title+'</div>';
         return '<div class="ev timed" title="'+title+'"><span class="ev-dot" style="background:'+c+'"></span><span class="ev-t">'+esc(shortTime(it.t))+'</span> '+title+'</div>';
       }).join('');
-      html+='<div class="cal-cell'+(inM?'':' other')+(isT?' today':'')+'"><span class="dnum">'+cur.getDate()+'</span>'+evH+(extra>0?'<span class="ev-more">+'+extra+' more</span>':'')+'</div>';
+      html+='<div class="cal-cell'+(inM?'':' other')+(isT?' today':'')+'" data-date="'+localDateValue(cur)+'"><span class="dnum">'+cur.getDate()+'</span>'+evH+(extra>0?'<span class="ev-more">+'+extra+' more</span>':'')+'</div>';
       cur.setDate(cur.getDate()+1);
     }
     html+='</div>';
@@ -717,11 +756,86 @@
       var blocks=evs.map(function(o){ var col=evColor(o.ev), top=o._s/1440*DAYH, hgt=Math.max(16,(o._e-o._s)/1440*DAYH), w=100/(o._lanes||1), left=(o._lane||0)*w, st=shortTime(new Date(2000,0,1,Math.floor(o._s/60),o._s%60));
         return '<div class="wk-ev" style="top:'+top.toFixed(1)+'px;height:'+hgt.toFixed(1)+'px;left:'+left+'%;width:'+w+'%;background:'+col+'" title="'+esc(o.ev.summary||'')+'">'+(hgt>26?'<span class="wk-evt">'+esc(st)+'</span> ':'')+esc(o.ev.summary||'(no title)')+'</div>';
       }).join('');
-      cols+='<div class="wk-col" style="height:'+DAYH+'px">'+blocks+'</div>';
+      cols+='<div class="wk-col" data-i="'+c+'" style="height:'+DAYH+'px">'+blocks+'</div>';
     }
     $('calBody').innerHTML='<div class="wk">'+head+adrow+'<div class="wk-scroll" id="wkScroll"><div class="wk-grid">'+times+cols+'</div></div></div>';
     var sc=$('wkScroll'); if(sc) sc.scrollTop=7*HOURH-16;
   }
+
+  // -------- Create event (write) --------
+  function localDateValue(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function localDTValue(d){ return localDateValue(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes()); }
+  var tzName=(function(){ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC'; }catch(e){ return 'UTC'; } })();
+
+  function openEvent(start){
+    if(!start){ start=new Date(); start.setSeconds(0,0); start.setMinutes(0); start.setHours(start.getHours()+1); }
+    var end=new Date(start.getTime()+3600000);
+    $('evAllday').checked=false;
+    $('evStart').type='datetime-local'; $('evEnd').type='datetime-local';
+    $('evStart').value=localDTValue(start); $('evEnd').value=localDTValue(end);
+    $('evTitle').value=''; $('evLoc').value=''; $('evGuests').value=''; $('evDesc').value=''; $('evMsg').textContent='';
+    $('evSave').disabled=false;
+    $('evModalBg').classList.add('show');
+    setTimeout(function(){ $('evTitle').focus(); }, 50);
+  }
+  function closeEvent(){ $('evModalBg').classList.remove('show'); }
+  function toggleAllday(){
+    var all=$('evAllday').checked;
+    ['evStart','evEnd'].forEach(function(id){ var el=$(id), v=el.value;
+      if(all){ el.type='date'; if(v&&v.indexOf('T')>-1) el.value=v.slice(0,10); }
+      else { el.type='datetime-local'; if(v&&v.indexOf('T')===-1) el.value=(v||localDateValue(new Date()))+'T09:00'; }
+    });
+  }
+  function saveEvent(){
+    if(!gToken){ renderGoogleDisconnected('Connect Google to create events.'); closeEvent(); return; }
+    var title=$('evTitle').value.trim(); if(!title){ $('evMsg').style.color='var(--red)'; $('evMsg').textContent='Give the event a title.'; $('evTitle').focus(); return; }
+    var all=$('evAllday').checked, sV=$('evStart').value, eV=$('evEnd').value;
+    if(!sV){ $('evMsg').style.color='var(--red)'; $('evMsg').textContent='Pick a start time.'; return; }
+    var body={ summary:title };
+    var loc=$('evLoc').value.trim(); if(loc) body.location=loc;
+    var desc=$('evDesc').value.trim(); if(desc) body.description=desc;
+    if(all){
+      var sd=sV.slice(0,10), ed=(eV||sV).slice(0,10);
+      var startD=new Date(sd+'T00:00:00'), endD=new Date(ed+'T00:00:00');
+      if(endD<=startD){ endD=new Date(startD); endD.setDate(endD.getDate()+1); } // end date is exclusive
+      body.start={ date:sd }; body.end={ date:localDateValue(endD) };
+    } else {
+      var sDate=new Date(sV); var eDate=eV?new Date(eV):new Date(sDate.getTime()+3600000);
+      if(eDate<=sDate) eDate=new Date(sDate.getTime()+3600000);
+      body.start={ dateTime:sDate.toISOString(), timeZone:tzName };
+      body.end={ dateTime:eDate.toISOString(), timeZone:tzName };
+    }
+    var guests=$('evGuests').value.split(/[,;\s]+/).map(function(s){ return s.trim(); }).filter(function(s){ return s.indexOf('@')>0; });
+    if(guests.length) body.attendees=guests.map(function(em){ return { email:em }; });
+    var send=guests.length?'all':'none';
+    $('evSave').disabled=true; $('evMsg').style.color='var(--text3)'; $('evMsg').textContent='Creating…';
+    gfetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates='+send,
+      { method:'POST', body:JSON.stringify(body) })
+      .then(function(){ $('evSave').disabled=false; closeEvent(); if(Cal&&Cal.render) Cal.render(); })
+      .catch(function(err){ $('evSave').disabled=false; $('evMsg').style.color='var(--red)';
+        if(err&&err.message==='reauth'){ $('evMsg').textContent='Session expired — reconnect Google, then retry.'; renderGoogleDisconnected('Reconnect Google to create events.'); }
+        else $('evMsg').textContent='Could not create: '+esc(err&&err.message||'error');
+      });
+  }
+  // wiring (static elements — safe to bind once at load)
+  $('calNew').addEventListener('click', function(){ openEvent(); });
+  $('evCancel').addEventListener('click', closeEvent);
+  $('evSave').addEventListener('click', saveEvent);
+  $('evAllday').addEventListener('change', toggleAllday);
+  $('evModalBg').addEventListener('click', function(e){ if(e.target===$('evModalBg')) closeEvent(); });
+  $('evTitle').addEventListener('keydown', function(e){ if(e.key==='Enter') saveEvent(); });
+  // click a day (month) or a time slot (week) to create there
+  $('calBody').addEventListener('click', function(e){
+    var cell=e.target.closest('.cal-cell');
+    if(cell && cell.getAttribute('data-date')){ openEvent(new Date(cell.getAttribute('data-date')+'T09:00:00')); return; }
+    var col=e.target.closest('.wk-col');
+    if(col && !e.target.closest('.wk-ev')){
+      var rect=col.getBoundingClientRect(), y=e.clientY-rect.top;
+      var mins=Math.max(0, Math.min(1410, Math.round(y/DAYH*1440/30)*30));
+      var d=new Date(startOfWeek(Cal.cursor)); d.setDate(d.getDate()+(parseInt(col.getAttribute('data-i'),10)||0)); d.setHours(0, mins, 0, 0);
+      openEvent(d);
+    }
+  });
 
   // -------- Tasks --------
   function loadTasks(){
