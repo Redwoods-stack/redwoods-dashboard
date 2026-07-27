@@ -233,6 +233,32 @@
   .modal-actions{display:flex;gap:0.6rem;margin-top:1.3rem;}
   .modal-actions .btn{flex:1;justify-content:center;}
   .modal-actions .del{margin-right:auto;background:none;border:none;color:var(--red);font-family:inherit;font-weight:700;font-size:0.83rem;cursor:pointer;padding:0 6px;}
+  .money{display:flex;align-items:stretch;border:1px solid var(--border2);border-radius:11px;background:var(--card2);overflow:hidden;}
+  .money:focus-within{border-color:var(--accent);background:var(--card);}
+  .money .cur{display:flex;align-items:center;padding:0 12px;font-size:0.86rem;font-weight:700;color:var(--text3);background:rgba(0,0,0,0.03);border-right:1px solid var(--border);}
+  html[data-theme="dark"] .money .cur{background:rgba(255,255,255,0.04);}
+  .money input{border:none;background:transparent;border-radius:0;flex:1;padding:10px 12px;font-size:0.95rem;font-weight:600;color:var(--text);font-family:inherit;}
+  .money input:focus{outline:none;}
+  .atts{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}
+  .atts:empty{display:none;}
+  .att-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--card2);}
+  .att-row .ic{font-size:1rem;line-height:1;flex-shrink:0;}
+  .att-row .nm{flex:1;font-size:0.83rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:none;}
+  .att-row a.nm:hover{color:var(--accent);text-decoration:underline;}
+  .att-row .rm{border:none;background:none;color:var(--text3);cursor:pointer;font-size:1.1rem;line-height:1;padding:0 2px;flex-shrink:0;}
+  .att-row .rm:hover{color:var(--red);}
+  .attadd{display:flex;gap:7px;flex-wrap:wrap;}
+  .attadd #fAttUrl{flex:2;min-width:170px;padding:9px 11px;border:1px solid var(--border2);border-radius:10px;background:var(--card2);color:var(--text);font-family:inherit;font-size:0.83rem;}
+  .attadd #fAttLabel{flex:1;min-width:110px;padding:9px 11px;border:1px solid var(--border2);border-radius:10px;background:var(--card2);color:var(--text);font-family:inherit;font-size:0.83rem;}
+  .attadd input:focus{outline:none;border-color:var(--accent);}
+  /* attachment chips + referrer on cards */
+  .p-from{font-size:0.78rem;color:var(--text2);margin-bottom:0.7rem;}
+  .p-from b{color:var(--text);font-weight:700;}
+  .p-atts{display:flex;flex-wrap:wrap;gap:6px;margin-top:0.2rem;}
+  .att{display:inline-flex;align-items:center;gap:5px;font-size:0.72rem;font-weight:600;color:var(--text2);text-decoration:none;padding:4px 9px;border:1px solid var(--border);border-radius:8px;background:var(--card2);max-width:100%;}
+  .att:hover{border-color:var(--accent);color:var(--accent);}
+  .att .ic{font-size:0.85rem;line-height:1;}
+  .att .lb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
   .cb{display:flex;align-items:center;gap:8px;font-size:0.86rem;font-weight:600;color:var(--text2);margin-bottom:0.95rem;cursor:pointer;}
   .cb input{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;}
   .hint{font-size:0.72rem;color:var(--text3);margin-top:5px;line-height:1.4;}
@@ -318,12 +344,14 @@
       <button data-f="partnership">Partnerships</button>
     </div>
     <div class="grow"></div>
+    <select class="sel" id="sourceSel" title="Filter by who brought the project"></select>
     <select class="sel" id="sortSel">
       <option value="deadline">Sort: Deadline</option>
       <option value="priority">Sort: Priority</option>
       <option value="age">Sort: Age (oldest)</option>
       <option value="new">Sort: Newest</option>
       <option value="size">Sort: Size</option>
+      <option value="source">Sort: Referrer</option>
     </select>
   </div>
 
@@ -349,9 +377,14 @@
         </select>
       </div>
       <div class="field">
-        <label>Size / value</label>
-        <input id="fSize" placeholder="e.g. $250k, 3 units" autocomplete="off">
+        <label>Coming from</label>
+        <input id="fSource" list="sourceList" placeholder="Who brought this in?" autocomplete="off">
+        <datalist id="sourceList"></datalist>
       </div>
+    </div>
+    <div class="field">
+      <label>Size / value (IDR)</label>
+      <div class="money"><span class="cur">Rp</span><input id="fSize" inputmode="numeric" placeholder="1,200,000,000" autocomplete="off"></div>
     </div>
     <div class="frow">
       <div class="field">
@@ -390,6 +423,16 @@
         <option value="passed">Passed (we declined)</option>
         <option value="lost">Lost / Dropped</option>
       </select>
+    </div>
+    <div class="field">
+      <label>Attachments</label>
+      <div class="atts" id="fAtts"></div>
+      <div class="attadd">
+        <input id="fAttUrl" placeholder="Paste a link — Drive, Sheets, PDF, Excel…" autocomplete="off">
+        <input id="fAttLabel" placeholder="Label (optional)" autocomplete="off">
+        <button type="button" class="btn outline sm" id="fAttAdd">Add</button>
+      </div>
+      <div class="hint">Tip: for PDF or Excel files, upload to Google Drive and paste the share link here.</div>
     </div>
     <div class="field">
       <label>Notes</label>
@@ -459,7 +502,7 @@
   var DAY=86400000;
 
   // ---- state ----
-  var state={ projects:[], filter:'all', sort:'deadline', theme:'light' };
+  var state={ projects:[], filter:'all', source:'all', sort:'deadline', theme:'light' };
   function uid(){ return 'p'+Math.random().toString(36).slice(2,9); }
   function todayMid(){ var d=new Date(); d.setHours(0,0,0,0); return d; }
   function $(id){ return document.getElementById(id); }
@@ -468,13 +511,29 @@
   // ---- persistence (local) ----
   function saveLocal(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(serialize())); }catch(e){} }
   function loadLocal(){ try{ var r=localStorage.getItem(LS_KEY); if(r) hydrate(JSON.parse(r)); }catch(e){} }
-  function serialize(){ return { projects:state.projects, filter:state.filter, sort:state.sort, theme:state.theme }; }
+  function serialize(){ return { projects:state.projects, filter:state.filter, source:state.source, sort:state.sort, theme:state.theme }; }
   function hydrate(d){ if(!d) return;
     if(Array.isArray(d.projects)) state.projects=d.projects;
     if(d.filter) state.filter=d.filter;
+    if(d.source) state.source=d.source;
     if(d.sort) state.sort=d.sort;
     if(d.theme) state.theme=d.theme;
   }
+  // ---- money (IDR) + attachments helpers ----
+  function digits(s){ return String(s==null?'':s).replace(/[^\d]/g,''); }
+  function groupNum(s){ s=digits(s); return s?s.replace(/\B(?=(\d{3})+(?!\d))/g,','):''; }
+  function fmtIDR(n){ if(n==null||n==='') return ''; var d=digits(n); return d?('Rp '+groupNum(d)):''; }
+  function attKind(url){ var u=(url||'').toLowerCase();
+    if(/docs\.google\.com\/spreadsheets/.test(u)||/\.xlsx?($|\?)/.test(u)) return 'sheet';
+    if(/docs\.google\.com\/presentation/.test(u)||/slides/.test(u)) return 'slides';
+    if(/docs\.google\.com\/document/.test(u)) return 'doc';
+    if(/drive\.google\.com/.test(u)) return 'drive';
+    if(/\.pdf($|\?)/.test(u)) return 'pdf';
+    return 'link';
+  }
+  var ATT_ICON={ sheet:'📊', slides:'📽️', doc:'📝', drive:'📁', pdf:'📄', link:'🔗' };
+  function attIcon(k){ return ATT_ICON[k]||'🔗'; }
+  function hostOf(url){ try{ return new URL(url).hostname.replace(/^www\./,''); }catch(e){ return url; } }
 
   // ---- cloud sync bridge (auth-gate.js reads this) ----
   window.RWDState={
@@ -496,15 +555,18 @@
   var PR_RANK={high:0,medium:1,low:2}, TYPE_LABEL={deal:'Deal',investment:'Investment',partnership:'Partnership'},
       STATUS_LABEL={active:'Active','on-hold':'On hold',won:'Won',passed:'Passed',lost:'Lost'};
 
+  function srcOf(p){ return (p.source||'').trim(); }
   function visibleProjects(){
     var arr=state.projects.slice();
     if(state.filter!=='all') arr=arr.filter(function(p){ return p.type===state.filter; });
+    if(state.source!=='all') arr=arr.filter(function(p){ return srcOf(p)===state.source; });
     var s=state.sort;
     arr.sort(function(a,b){
       if(s==='priority') return (PR_RANK[a.priority]||1)-(PR_RANK[b.priority]||1);
       if(s==='age') return (ageOf(b)||0)-(ageOf(a)||0);
       if(s==='new') return (b.created||0)-(a.created||0);
       if(s==='size') return sizeNum(b.size)-sizeNum(a.size);
+      if(s==='source') return srcOf(a).toLowerCase().localeCompare(srcOf(b).toLowerCase()) || (b.created||0)-(a.created||0);
       // deadline: soonest first; no-deadline last
       var da=daysToDeadline(a), db=daysToDeadline(b);
       if(da==null&&db==null) return 0; if(da==null) return 1; if(db==null) return -1;
@@ -512,8 +574,11 @@
     });
     return arr;
   }
-  function sizeNum(s){ if(!s) return 0; var m=String(s).replace(/[, ]/g,'').match(/([\d.]+)\s*([kmb])?/i); if(!m) return 0;
+  // size is now a numeric IDR amount; keep string parsing for any legacy values.
+  function sizeNum(s){ if(s==null||s==='') return 0; if(typeof s==='number') return s;
+    var m=String(s).replace(/[, ]/g,'').match(/([\d.]+)\s*([kmb])?/i); if(!m) return 0;
     var n=parseFloat(m[1])||0, u=(m[2]||'').toLowerCase(); return n*(u==='b'?1e9:u==='m'?1e6:u==='k'?1e3:1); }
+  function sizeDisplay(s){ if(s==null||s==='') return '—'; if(typeof s==='number') return fmtIDR(s); if(/^\d[\d,]*$/.test(String(s).trim())) return fmtIDR(s); return String(s); }
 
   function renderKPIs(){
     var active=state.projects.filter(function(p){ return p.status==='active'; });
@@ -547,13 +612,15 @@
         (p.urgency==='urgent'?'<span class="pill pr-high dot">Urgent</span>':'')+
         '<span class="pill status st-'+esc(p.status)+'">'+esc(STATUS_LABEL[p.status]||p.status)+'</span>'+
       '</div>'+
+      (srcOf(p)?'<div class="p-from">From <b>'+esc(srcOf(p))+'</b></div>':'')+
       '<div class="p-meta">'+
-        '<div><div class="m-lab">Size</div><div class="m-val">'+esc(p.size||'—')+'</div></div>'+
+        '<div><div class="m-lab">Size</div><div class="m-val">'+esc(sizeDisplay(p.size))+'</div></div>'+
         '<div><div class="m-lab">Started</div><div class="m-val">'+fmtDate(p.start)+'</div></div>'+
       '</div>'+
       '<div class="agebar"><i style="width:'+agePct+'%"></i></div>'+
       '<div class="age-line"><span>'+esc(ageTxt)+'</span><span class="due '+dueCls+'">'+esc(dueTxt)+'</span></div>'+
       (p.notes?'<div style="font-size:0.8rem;color:var(--text2);margin-top:0.7rem;line-height:1.5;">'+esc(p.notes)+'</div>':'')+
+      (Array.isArray(p.attachments)&&p.attachments.length?'<div class="p-atts">'+p.attachments.map(function(a){ var k=a.kind||attKind(a.url); return '<a class="att" href="'+esc(a.url)+'" target="_blank" rel="noopener"><span class="ic">'+attIcon(k)+'</span><span class="lb">'+esc(a.label||hostOf(a.url))+'</span></a>'; }).join('')+'</div>':'')+
     '</div>';
   }
 
@@ -570,13 +637,33 @@
     grid.innerHTML=list.map(projCard).join('');
     Array.prototype.forEach.call(grid.querySelectorAll('.proj'),function(el){
       el.addEventListener('click',function(e){
-        if(e.target.closest('[data-act="edit"]')||!e.target.closest('.p-actions')){}
+        if(e.target.closest('a')) return; // let attachment links open
         openModal(el.getAttribute('data-id'));
       });
     });
   }
 
-  function renderAll(){ renderKPIs(); renderProjects();
+  // Distinct referrers with counts, most-frequent first.
+  function sourceCounts(){
+    var m={};
+    state.projects.forEach(function(p){ var s=srcOf(p); if(s) m[s]=(m[s]||0)+1; });
+    return Object.keys(m).map(function(k){ return {name:k,count:m[k]}; })
+      .sort(function(a,b){ return b.count-a.count || a.name.toLowerCase().localeCompare(b.name.toLowerCase()); });
+  }
+  function renderSourceControls(){
+    var counts=sourceCounts();
+    // referrer filter dropdown (shows who brings most, by count)
+    var sel=$('sourceSel');
+    var opts='<option value="all">All referrers ('+state.projects.length+')</option>';
+    counts.forEach(function(c){ opts+='<option value="'+esc(c.name)+'">'+esc(c.name)+' ('+c.count+')</option>'; });
+    sel.innerHTML=opts;
+    if(state.source!=='all' && !counts.some(function(c){return c.name===state.source;})) state.source='all';
+    sel.value=state.source;
+    // datalist for the modal input
+    $('sourceList').innerHTML=counts.map(function(c){ return '<option value="'+esc(c.name)+'"></option>'; }).join('');
+  }
+
+  function renderAll(){ renderKPIs(); renderSourceControls(); renderProjects();
     Array.prototype.forEach.call($('filterSeg').children,function(b){ b.classList.toggle('on', b.getAttribute('data-f')===state.filter); });
     $('sortSel').value=state.sort;
   }
@@ -584,21 +671,41 @@
   // ---- toolbar ----
   $('filterSeg').addEventListener('click',function(e){ var b=e.target.closest('button'); if(!b) return; state.filter=b.getAttribute('data-f'); saveLocal(); renderAll(); });
   $('sortSel').addEventListener('change',function(){ state.sort=this.value; saveLocal(); renderProjects(); });
+  $('sourceSel').addEventListener('change',function(){ state.source=this.value; saveLocal(); renderProjects(); });
 
   // ---- modal ----
+  var modalAtts=[];
+  function renderAtts(){
+    $('fAtts').innerHTML=modalAtts.map(function(a,i){ var k=a.kind||attKind(a.url);
+      return '<div class="att-row"><span class="ic">'+attIcon(k)+'</span>'+
+        '<a class="nm" href="'+esc(a.url)+'" target="_blank" rel="noopener">'+esc(a.label||hostOf(a.url))+'</a>'+
+        '<button type="button" class="rm" data-i="'+i+'" title="Remove">×</button></div>';
+    }).join('');
+  }
+  function normalizeUrl(u){ u=(u||'').trim(); if(!u) return ''; if(!/^https?:\/\//i.test(u) && /\./.test(u)) u='https://'+u; return u; }
+  function addAtt(){
+    var url=normalizeUrl($('fAttUrl').value); if(!url){ $('fAttUrl').focus(); return; }
+    var label=$('fAttLabel').value.trim();
+    modalAtts.push({ url:url, label:label, kind:attKind(url) });
+    $('fAttUrl').value=''; $('fAttLabel').value=''; renderAtts(); $('fAttUrl').focus();
+  }
   function openModal(id){
     var p=id?state.projects.find(function(x){return x.id===id;}):null;
     $('modalTitle').textContent=p?'Edit project':'Add project';
     $('fId').value=p?p.id:'';
     $('fName').value=p?p.name||'':'';
     $('fType').value=p?p.type||'deal':'deal';
-    $('fSize').value=p?p.size||'':'';
+    $('fSource').value=p?p.source||'':'';
+    $('fSize').value=p?(p.size!=null&&p.size!==''?groupNum(p.size):''):'';
     $('fStart').value=p?p.start||'':new Date().toISOString().slice(0,10);
     $('fDeadline').value=p?p.deadline||'':'';
     $('fPriority').value=p?p.priority||'medium':'medium';
     $('fUrgency').value=p?p.urgency||'normal':'normal';
     $('fStatus').value=p?p.status||'active':'active';
     $('fNotes').value=p?p.notes||'':'';
+    modalAtts=(p&&Array.isArray(p.attachments))?p.attachments.map(function(a){ return {url:a.url,label:a.label,kind:a.kind||attKind(a.url)}; }):[];
+    renderAtts();
+    $('fAttUrl').value=''; $('fAttLabel').value='';
     $('fDelete').style.display=p?'block':'none';
     $('modalBg').classList.add('show');
     setTimeout(function(){ $('fName').focus(); },50);
@@ -607,13 +714,22 @@
   $('addBtn').addEventListener('click',function(){ openModal(); });
   $('fCancel').addEventListener('click',closeModal);
   $('modalBg').addEventListener('click',function(e){ if(e.target===$('modalBg')) closeModal(); });
+  // live thousands-separator formatting on the IDR size input
+  $('fSize').addEventListener('input',function(){ var caretEnd=this.selectionStart===this.value.length; var f=groupNum(this.value); this.value=f; if(caretEnd){ try{ this.setSelectionRange(f.length,f.length); }catch(e){} } });
+  $('fAttAdd').addEventListener('click',addAtt);
+  $('fAttUrl').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); addAtt(); } });
+  $('fAttLabel').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); addAtt(); } });
+  $('fAtts').addEventListener('click',function(e){ var b=e.target.closest('.rm'); if(!b) return; modalAtts.splice(parseInt(b.getAttribute('data-i'),10),1); renderAtts(); });
   $('fSave').addEventListener('click',function(){
     var name=$('fName').value.trim(); if(!name){ $('fName').focus(); return; }
     var id=$('fId').value;
-    var rec={ name:name, type:$('fType').value, size:$('fSize').value.trim(),
+    var sizeDigits=digits($('fSize').value);
+    var rec={ name:name, type:$('fType').value, source:$('fSource').value.trim(),
+      size:sizeDigits?parseInt(sizeDigits,10):'',
       start:$('fStart').value, deadline:$('fDeadline').value,
       priority:$('fPriority').value, urgency:$('fUrgency').value,
-      status:$('fStatus').value, notes:$('fNotes').value.trim() };
+      status:$('fStatus').value, notes:$('fNotes').value.trim(),
+      attachments:modalAtts.slice() };
     if(id){ var p=state.projects.find(function(x){return x.id===id;}); if(p) Object.assign(p,rec); }
     else { rec.id=uid(); rec.created=Date.now(); state.projects.push(rec); }
     saveLocal(); renderAll(); closeModal();
