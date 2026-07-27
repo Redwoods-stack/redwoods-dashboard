@@ -252,6 +252,10 @@
   .attadd #fAttLabel{flex:1;min-width:110px;padding:9px 11px;border:1px solid var(--border2);border-radius:10px;background:var(--card2);color:var(--text);font-family:inherit;font-size:0.83rem;}
   .attadd input:focus{outline:none;border-color:var(--accent);}
   /* attachment chips + referrer on cards */
+  .grp{grid-column:1/-1;display:flex;align-items:baseline;gap:10px;margin:0.5rem 2px 0;padding-bottom:0.1rem;border-bottom:1px solid var(--border);}
+  .grp:first-child{margin-top:0;}
+  .grp-name{font-size:0.92rem;font-weight:800;color:var(--text);letter-spacing:-0.01em;}
+  .grp-meta{font-size:0.76rem;font-weight:700;color:var(--accent);}
   .p-from{font-size:0.78rem;color:var(--text2);margin-bottom:0.7rem;}
   .p-from b{color:var(--text);font-weight:700;}
   .p-atts{display:flex;flex-wrap:wrap;gap:6px;margin-top:0.2rem;}
@@ -634,7 +638,21 @@
       return;
     }
     if(!list.length){ grid.innerHTML='<div class="card empty-proj" style="grid-column:1/-1"><p>No projects match this filter.</p></div>'; return; }
-    grid.innerHTML=list.map(projCard).join('');
+    if(state.sort==='source'){
+      var html='', cur=null;
+      list.forEach(function(p){
+        var s=srcOf(p)||'—';
+        if(s!==cur){ cur=s;
+          var group=list.filter(function(x){ return (srcOf(x)||'—')===s; });
+          var total=group.reduce(function(a,x){ return a+sizeNum(x.size); }, 0);
+          html+='<div class="grp"><span class="grp-name">'+esc(s==='—'?'No referrer':s)+'</span><span class="grp-meta">'+group.length+' project'+(group.length>1?'s':'')+(total>0?' · '+esc(fmtIDR(total)):'')+'</span></div>';
+        }
+        html+=projCard(p);
+      });
+      grid.innerHTML=html;
+    } else {
+      grid.innerHTML=list.map(projCard).join('');
+    }
     Array.prototype.forEach.call(grid.querySelectorAll('.proj'),function(el){
       el.addEventListener('click',function(e){
         if(e.target.closest('a')) return; // let attachment links open
