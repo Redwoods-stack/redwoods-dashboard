@@ -451,6 +451,7 @@
   var GCID_KEY='rwd_gcid';         // Google OAuth client id
   var GTOK_KEY='rwd_gtoken';       // {access_token, expires_at}
   var GCONN_KEY='rwd_gconnected';  // '1' once the user has authorized at least once
+  var SCOPE_VER='2';               // bump when SCOPES change so stale tokens are ignored
   var SCOPES='https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/tasks';
   // Default OAuth client id (public — protected by Authorized JavaScript origins).
   // Users can still override it in the UI (stored in localStorage per device).
@@ -629,7 +630,7 @@
   var gToken=null, gTaskListId=null;
   function getClientId(){ try{ return localStorage.getItem(GCID_KEY)||DEFAULT_GCID; }catch(e){ return DEFAULT_GCID; } }
   function setClientId(v){ try{ localStorage.setItem(GCID_KEY,v); }catch(e){} }
-  function loadToken(){ try{ var r=localStorage.getItem(GTOK_KEY); if(r){ var t=JSON.parse(r); if(t&&t.expires_at>Date.now()+30000) return t; } }catch(e){} return null; }
+  function loadToken(){ try{ var r=localStorage.getItem(GTOK_KEY); if(r){ var t=JSON.parse(r); if(t&&t.sv===SCOPE_VER&&t.expires_at>Date.now()+30000) return t; } }catch(e){} return null; }
   function saveToken(t){ try{ localStorage.setItem(GTOK_KEY,JSON.stringify(t)); }catch(e){} }
   function clearToken(){ gToken=null; try{ localStorage.removeItem(GTOK_KEY); }catch(e){} }
   function gsiReady(){ return window.google && google.accounts && google.accounts.oauth2; }
@@ -642,7 +643,15 @@
         client_id:cid, scope:SCOPES,
         callback:function(resp){
           if(resp&&resp.access_token){
-            gToken={ access_token:resp.access_token, expires_at:Date.now()+((resp.expires_in||3600)*1000) };
+            // If the calendar edit scope wasn't granted, force the consent screen once.
+            var oauth=google.accounts.oauth2;
+            if(oauth.hasGrantedAllScopes && !oauth.hasGrantedAllScopes(resp,'https://www.googleapis.com/auth/calendar.events') && !tokenClient.__consented){
+              tokenClient.__consented=true;
+              try{ tokenClient.requestAccessToken({ prompt:'consent' }); }catch(e){}
+              return;
+            }
+            tokenClient.__consented=false;
+            gToken={ access_token:resp.access_token, expires_at:Date.now()+((resp.expires_in||3600)*1000), sv:SCOPE_VER };
             saveToken(gToken); try{ localStorage.setItem(GCONN_KEY,'1'); }catch(e){} refreshGoogle();
           } else { setGStatus('Authorization failed'); }
         }
@@ -662,6 +671,12 @@
     clearToken(); try{ localStorage.removeItem(GCONN_KEY); }catch(e){} renderGoogleDisconnected();
   }
   function setGStatus(t){ $('calStatus').textContent=t||''; $('taskStatus').textContent=t||''; }
+  // Called when Google rejects a write for lack of the edit scope: reset and re-consent.
+  function needScope(){
+    clearToken(); try{ localStorage.removeItem(GCONN_KEY); }catch(e){}
+    if(typeof closeEvent==='function') closeEvent();
+    renderGoogleDisconnected('Google needs permission to manage your calendar. Click “Connect Google” and allow calendar access (edit events).');
+  }
 
   function gfetch(url,opts){
     opts=opts||{}; opts.headers=opts.headers||{};
@@ -669,7 +684,12 @@
     if(opts.body) opts.headers['Content-Type']='application/json';
     return fetch(url,opts).then(function(r){
       if(r.status===401){ clearToken(); throw new Error('reauth'); }
-      return r.json().catch(function(){ return {}; }).then(function(j){ if(!r.ok) throw new Error((j.error&&j.error.message)||'HTTP '+r.status); return j; });
+      return r.json().catch(function(){ return {}; }).then(function(j){
+        if(!r.ok){ var m=(j.error&&j.error.message)||('HTTP '+r.status);
+          if(r.status===403 && /scope/i.test(m)) throw new Error('scope');
+          throw new Error(m); }
+        return j;
+      });
     });
   }
 
@@ -845,6 +865,7 @@
     gfetch(url, { method: editing?'PATCH':'POST', body:JSON.stringify(body) })
       .then(function(){ $('evSave').disabled=false; closeEvent(); if(Cal&&Cal.render) Cal.render(); })
       .catch(function(err){ $('evSave').disabled=false; $('evMsg').style.color='var(--red)';
+        if(err&&err.message==='scope'){ needScope(); return; }
         if(err&&err.message==='reauth'){ $('evMsg').textContent='Session expired — reconnect Google, then retry.'; renderGoogleDisconnected('Reconnect Google to manage events.'); }
         else $('evMsg').textContent=(editing?'Could not save: ':'Could not create: ')+esc(err&&err.message||'error');
       });
@@ -856,6 +877,7 @@
     gfetch('https://www.googleapis.com/calendar/v3/calendars/primary/events/'+encodeURIComponent(evEditId)+'?sendUpdates=all', { method:'DELETE' })
       .then(function(){ closeEvent(); if(Cal&&Cal.render) Cal.render(); })
       .catch(function(err){ $('evDelete').disabled=false; $('evSave').disabled=false; $('evMsg').style.color='var(--red)';
+        if(err&&err.message==='scope'){ needScope(); return; }
         if(err&&err.message==='reauth'){ $('evMsg').textContent='Session expired — reconnect Google, then retry.'; renderGoogleDisconnected('Reconnect Google to manage events.'); }
         else $('evMsg').textContent='Could not delete: '+esc(err&&err.message||'error');
       });
