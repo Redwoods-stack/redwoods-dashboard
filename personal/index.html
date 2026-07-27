@@ -128,6 +128,9 @@
   .cal-cell.other .dnum{color:var(--text3);}
   .dnum{font-size:0.76rem;font-weight:700;color:var(--text2);width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;margin-bottom:1px;}
   .cal-cell.today .dnum{background:var(--accent);color:#fff;}
+  .cal-cell{cursor:pointer;}
+  .ev,.wk-ev,.wk-adchip{cursor:pointer;}
+  .wk-col{cursor:pointer;}
   .ev{font-size:0.66rem;line-height:1.35;border-radius:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .ev.allday{background:var(--accent);color:#fff;padding:1px 6px;font-weight:600;}
   .ev.timed{display:flex;align-items:center;gap:4px;color:var(--text);font-weight:600;padding:0 1px;}
@@ -403,7 +406,7 @@
 <!-- New Google Calendar event modal -->
 <div class="modal-bg" id="evModalBg">
   <div class="modal">
-    <h3>New calendar event</h3>
+    <h3 id="evModalTitle">New calendar event</h3>
     <div class="field">
       <label>Title</label>
       <input id="evTitle" placeholder="e.g. Investor call — Acme" autocomplete="off">
@@ -428,6 +431,7 @@
     </div>
     <div class="evmsg" id="evMsg"></div>
     <div class="modal-actions">
+      <button class="del" id="evDelete" style="display:none">Delete</button>
       <button class="btn outline" id="evCancel">Cancel</button>
       <button class="btn" id="evSave">Create event</button>
     </div>
@@ -717,9 +721,9 @@
       var inM=cur.getMonth()===month, isT=sameDay(cur,today), items=(byDay[dkey(cur)]||[]).slice();
       items.sort(function(a,b){ if(a.allDay!==b.allDay) return a.allDay?-1:1; return (a.t||0)-(b.t||0); });
       var shown=items.slice(0,3), extra=items.length-shown.length;
-      var evH=shown.map(function(it){ var c=evColor(it.ev), title=esc(it.ev.summary||'(no title)');
-        if(it.allDay) return '<div class="ev allday" style="background:'+c+'" title="'+title+'">'+title+'</div>';
-        return '<div class="ev timed" title="'+title+'"><span class="ev-dot" style="background:'+c+'"></span><span class="ev-t">'+esc(shortTime(it.t))+'</span> '+title+'</div>';
+      var evH=shown.map(function(it){ var c=evColor(it.ev), title=esc(it.ev.summary||'(no title)'), eid=esc(it.ev.id||'');
+        if(it.allDay) return '<div class="ev allday" data-eid="'+eid+'" style="background:'+c+'" title="'+title+'">'+title+'</div>';
+        return '<div class="ev timed" data-eid="'+eid+'" title="'+title+'"><span class="ev-dot" style="background:'+c+'"></span><span class="ev-t">'+esc(shortTime(it.t))+'</span> '+title+'</div>';
       }).join('');
       html+='<div class="cal-cell'+(inM?'':' other')+(isT?' today':'')+'" data-date="'+localDateValue(cur)+'"><span class="dnum">'+cur.getDate()+'</span>'+evH+(extra>0?'<span class="ev-more">+'+extra+' more</span>':'')+'</div>';
       cur.setDate(cur.getDate()+1);
@@ -747,14 +751,14 @@
     });
     var head='<div class="wk-head"><div></div>'+days.map(function(d){ var td=sameDay(d,today); return '<div class="wk-dh'+(td?' today':'')+'"><span class="wd">'+DOWS[d.getDay()]+'</span><span class="wd-num">'+d.getDate()+'</span></div>'; }).join('')+'</div>';
     var hasAD=days.some(function(_,i){ return allday[i].length; });
-    var adrow=hasAD?'<div class="wk-allday"><div class="wk-ga">all-day</div>'+days.map(function(_,i){ return '<div class="wk-ad">'+allday[i].map(function(ev){ var c=evColor(ev),t=esc(ev.summary||'(no title)'); return '<div class="wk-adchip" style="background:'+c+'" title="'+t+'">'+t+'</div>'; }).join('')+'</div>'; }).join('')+'</div>':'';
+    var adrow=hasAD?'<div class="wk-allday"><div class="wk-ga">all-day</div>'+days.map(function(_,i){ return '<div class="wk-ad">'+allday[i].map(function(ev){ var c=evColor(ev),t=esc(ev.summary||'(no title)'); return '<div class="wk-adchip" data-eid="'+esc(ev.id||'')+'" style="background:'+c+'" title="'+t+'">'+t+'</div>'; }).join('')+'</div>'; }).join('')+'</div>':'';
     var times='<div class="wk-times">'; for(var h=0;h<24;h++){ times+='<div class="wk-hr"><span>'+(h===0?'':hourLabel(h))+'</span></div>'; } times+='</div>';
     var cols='';
     for(var c=0;c<7;c++){
       var evs=timed[c].map(function(o){ var sm=o.s.getHours()*60+o.s.getMinutes(); var em=o.e.getHours()*60+o.e.getMinutes(); if(!sameDay(o.e,o.s)||o.e<o.s) em=1440; sm=Math.max(0,Math.min(1440,sm)); em=Math.max(0,Math.min(1440,em)); if(em<=sm) em=sm+30; return {ev:o.ev,_s:sm,_e:em}; });
       layoutDay(evs);
       var blocks=evs.map(function(o){ var col=evColor(o.ev), top=o._s/1440*DAYH, hgt=Math.max(16,(o._e-o._s)/1440*DAYH), w=100/(o._lanes||1), left=(o._lane||0)*w, st=shortTime(new Date(2000,0,1,Math.floor(o._s/60),o._s%60));
-        return '<div class="wk-ev" style="top:'+top.toFixed(1)+'px;height:'+hgt.toFixed(1)+'px;left:'+left+'%;width:'+w+'%;background:'+col+'" title="'+esc(o.ev.summary||'')+'">'+(hgt>26?'<span class="wk-evt">'+esc(st)+'</span> ':'')+esc(o.ev.summary||'(no title)')+'</div>';
+        return '<div class="wk-ev" data-eid="'+esc(o.ev.id||'')+'" style="top:'+top.toFixed(1)+'px;height:'+hgt.toFixed(1)+'px;left:'+left+'%;width:'+w+'%;background:'+col+'" title="'+esc(o.ev.summary||'')+'">'+(hgt>26?'<span class="wk-evt">'+esc(st)+'</span> ':'')+esc(o.ev.summary||'(no title)')+'</div>';
       }).join('');
       cols+='<div class="wk-col" data-i="'+c+'" style="height:'+DAYH+'px">'+blocks+'</div>';
     }
@@ -767,14 +771,37 @@
   function localDTValue(d){ return localDateValue(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes()); }
   var tzName=(function(){ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC'; }catch(e){ return 'UTC'; } })();
 
-  function openEvent(start){
-    if(!start){ start=new Date(); start.setSeconds(0,0); start.setMinutes(0); start.setHours(start.getHours()+1); }
-    var end=new Date(start.getTime()+3600000);
-    $('evAllday').checked=false;
-    $('evStart').type='datetime-local'; $('evEnd').type='datetime-local';
-    $('evStart').value=localDTValue(start); $('evEnd').value=localDTValue(end);
-    $('evTitle').value=''; $('evLoc').value=''; $('evGuests').value=''; $('evDesc').value=''; $('evMsg').textContent='';
+  var evEditId=null;
+  function openEvent(start, ev){
+    evEditId = ev ? (ev.id||null) : null;
+    $('evModalTitle').textContent = ev ? 'Edit event' : 'New calendar event';
+    $('evSave').textContent = ev ? 'Save changes' : 'Create event';
     $('evSave').disabled=false;
+    $('evDelete').style.display = ev ? 'inline-block' : 'none';
+    $('evDelete').disabled=false;
+    $('evMsg').textContent='';
+    var all = ev ? isAllDay(ev) : false;
+    $('evAllday').checked = all;
+    $('evStart').type = all ? 'date' : 'datetime-local';
+    $('evEnd').type   = all ? 'date' : 'datetime-local';
+    if(ev){
+      $('evTitle').value = ev.summary||'';
+      $('evLoc').value   = ev.location||'';
+      $('evDesc').value  = ev.description||'';
+      $('evGuests').value = (ev.attendees||[]).filter(function(a){ return a.email && !a.self; }).map(function(a){ return a.email; }).join(', ');
+      if(all){
+        var last=new Date(ev.end.date+'T00:00:00'); last.setDate(last.getDate()-1); // Google end date is exclusive
+        $('evStart').value=ev.start.date; $('evEnd').value=localDateValue(last);
+      } else {
+        $('evStart').value=localDTValue(new Date(ev.start.dateTime));
+        $('evEnd').value=localDTValue(new Date(ev.end.dateTime));
+      }
+    } else {
+      if(!start){ start=new Date(); start.setSeconds(0,0); start.setMinutes(0); start.setHours(start.getHours()+1); }
+      var end=new Date(start.getTime()+3600000);
+      $('evTitle').value=''; $('evLoc').value=''; $('evGuests').value=''; $('evDesc').value='';
+      $('evStart').value=localDTValue(start); $('evEnd').value=localDTValue(end);
+    }
     $('evModalBg').classList.add('show');
     setTimeout(function(){ $('evTitle').focus(); }, 50);
   }
@@ -796,9 +823,10 @@
     var desc=$('evDesc').value.trim(); if(desc) body.description=desc;
     if(all){
       var sd=sV.slice(0,10), ed=(eV||sV).slice(0,10);
-      var startD=new Date(sd+'T00:00:00'), endD=new Date(ed+'T00:00:00');
-      if(endD<=startD){ endD=new Date(startD); endD.setDate(endD.getDate()+1); } // end date is exclusive
-      body.start={ date:sd }; body.end={ date:localDateValue(endD) };
+      var startD=new Date(sd+'T00:00:00'), lastD=new Date(ed+'T00:00:00');
+      if(lastD<startD) lastD=new Date(startD);
+      var endExcl=new Date(lastD); endExcl.setDate(endExcl.getDate()+1); // Google end date is exclusive
+      body.start={ date:sd }; body.end={ date:localDateValue(endExcl) };
     } else {
       var sDate=new Date(sV); var eDate=eV?new Date(eV):new Date(sDate.getTime()+3600000);
       if(eDate<=sDate) eDate=new Date(sDate.getTime()+3600000);
@@ -807,29 +835,47 @@
     }
     var guests=$('evGuests').value.split(/[,;\s]+/).map(function(s){ return s.trim(); }).filter(function(s){ return s.indexOf('@')>0; });
     if(guests.length) body.attendees=guests.map(function(em){ return { email:em }; });
+    else if(evEditId) body.attendees=[]; // editing: empty field clears guests
     var send=guests.length?'all':'none';
-    $('evSave').disabled=true; $('evMsg').style.color='var(--text3)'; $('evMsg').textContent='Creating…';
-    gfetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates='+send,
-      { method:'POST', body:JSON.stringify(body) })
+    var editing=!!evEditId;
+    var url=editing
+      ? 'https://www.googleapis.com/calendar/v3/calendars/primary/events/'+encodeURIComponent(evEditId)+'?sendUpdates='+send
+      : 'https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates='+send;
+    $('evSave').disabled=true; $('evMsg').style.color='var(--text3)'; $('evMsg').textContent=editing?'Saving…':'Creating…';
+    gfetch(url, { method: editing?'PATCH':'POST', body:JSON.stringify(body) })
       .then(function(){ $('evSave').disabled=false; closeEvent(); if(Cal&&Cal.render) Cal.render(); })
       .catch(function(err){ $('evSave').disabled=false; $('evMsg').style.color='var(--red)';
-        if(err&&err.message==='reauth'){ $('evMsg').textContent='Session expired — reconnect Google, then retry.'; renderGoogleDisconnected('Reconnect Google to create events.'); }
-        else $('evMsg').textContent='Could not create: '+esc(err&&err.message||'error');
+        if(err&&err.message==='reauth'){ $('evMsg').textContent='Session expired — reconnect Google, then retry.'; renderGoogleDisconnected('Reconnect Google to manage events.'); }
+        else $('evMsg').textContent=(editing?'Could not save: ':'Could not create: ')+esc(err&&err.message||'error');
+      });
+  }
+  function deleteEvent(){
+    if(!evEditId){ return; }
+    if(!confirm('Delete this event from your Google Calendar?')) return;
+    $('evDelete').disabled=true; $('evSave').disabled=true; $('evMsg').style.color='var(--text3)'; $('evMsg').textContent='Deleting…';
+    gfetch('https://www.googleapis.com/calendar/v3/calendars/primary/events/'+encodeURIComponent(evEditId)+'?sendUpdates=all', { method:'DELETE' })
+      .then(function(){ closeEvent(); if(Cal&&Cal.render) Cal.render(); })
+      .catch(function(err){ $('evDelete').disabled=false; $('evSave').disabled=false; $('evMsg').style.color='var(--red)';
+        if(err&&err.message==='reauth'){ $('evMsg').textContent='Session expired — reconnect Google, then retry.'; renderGoogleDisconnected('Reconnect Google to manage events.'); }
+        else $('evMsg').textContent='Could not delete: '+esc(err&&err.message||'error');
       });
   }
   // wiring (static elements — safe to bind once at load)
   $('calNew').addEventListener('click', function(){ openEvent(); });
   $('evCancel').addEventListener('click', closeEvent);
   $('evSave').addEventListener('click', saveEvent);
+  $('evDelete').addEventListener('click', deleteEvent);
   $('evAllday').addEventListener('change', toggleAllday);
   $('evModalBg').addEventListener('click', function(e){ if(e.target===$('evModalBg')) closeEvent(); });
   $('evTitle').addEventListener('keydown', function(e){ if(e.key==='Enter') saveEvent(); });
-  // click a day (month) or a time slot (week) to create there
+  // click an existing event to edit; click empty day (month) or time slot (week) to create
   $('calBody').addEventListener('click', function(e){
+    var evEl=e.target.closest('[data-eid]');
+    if(evEl){ var id=evEl.getAttribute('data-eid'); var found=(Cal.events||[]).filter(function(x){ return x.id===id; })[0]; if(found) openEvent(null, found); return; }
     var cell=e.target.closest('.cal-cell');
     if(cell && cell.getAttribute('data-date')){ openEvent(new Date(cell.getAttribute('data-date')+'T09:00:00')); return; }
     var col=e.target.closest('.wk-col');
-    if(col && !e.target.closest('.wk-ev')){
+    if(col){
       var rect=col.getBoundingClientRect(), y=e.clientY-rect.top;
       var mins=Math.max(0, Math.min(1410, Math.round(y/DAYH*1440/30)*30));
       var d=new Date(startOfWeek(Cal.cursor)); d.setDate(d.getDate()+(parseInt(col.getAttribute('data-i'),10)||0)); d.setHours(0, mins, 0, 0);
