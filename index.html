@@ -68,6 +68,9 @@
   .foot{margin-top:1.8rem;font-size:0.78rem;color:var(--text3);}
   .foot a{color:var(--text2);text-decoration:none;border-bottom:1px dotted var(--border);}
   .foot a:hover{color:var(--accent);}
+  .links{display:flex;flex-direction:column;gap:12px;align-items:center;}
+  .btn.secondary{background:var(--card);color:var(--accent);border:1px solid var(--border);box-shadow:none;}
+  .btn.secondary:hover{background:#f4f3ff;transform:translateY(-2px);box-shadow:0 8px 18px rgba(91,80,232,0.14);}
 </style>
 </head>
 <body>
@@ -76,11 +79,17 @@
     <div class="eyebrow">Redwoods Solutions</div>
     <h1>Redwoods Hub</h1>
     <p class="sub">The central hub for Redwoods research, company tools, and dashboards.</p>
-    <a class="btn" href="projects/">
-      Project list
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-    </a>
-    <p class="foot">3 active projects</p>
+    <div class="links">
+      <a class="btn" href="projects/">
+        Project list
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <a class="btn secondary" href="personal/">
+        Personal Dashboard
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h8V3H3zM13 21h8V8h-8zM3 21h8v-6H3zM13 3v3"/></svg>
+      </a>
+    </div>
+    <p class="foot">Projects, calendar &amp; tasks</p>
   </main>
 <script defer src="assets/auth-gate.js"></script>
 </body>

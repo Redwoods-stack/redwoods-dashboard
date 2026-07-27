@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Personal Dashboard — Redwoods Solutions</title>
+<link rel="icon" href="../assets/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#eef1f6; --card:#ffffff; --card2:#f7f8fc; --text:#1b2138; --text2:#6b7385; --text3:#9aa2b4;
+    --accent:#5b50e8; --accent-2:#8b83f5; --accent-soft:rgba(91,80,232,0.10);
+    --border:rgba(28,35,60,0.08); --border2:rgba(28,35,60,0.14);
+    --green:#1faf6b; --green-soft:rgba(31,175,107,0.12);
+    --amber:#e0900a; --amber-soft:rgba(224,144,10,0.13);
+    --red:#e5533c; --red-soft:rgba(229,83,60,0.12);
+    --blue:#2f7fe0; --blue-soft:rgba(47,127,224,0.12);
+    --shadow:0 4px 16px rgba(28,35,60,0.06); --shadow-lg:0 14px 38px rgba(28,35,60,0.12);
+  }
+  html[data-theme="dark"]{
+    --bg:#0f1320; --card:#171b2b; --card2:#1e2334; --text:#eef1f8; --text2:#a6adc2; --text3:#6f7793;
+    --accent:#8b83f5; --accent-2:#a79ff8; --accent-soft:rgba(139,131,245,0.16);
+    --border:rgba(255,255,255,0.08); --border2:rgba(255,255,255,0.14);
+    --green:#3fd18b; --green-soft:rgba(63,209,139,0.15);
+    --amber:#f0b13a; --amber-soft:rgba(240,177,58,0.16);
+    --red:#ff6f57; --red-soft:rgba(255,111,87,0.15);
+    --blue:#5fa2ef; --blue-soft:rgba(95,162,239,0.16);
+    --shadow:0 4px 16px rgba(0,0,0,0.35); --shadow-lg:0 18px 44px rgba(0,0,0,0.5);
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Plus Jakarta Sans',sans-serif;
+    background:radial-gradient(1100px 520px at 50% -12%, var(--accent-soft), transparent 60%),var(--bg);
+    color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; line-height:1.5;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:2.2rem 1.4rem 5rem;}
+
+  /* Header */
+  .top{display:flex;align-items:center;gap:13px;margin-bottom:1.6rem;flex-wrap:wrap;}
+  .logo{width:42px;height:42px;border-radius:12px;flex-shrink:0;object-fit:cover;display:block;box-shadow:0 6px 16px rgba(13,0,30,0.25);}
+  .top .brand{font-size:0.68rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);}
+  .top h1{font-size:1.5rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1;}
+  .top .spacer{margin-left:auto;}
+  .ghost{
+    font-size:0.83rem;font-weight:600;color:var(--text2);text-decoration:none;cursor:pointer;
+    display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border:1px solid var(--border);
+    border-radius:10px;background:var(--card);transition:border-color .15s,color .15s;
+  }
+  .ghost:hover{border-color:var(--border2);color:var(--text);}
+
+  /* Section */
+  .sec-head{display:flex;align-items:center;gap:10px;margin:2.1rem 0 1rem;}
+  .sec-head h2{font-size:1.12rem;font-weight:800;letter-spacing:-0.01em;}
+  .sec-head .count{font-size:0.75rem;font-weight:700;color:var(--text3);background:var(--card2);border:1px solid var(--border);padding:2px 9px;border-radius:999px;}
+  .sec-head .grow{margin-left:auto;}
+
+  /* Cards */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);}
+
+  /* Google row */
+  .grow2{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;}
+  @media(max-width:760px){.grow2{grid-template-columns:1fr;}}
+  .gpanel{padding:1.3rem 1.4rem;min-height:150px;}
+  .gpanel .gp-head{display:flex;align-items:center;gap:9px;margin-bottom:0.9rem;}
+  .gp-head .gp-ic{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:var(--accent-soft);}
+  .gp-head .gp-ic svg{width:17px;height:17px;color:var(--accent);}
+  .gp-head h3{font-size:0.98rem;font-weight:700;}
+  .gp-head .gp-status{margin-left:auto;font-size:0.72rem;font-weight:600;color:var(--text3);}
+
+  .glist{list-style:none;display:flex;flex-direction:column;gap:2px;}
+  .gitem{display:flex;align-items:flex-start;gap:10px;padding:9px 8px;border-radius:10px;transition:background .12s;}
+  .gitem:hover{background:var(--card2);}
+  .gitem .gi-time{font-size:0.7rem;font-weight:700;color:var(--accent);min-width:66px;padding-top:1px;}
+  .gitem .gi-title{font-size:0.86rem;font-weight:500;color:var(--text);}
+  .gitem .gi-sub{font-size:0.72rem;color:var(--text3);}
+
+  .task .tk-check{width:18px;height:18px;border:2px solid var(--border2);border-radius:6px;flex-shrink:0;cursor:pointer;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:.12s;}
+  .task .tk-check:hover{border-color:var(--accent);}
+  .task .tk-check svg{width:11px;height:11px;color:#fff;opacity:0;}
+  .task.done .tk-check{background:var(--green);border-color:var(--green);}
+  .task.done .tk-check svg{opacity:1;}
+  .task.done .gi-title{text-decoration:line-through;color:var(--text3);}
+  .addtask{display:flex;gap:8px;margin-top:0.7rem;}
+  .addtask input{flex:1;padding:9px 11px;border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--text);font-family:inherit;font-size:0.83rem;}
+  .addtask input:focus{outline:none;border-color:var(--accent);}
+  .addtask button{border:none;background:var(--accent);color:#fff;border-radius:10px;padding:0 14px;font-weight:700;font-family:inherit;cursor:pointer;font-size:1.1rem;line-height:1;}
+
+  .gempty{color:var(--text3);font-size:0.85rem;padding:0.4rem 0.2rem;}
+  .gconnect{display:flex;flex-direction:column;gap:0.7rem;align-items:flex-start;}
+  .gconnect p{font-size:0.83rem;color:var(--text2);line-height:1.5;}
+  .btn{display:inline-flex;align-items:center;gap:9px;background:var(--accent);color:#fff;border:none;font-family:inherit;font-size:0.88rem;font-weight:700;padding:11px 18px;border-radius:11px;cursor:pointer;box-shadow:0 6px 16px rgba(91,80,232,0.28);transition:transform .12s,background .15s;}
+  .btn:hover{transform:translateY(-1px);}
+  .btn.sm{padding:8px 14px;font-size:0.82rem;box-shadow:none;}
+  .btn.outline{background:var(--card);color:var(--text);border:1px solid var(--border2);box-shadow:none;}
+  .cid-row{display:flex;gap:8px;width:100%;flex-wrap:wrap;}
+  .cid-row input{flex:1;min-width:180px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--text);font-family:inherit;font-size:0.82rem;}
+  .cid-row input:focus{outline:none;border-color:var(--accent);}
+  details.setup{margin-top:0.3rem;width:100%;}
+  details.setup summary{cursor:pointer;font-size:0.76rem;color:var(--text3);font-weight:600;}
+  details.setup ol{margin:0.6rem 0 0 1.1rem;font-size:0.78rem;color:var(--text2);line-height:1.7;}
+  details.setup code{background:var(--card2);border:1px solid var(--border);padding:1px 5px;border-radius:5px;font-size:0.74rem;word-break:break-all;}
+
+  /* KPI strip */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:0.9rem;margin-bottom:1.3rem;}
+  @media(max-width:680px){.kpis{grid-template-columns:repeat(2,1fr);}}
+  .kpi{padding:1.05rem 1.15rem;}
+  .kpi .k-lab{font-size:0.7rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text3);margin-bottom:0.35rem;}
+  .kpi .k-val{font-size:1.7rem;font-weight:800;letter-spacing:-0.02em;line-height:1;}
+  .kpi .k-val.red{color:var(--red);} .kpi .k-val.amber{color:var(--amber);}
+
+  /* Toolbar */
+  .toolbar{display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;margin-bottom:1.1rem;}
+  .seg{display:inline-flex;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:3px;gap:2px;}
+  .seg button{border:none;background:none;font-family:inherit;font-size:0.78rem;font-weight:600;color:var(--text2);padding:6px 12px;border-radius:8px;cursor:pointer;transition:.12s;}
+  .seg button.on{background:var(--accent);color:#fff;}
+  .sel{font-family:inherit;font-size:0.8rem;font-weight:600;color:var(--text2);background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 11px;cursor:pointer;}
+  .sel:focus{outline:none;border-color:var(--accent);}
+  .toolbar .grow{margin-left:auto;}
+
+  /* Project grid */
+  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.1rem;}
+  .proj{position:relative;padding:1.3rem 1.35rem 1.15rem;border-left:4px solid var(--accent);overflow:hidden;}
+  .proj.t-deal{border-left-color:var(--blue);}
+  .proj.t-investment{border-left-color:var(--green);}
+  .proj.t-partnership{border-left-color:var(--accent-2);}
+  .proj .p-top{display:flex;align-items:flex-start;gap:8px;margin-bottom:0.7rem;}
+  .proj .p-name{font-size:1.05rem;font-weight:800;letter-spacing:-0.01em;line-height:1.2;padding-right:4px;}
+  .proj .p-actions{margin-left:auto;display:flex;gap:4px;flex-shrink:0;opacity:0;transition:.12s;}
+  .proj:hover .p-actions{opacity:1;}
+  .p-actions button{border:none;background:var(--card2);color:var(--text2);width:28px;height:28px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .p-actions button:hover{color:var(--text);background:var(--border);}
+  .p-actions svg{width:14px;height:14px;}
+
+  .pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:0.85rem;}
+  .pill{font-size:0.68rem;font-weight:700;letter-spacing:0.02em;padding:3px 9px;border-radius:999px;display:inline-flex;align-items:center;gap:5px;}
+  .pill.type{background:var(--accent-soft);color:var(--accent);}
+  .proj.t-deal .pill.type{background:var(--blue-soft);color:var(--blue);}
+  .proj.t-investment .pill.type{background:var(--green-soft);color:var(--green);}
+  .proj.t-partnership .pill.type{background:var(--accent-soft);color:var(--accent);}
+  .pill.pr-high{background:var(--red-soft);color:var(--red);} .pill.pr-medium{background:var(--amber-soft);color:var(--amber);} .pill.pr-low{background:var(--card2);color:var(--text3);}
+  .pill.dot::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;}
+  .pill.status{background:var(--card2);color:var(--text2);}
+
+  .p-meta{display:grid;grid-template-columns:1fr 1fr;gap:0.55rem 0.8rem;margin-bottom:0.9rem;}
+  .p-meta .m-lab{font-size:0.66rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text3);}
+  .p-meta .m-val{font-size:0.9rem;font-weight:700;color:var(--text);}
+  .p-meta .m-val small{font-weight:500;color:var(--text3);font-size:0.72rem;}
+
+  .agebar{height:6px;border-radius:999px;background:var(--card2);overflow:hidden;margin-bottom:0.35rem;}
+  .agebar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--green),var(--amber));}
+  .age-line{display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text3);font-weight:600;}
+  .age-line .due.soon{color:var(--amber);} .age-line .due.over{color:var(--red);} .age-line .due.ok{color:var(--green);}
+
+  .empty-proj{padding:2.6rem 1.5rem;text-align:center;color:var(--text3);}
+  .empty-proj p{font-size:0.9rem;margin-bottom:1rem;}
+
+  /* Modal */
+  .modal-bg{position:fixed;inset:0;background:rgba(15,19,32,0.55);backdrop-filter:blur(3px);z-index:1000;display:none;align-items:flex-start;justify-content:center;padding:2.5rem 1rem;overflow-y:auto;}
+  .modal-bg.show{display:flex;}
+  .modal{background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow-lg);width:100%;max-width:520px;padding:1.7rem 1.7rem 1.5rem;}
+  .modal h3{font-size:1.2rem;font-weight:800;margin-bottom:1.2rem;}
+  .field{margin-bottom:0.95rem;}
+  .field label{display:block;font-size:0.72rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--text3);margin-bottom:0.35rem;}
+  .field input,.field select,.field textarea{width:100%;padding:10px 12px;border:1px solid var(--border2);border-radius:11px;background:var(--card2);color:var(--text);font-family:inherit;font-size:0.9rem;}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);background:var(--card);}
+  .field textarea{resize:vertical;min-height:60px;}
+  .frow{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;}
+  @media(max-width:520px){.frow{grid-template-columns:1fr;}}
+  .modal-actions{display:flex;gap:0.6rem;margin-top:1.3rem;}
+  .modal-actions .btn{flex:1;justify-content:center;}
+  .modal-actions .del{margin-right:auto;background:none;border:none;color:var(--red);font-family:inherit;font-weight:700;font-size:0.83rem;cursor:pointer;padding:0 6px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="top">
+    <img class="logo" src="../assets/logo.png" alt="Redwoods">
+    <div>
+      <div class="brand">Redwoods Solutions</div>
+      <h1>Personal Dashboard</h1>
+    </div>
+    <div class="spacer"></div>
+    <button class="ghost" id="themeBtn" title="Toggle theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      <span>Theme</span>
+    </button>
+    <a class="ghost" href="../">← Hub</a>
+  </div>
+
+  <!-- Google integrations -->
+  <div class="grow2">
+    <!-- Calendar -->
+    <div class="card gpanel">
+      <div class="gp-head">
+        <span class="gp-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+        <h3>Google Calendar</h3>
+        <span class="gp-status" id="calStatus"></span>
+      </div>
+      <div id="calBody"></div>
+    </div>
+    <!-- Tasks -->
+    <div class="card gpanel">
+      <div class="gp-head">
+        <span class="gp-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+        <h3>Google Tasks</h3>
+        <span class="gp-status" id="taskStatus"></span>
+      </div>
+      <div id="taskBody"></div>
+    </div>
+  </div>
+
+  <!-- Projects -->
+  <div class="sec-head">
+    <h2>Projects</h2>
+    <span class="count" id="projCount">0</span>
+    <div class="grow"></div>
+    <button class="btn sm" id="addBtn">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Add project
+    </button>
+  </div>
+
+  <div class="kpis">
+    <div class="card kpi"><div class="k-lab">Active</div><div class="k-val" id="kActive">0</div></div>
+    <div class="card kpi"><div class="k-lab">Urgent</div><div class="k-val amber" id="kUrgent">0</div></div>
+    <div class="card kpi"><div class="k-lab">Due ≤ 7 days</div><div class="k-val amber" id="kDue">0</div></div>
+    <div class="card kpi"><div class="k-lab">Overdue</div><div class="k-val red" id="kOver">0</div></div>
+  </div>
+
+  <div class="toolbar">
+    <div class="seg" id="filterSeg">
+      <button data-f="all" class="on">All</button>
+      <button data-f="deal">Deals</button>
+      <button data-f="investment">Investments</button>
+      <button data-f="partnership">Partnerships</button>
+    </div>
+    <div class="grow"></div>
+    <select class="sel" id="sortSel">
+      <option value="deadline">Sort: Deadline</option>
+      <option value="priority">Sort: Priority</option>
+      <option value="age">Sort: Age (oldest)</option>
+      <option value="new">Sort: Newest</option>
+      <option value="size">Sort: Size</option>
+    </select>
+  </div>
+
+  <div class="pgrid" id="pgrid"></div>
+</div>
+
+<!-- Add/Edit modal -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3 id="modalTitle">Add project</h3>
+    <input type="hidden" id="fId">
+    <div class="field">
+      <label>Project name</label>
+      <input id="fName" placeholder="e.g. Acme distribution deal" autocomplete="off">
+    </div>
+    <div class="frow">
+      <div class="field">
+        <label>Type</label>
+        <select id="fType">
+          <option value="deal">Deal on project</option>
+          <option value="investment">Investment opportunity</option>
+          <option value="partnership">Partnership</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Size / value</label>
+        <input id="fSize" placeholder="e.g. $250k, 3 units" autocomplete="off">
+      </div>
+    </div>
+    <div class="frow">
+      <div class="field">
+        <label>Start date</label>
+        <input id="fStart" type="date">
+      </div>
+      <div class="field">
+        <label>Deadline</label>
+        <input id="fDeadline" type="date">
+      </div>
+    </div>
+    <div class="frow">
+      <div class="field">
+        <label>Priority</label>
+        <select id="fPriority">
+          <option value="high">High</option>
+          <option value="medium" selected>Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Urgency</label>
+        <select id="fUrgency">
+          <option value="urgent">Urgent</option>
+          <option value="normal" selected>Normal</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Status</label>
+      <select id="fStatus">
+        <option value="active" selected>Active</option>
+        <option value="on-hold">On hold</option>
+        <option value="won">Won / Closed-won</option>
+        <option value="lost">Lost / Dropped</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Notes</label>
+      <textarea id="fNotes" placeholder="Context, next step, contact…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="del" id="fDelete" style="display:none">Delete</button>
+      <button class="btn outline" id="fCancel">Cancel</button>
+      <button class="btn" id="fSave">Save project</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+/* ============================================================================
+ * Personal Dashboard — projects tracker + Google Calendar/Tasks (client-side).
+ * Projects persist to localStorage and sync via window.RWDState (cloud API).
+ * Google tokens live in localStorage only (per-device), never synced.
+ * ==========================================================================*/
+(function(){
+  'use strict';
+  var LS_KEY='rwd_personal_v1';
+  var GCID_KEY='rwd_gcid';         // Google OAuth client id
+  var GTOK_KEY='rwd_gtoken';       // {access_token, expires_at}
+  var SCOPES='https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/tasks';
+  // Default OAuth client id (public — protected by Authorized JavaScript origins).
+  // Users can still override it in the UI (stored in localStorage per device).
+  var DEFAULT_GCID='1044344951421-l3q5j3d3pvqb5n91ao97dsouv8cvfph9.apps.googleusercontent.com';
+  var DAY=86400000;
+
+  // ---- state ----
+  var state={ projects:[], filter:'all', sort:'deadline', theme:'light' };
+  function uid(){ return 'p'+Math.random().toString(36).slice(2,9); }
+  function todayMid(){ var d=new Date(); d.setHours(0,0,0,0); return d; }
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+
+  // ---- persistence (local) ----
+  function saveLocal(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(serialize())); }catch(e){} }
+  function loadLocal(){ try{ var r=localStorage.getItem(LS_KEY); if(r) hydrate(JSON.parse(r)); }catch(e){} }
+  function serialize(){ return { projects:state.projects, filter:state.filter, sort:state.sort, theme:state.theme }; }
+  function hydrate(d){ if(!d) return;
+    if(Array.isArray(d.projects)) state.projects=d.projects;
+    if(d.filter) state.filter=d.filter;
+    if(d.sort) state.sort=d.sort;
+    if(d.theme) state.theme=d.theme;
+  }
+
+  // ---- cloud sync bridge (auth-gate.js reads this) ----
+  window.RWDState={
+    read:function(){ return serialize(); },
+    apply:function(d){ if(!d) return; hydrate(d); applyTheme(); renderAll(); saveLocal(); }
+  };
+
+  // ---- theme ----
+  function applyTheme(){ document.documentElement.setAttribute('data-theme', state.theme==='dark'?'dark':'light'); }
+  $('themeBtn').addEventListener('click',function(){ state.theme=(state.theme==='dark')?'light':'dark'; applyTheme(); saveLocal(); });
+
+  // ---- aging helpers ----
+  function daysBetween(a,b){ return Math.round((b-a)/DAY); }
+  function ageOf(p){ if(!p.start) return null; var s=new Date(p.start+'T00:00:00'); return Math.max(0, daysBetween(s, todayMid())); }
+  function daysToDeadline(p){ if(!p.deadline) return null; var d=new Date(p.deadline+'T00:00:00'); return daysBetween(todayMid(), d); }
+  function fmtDate(iso){ if(!iso) return '—'; var d=new Date(iso+'T00:00:00'); return d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}); }
+
+  // ---- projects rendering ----
+  var PR_RANK={high:0,medium:1,low:2}, TYPE_LABEL={deal:'Deal',investment:'Investment',partnership:'Partnership'},
+      STATUS_LABEL={active:'Active','on-hold':'On hold',won:'Won',lost:'Lost'};
+
+  function visibleProjects(){
+    var arr=state.projects.slice();
+    if(state.filter!=='all') arr=arr.filter(function(p){ return p.type===state.filter; });
+    var s=state.sort;
+    arr.sort(function(a,b){
+      if(s==='priority') return (PR_RANK[a.priority]||1)-(PR_RANK[b.priority]||1);
+      if(s==='age') return (ageOf(b)||0)-(ageOf(a)||0);
+      if(s==='new') return (b.created||0)-(a.created||0);
+      if(s==='size') return sizeNum(b.size)-sizeNum(a.size);
+      // deadline: soonest first; no-deadline last
+      var da=daysToDeadline(a), db=daysToDeadline(b);
+      if(da==null&&db==null) return 0; if(da==null) return 1; if(db==null) return -1;
+      return da-db;
+    });
+    return arr;
+  }
+  function sizeNum(s){ if(!s) return 0; var m=String(s).replace(/[, ]/g,'').match(/([\d.]+)\s*([kmb])?/i); if(!m) return 0;
+    var n=parseFloat(m[1])||0, u=(m[2]||'').toLowerCase(); return n*(u==='b'?1e9:u==='m'?1e6:u==='k'?1e3:1); }
+
+  function renderKPIs(){
+    var active=state.projects.filter(function(p){ return p.status==='active'; });
+    $('kActive').textContent=active.length;
+    $('kUrgent').textContent=active.filter(function(p){ return p.urgency==='urgent'; }).length;
+    $('kDue').textContent=active.filter(function(p){ var d=daysToDeadline(p); return d!=null&&d>=0&&d<=7; }).length;
+    $('kOver').textContent=active.filter(function(p){ var d=daysToDeadline(p); return d!=null&&d<0; }).length;
+  }
+
+  function projCard(p){
+    var age=ageOf(p), d2d=daysToDeadline(p);
+    var agePct=age==null?0:Math.min(100, Math.round(age/180*100)); // 180d = full bar
+    var dueTxt='No deadline', dueCls='';
+    if(d2d!=null){
+      if(d2d<0){ dueTxt='Overdue '+Math.abs(d2d)+'d'; dueCls='over'; }
+      else if(d2d===0){ dueTxt='Due today'; dueCls='soon'; }
+      else if(d2d<=7){ dueTxt='Due in '+d2d+'d'; dueCls='soon'; }
+      else { dueTxt='Due in '+d2d+'d'; dueCls='ok'; }
+    }
+    var ageTxt=age==null?'No start date':(age+' day'+(age===1?'':'s')+' old');
+    return '<div class="card proj t-'+esc(p.type)+'" data-id="'+esc(p.id)+'">'+
+      '<div class="p-top"><div class="p-name">'+esc(p.name||'Untitled')+'</div>'+
+        '<div class="p-actions">'+
+          '<button data-act="edit" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="pills">'+
+        '<span class="pill type">'+esc(TYPE_LABEL[p.type]||p.type)+'</span>'+
+        '<span class="pill dot pr-'+esc(p.priority)+'">'+esc((p.priority||'').replace(/^\w/,function(c){return c.toUpperCase();}))+' priority</span>'+
+        (p.urgency==='urgent'?'<span class="pill pr-high dot">Urgent</span>':'')+
+        '<span class="pill status">'+esc(STATUS_LABEL[p.status]||p.status)+'</span>'+
+      '</div>'+
+      '<div class="p-meta">'+
+        '<div><div class="m-lab">Size</div><div class="m-val">'+esc(p.size||'—')+'</div></div>'+
+        '<div><div class="m-lab">Started</div><div class="m-val">'+fmtDate(p.start)+'</div></div>'+
+      '</div>'+
+      '<div class="agebar"><i style="width:'+agePct+'%"></i></div>'+
+      '<div class="age-line"><span>'+esc(ageTxt)+'</span><span class="due '+dueCls+'">'+esc(dueTxt)+'</span></div>'+
+      (p.notes?'<div style="font-size:0.8rem;color:var(--text2);margin-top:0.7rem;line-height:1.5;">'+esc(p.notes)+'</div>':'')+
+    '</div>';
+  }
+
+  function renderProjects(){
+    var list=visibleProjects();
+    $('projCount').textContent=state.projects.length;
+    var grid=$('pgrid');
+    if(!state.projects.length){
+      grid.innerHTML='<div class="card empty-proj" style="grid-column:1/-1"><p>No projects yet. Track your first deal, investment, or partnership.</p><button class="btn" id="emptyAdd" style="margin:0 auto"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add project</button></div>';
+      var ea=$('emptyAdd'); if(ea) ea.addEventListener('click',function(){ openModal(); });
+      return;
+    }
+    if(!list.length){ grid.innerHTML='<div class="card empty-proj" style="grid-column:1/-1"><p>No projects match this filter.</p></div>'; return; }
+    grid.innerHTML=list.map(projCard).join('');
+    Array.prototype.forEach.call(grid.querySelectorAll('.proj'),function(el){
+      el.addEventListener('click',function(e){
+        if(e.target.closest('[data-act="edit"]')||!e.target.closest('.p-actions')){}
+        openModal(el.getAttribute('data-id'));
+      });
+    });
+  }
+
+  function renderAll(){ renderKPIs(); renderProjects();
+    Array.prototype.forEach.call($('filterSeg').children,function(b){ b.classList.toggle('on', b.getAttribute('data-f')===state.filter); });
+    $('sortSel').value=state.sort;
+  }
+
+  // ---- toolbar ----
+  $('filterSeg').addEventListener('click',function(e){ var b=e.target.closest('button'); if(!b) return; state.filter=b.getAttribute('data-f'); saveLocal(); renderAll(); });
+  $('sortSel').addEventListener('change',function(){ state.sort=this.value; saveLocal(); renderProjects(); });
+
+  // ---- modal ----
+  function openModal(id){
+    var p=id?state.projects.find(function(x){return x.id===id;}):null;
+    $('modalTitle').textContent=p?'Edit project':'Add project';
+    $('fId').value=p?p.id:'';
+    $('fName').value=p?p.name||'':'';
+    $('fType').value=p?p.type||'deal':'deal';
+    $('fSize').value=p?p.size||'':'';
+    $('fStart').value=p?p.start||'':new Date().toISOString().slice(0,10);
+    $('fDeadline').value=p?p.deadline||'':'';
+    $('fPriority').value=p?p.priority||'medium':'medium';
+    $('fUrgency').value=p?p.urgency||'normal':'normal';
+    $('fStatus').value=p?p.status||'active':'active';
+    $('fNotes').value=p?p.notes||'':'';
+    $('fDelete').style.display=p?'block':'none';
+    $('modalBg').classList.add('show');
+    setTimeout(function(){ $('fName').focus(); },50);
+  }
+  function closeModal(){ $('modalBg').classList.remove('show'); }
+  $('addBtn').addEventListener('click',function(){ openModal(); });
+  $('fCancel').addEventListener('click',closeModal);
+  $('modalBg').addEventListener('click',function(e){ if(e.target===$('modalBg')) closeModal(); });
+  $('fSave').addEventListener('click',function(){
+    var name=$('fName').value.trim(); if(!name){ $('fName').focus(); return; }
+    var id=$('fId').value;
+    var rec={ name:name, type:$('fType').value, size:$('fSize').value.trim(),
+      start:$('fStart').value, deadline:$('fDeadline').value,
+      priority:$('fPriority').value, urgency:$('fUrgency').value,
+      status:$('fStatus').value, notes:$('fNotes').value.trim() };
+    if(id){ var p=state.projects.find(function(x){return x.id===id;}); if(p) Object.assign(p,rec); }
+    else { rec.id=uid(); rec.created=Date.now(); state.projects.push(rec); }
+    saveLocal(); renderAll(); closeModal();
+  });
+  $('fDelete').addEventListener('click',function(){
+    var id=$('fId').value; if(!id) return;
+    if(!confirm('Delete this project?')) return;
+    state.projects=state.projects.filter(function(x){return x.id!==id;});
+    saveLocal(); renderAll(); closeModal();
+  });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeModal(); });
+
+  // ============================================================ GOOGLE ============
+  var gToken=null, gTaskListId=null;
+  function getClientId(){ try{ return localStorage.getItem(GCID_KEY)||DEFAULT_GCID; }catch(e){ return DEFAULT_GCID; } }
+  function setClientId(v){ try{ localStorage.setItem(GCID_KEY,v); }catch(e){} }
+  function loadToken(){ try{ var r=localStorage.getItem(GTOK_KEY); if(r){ var t=JSON.parse(r); if(t&&t.expires_at>Date.now()+30000) return t; } }catch(e){} return null; }
+  function saveToken(t){ try{ localStorage.setItem(GTOK_KEY,JSON.stringify(t)); }catch(e){} }
+  function clearToken(){ gToken=null; try{ localStorage.removeItem(GTOK_KEY); }catch(e){} }
+  function gsiReady(){ return window.google && google.accounts && google.accounts.oauth2; }
+
+  var tokenClient=null;
+  function ensureClient(){
+    var cid=getClientId(); if(!cid||!gsiReady()) return null;
+    if(!tokenClient||tokenClient.__cid!==cid){
+      tokenClient=google.accounts.oauth2.initTokenClient({
+        client_id:cid, scope:SCOPES,
+        callback:function(resp){
+          if(resp&&resp.access_token){
+            gToken={ access_token:resp.access_token, expires_at:Date.now()+((resp.expires_in||3600)*1000) };
+            saveToken(gToken); refreshGoogle();
+          } else { setGStatus('Authorization failed'); }
+        }
+      });
+      tokenClient.__cid=cid;
+    }
+    return tokenClient;
+  }
+  function connect(interactive){
+    var tc=ensureClient();
+    if(!tc){ renderGoogleDisconnected('Enter your Google OAuth Client ID to connect.'); return; }
+    try{ tc.requestAccessToken({ prompt: interactive?'consent':'' }); }
+    catch(e){ setGStatus('Could not start Google sign-in'); }
+  }
+  function disconnect(){
+    if(gToken&&gToken.access_token&&gsiReady()){ try{ google.accounts.oauth2.revoke(gToken.access_token,function(){}); }catch(e){} }
+    clearToken(); renderGoogleDisconnected();
+  }
+  function setGStatus(t){ $('calStatus').textContent=t||''; $('taskStatus').textContent=t||''; }
+
+  function gfetch(url,opts){
+    opts=opts||{}; opts.headers=opts.headers||{};
+    opts.headers['Authorization']='Bearer '+gToken.access_token;
+    if(opts.body) opts.headers['Content-Type']='application/json';
+    return fetch(url,opts).then(function(r){
+      if(r.status===401){ clearToken(); throw new Error('reauth'); }
+      return r.json().catch(function(){ return {}; }).then(function(j){ if(!r.ok) throw new Error((j.error&&j.error.message)||'HTTP '+r.status); return j; });
+    });
+  }
+
+  // -------- Calendar --------
+  function loadCalendar(){
+    var min=new Date().toISOString();
+    var url='https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin='+encodeURIComponent(min)+'&maxResults=8&singleEvents=true&orderBy=startTime';
+    $('calStatus').textContent='loading…';
+    gfetch(url).then(function(j){
+      $('calStatus').textContent='';
+      var items=(j.items||[]);
+      if(!items.length){ $('calBody').innerHTML='<div class="gempty">No upcoming events. 🎉</div>'; return; }
+      $('calBody').innerHTML='<ul class="glist">'+items.map(function(ev){
+        var start=ev.start&&(ev.start.dateTime||ev.start.date);
+        var allDay=ev.start&&!ev.start.dateTime;
+        var d=start?new Date(start):null;
+        var time=!d?'':allDay?d.toLocaleDateString(undefined,{month:'short',day:'numeric'}):d.toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+        return '<li class="gitem"><span class="gi-time">'+esc(time)+'</span><span><div class="gi-title">'+esc(ev.summary||'(no title)')+'</div>'+(ev.location?'<div class="gi-sub">'+esc(ev.location)+'</div>':'')+'</span></li>';
+      }).join('')+'</ul>';
+    }).catch(handleGErr('calBody'));
+  }
+
+  // -------- Tasks --------
+  function loadTasks(){
+    $('taskStatus').textContent='loading…';
+    var listsUrl='https://tasks.googleapis.com/tasks/v1/users/@me/lists?maxResults=100';
+    gfetch(listsUrl).then(function(j){
+      var lists=j.items||[];
+      gTaskListId=(lists[0]&&lists[0].id)||'@default';
+      return gfetch('https://tasks.googleapis.com/tasks/v1/lists/'+encodeURIComponent(gTaskListId)+'/tasks?showCompleted=false&maxResults=100');
+    }).then(function(j){
+      $('taskStatus').textContent='';
+      var items=(j.items||[]).filter(function(t){ return t.title&&t.status!=='completed'; });
+      var listHtml=items.length?'<ul class="glist">'+items.map(function(t){
+        var due=t.due?new Date(t.due):null;
+        var dueTxt=due?due.toLocaleDateString(undefined,{month:'short',day:'numeric'}):'';
+        return '<li class="gitem task" data-tid="'+esc(t.id)+'"><span class="tk-check" data-act="done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>'+
+          '<span><div class="gi-title">'+esc(t.title)+'</div>'+(dueTxt?'<div class="gi-sub">Due '+esc(dueTxt)+'</div>':'')+'</span></li>';
+      }).join('')+'</ul>':'<div class="gempty">No open tasks. ✅</div>';
+      $('taskBody').innerHTML=listHtml+
+        '<div class="addtask"><input id="newTask" placeholder="Add a task…" autocomplete="off"><button id="newTaskBtn">+</button></div>';
+      wireTaskInputs();
+    }).catch(handleGErr('taskBody'));
+  }
+  function wireTaskInputs(){
+    var body=$('taskBody');
+    Array.prototype.forEach.call(body.querySelectorAll('.task [data-act="done"]'),function(c){
+      c.addEventListener('click',function(){
+        var li=c.closest('.task'); var tid=li.getAttribute('data-tid'); li.classList.add('done');
+        gfetch('https://tasks.googleapis.com/tasks/v1/lists/'+encodeURIComponent(gTaskListId)+'/tasks/'+encodeURIComponent(tid),
+          { method:'PATCH', body:JSON.stringify({status:'completed'}) })
+          .then(function(){ setTimeout(loadTasks,400); }).catch(function(){ li.classList.remove('done'); });
+      });
+    });
+    var inp=$('newTask'), btn=$('newTaskBtn');
+    function add(){ var v=inp.value.trim(); if(!v) return; inp.value=''; inp.disabled=true;
+      gfetch('https://tasks.googleapis.com/tasks/v1/lists/'+encodeURIComponent(gTaskListId)+'/tasks',
+        { method:'POST', body:JSON.stringify({title:v}) })
+        .then(function(){ loadTasks(); }).catch(function(){ inp.disabled=false; inp.value=v; });
+    }
+    if(btn) btn.addEventListener('click',add);
+    if(inp) inp.addEventListener('keydown',function(e){ if(e.key==='Enter') add(); });
+  }
+
+  function handleGErr(target){ return function(err){
+    if(err&&err.message==='reauth'){ renderGoogleDisconnected('Session expired — reconnect Google.'); return; }
+    $(target).innerHTML='<div class="gempty">Couldn’t load: '+esc(err&&err.message||'error')+'</div>';
+  };}
+
+  // -------- Google panel states --------
+  function renderGoogleDisconnected(note){
+    var cid=getClientId();
+    setGStatus('');
+    var connectBtnRow = cid
+      ? '<button class="btn" id="gConnect"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 11v2h5.5c-.2 1.3-1.6 3.9-5.5 3.9A6 6 0 1 1 12 6c1.7 0 2.9.7 3.5 1.3l1.9-1.9C16.1 3.9 14.2 3 12 3a9 9 0 1 0 0 18c5.2 0 8.6-3.6 8.6-8.7 0-.6 0-.9-.1-1.3H12z"/></svg>Connect Google</button>'
+      : '';
+    var body=
+      '<div class="gconnect">'+
+        '<p>'+(note?esc(note):'Connect your Google account to see upcoming events and manage tasks here.')+'</p>'+
+        connectBtnRow+
+        '<div class="cid-row">'+
+          '<input id="gCidInput" placeholder="Google OAuth Client ID (…apps.googleusercontent.com)" value="'+esc(cid)+'">'+
+          '<button class="btn outline sm" id="gCidSave">Save ID</button>'+
+        '</div>'+
+        '<details class="setup"><summary>How to get a Client ID (one-time, ~3 min)</summary>'+
+          '<ol>'+
+            '<li>Go to <code>console.cloud.google.com</code> → create/select a project.</li>'+
+            '<li>APIs &amp; Services → <b>Enable APIs</b>: enable <b>Google Calendar API</b> and <b>Google Tasks API</b>.</li>'+
+            '<li>OAuth consent screen → External → add your email as a <b>Test user</b>.</li>'+
+            '<li>Credentials → Create credentials → <b>OAuth client ID</b> → <b>Web application</b>.</li>'+
+            '<li>Under <b>Authorized JavaScript origins</b> add this exact site origin: <code>'+esc(location.origin)+'</code></li>'+
+            '<li>Copy the Client ID, paste it above, hit Save ID, then Connect Google.</li>'+
+          '</ol>'+
+        '</details>'+
+      '</div>';
+    $('calBody').innerHTML=body;
+    $('taskBody').innerHTML='<div class="gempty">Connect Google to manage tasks.</div>';
+    var cs=$('gConnect'); if(cs) cs.addEventListener('click',function(){ connect(true); });
+    var save=$('gCidSave'); if(save) save.addEventListener('click',function(){
+      var v=($('gCidInput').value||'').trim(); if(!v) return; setClientId(v); tokenClient=null; renderGoogleDisconnected('Client ID saved. Click Connect Google.');
+    });
+  }
+  function renderGoogleConnected(){
+    $('calBody').innerHTML='<div class="gempty">loading…</div>';
+    $('taskBody').innerHTML='<div class="gempty">loading…</div>';
+    // add a small disconnect control into calendar status
+    $('calStatus').innerHTML='<span style="cursor:pointer;text-decoration:underline" id="gDisc">disconnect</span>';
+    var dc=$('gDisc'); if(dc) dc.addEventListener('click',disconnect);
+  }
+  function refreshGoogle(){
+    if(!gToken||gToken.expires_at<=Date.now()){ renderGoogleDisconnected(); return; }
+    renderGoogleConnected(); loadCalendar(); loadTasks();
+  }
+
+  // Try existing token; else show connect. Retry until GIS script is ready.
+  function initGoogle(){
+    gToken=loadToken();
+    if(gToken){ refreshGoogle(); return; }
+    if(getClientId()){
+      // have a client id — attempt a silent token once GIS is ready
+      if(gsiReady()){ renderGoogleDisconnected(); connect(false); }
+      else { renderGoogleDisconnected(); }
+    } else {
+      renderGoogleDisconnected();
+    }
+  }
+  // GIS loads async; poll briefly
+  (function waitGsi(n){ if(gsiReady()||n<=0){ initGoogle(); } else { setTimeout(function(){ waitGsi(n-1); }, 300); } })(20);
+
+  // ---- boot ----
+  loadLocal(); applyTheme(); renderAll();
+})();
+</script>
+
+<script>window.RWD_PROJECT='personal';</script>
+<script src="../assets/auth-gate.js" defer></script>
+</body>
+</html>
